@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContractCaseEvidence } from './contractCaseEvidence';
+import type { ContractCaseStageChecklist } from './contractCaseStageChecklist';
 import type { ContractCaseStatus } from './contractCaseStatus';
 import type { ContractCaseType } from './contractCaseType';
 import type { ContractCaseTypeDetails } from './contractCaseTypeDetails';
@@ -19,6 +20,8 @@ export interface ContractCase {
   eventDate: Date;
   /** @nullable */
   noticeDueDate?: Date | null;
+  /** @nullable */
+  noticeReference?: string | null;
   clauseBasis: string;
   description: string;
   /** @nullable */
@@ -29,6 +32,11 @@ export interface ContractCase {
   owner?: string | null;
   typeDetails: ContractCaseTypeDetails;
   evidence: ContractCaseEvidence[];
+  /** @nullable */
+  reviewNotes?: string | null;
+  /** @nullable */
+  decisionOutcome?: string | null;
+  stageChecklist: ContractCaseStageChecklist[];
   createdAt: Date;
   updatedAt: Date;
 }

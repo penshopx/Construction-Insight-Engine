@@ -558,6 +558,10 @@ components:
       properties:
         error:
           type: string
+        missingItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractCaseChecklistItem"
     WorkspaceRole:
       type: string
       enum: [manager, member]
@@ -743,9 +747,39 @@ components:
           type: string
         note:
           type: string
+    ContractCaseChecklistItem:
+      type: object
+      required: [key, label, target]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        target:
+          type: string
+    ContractCaseStageChecklist:
+      type: object
+      required: [stage, title, complete, items]
+      properties:
+        stage:
+          type: number
+        title:
+          type: string
+        complete:
+          type: boolean
+        items:
+          type: array
+          items:
+            allOf:
+              - $ref: "#/components/schemas/ContractCaseChecklistItem"
+              - type: object
+                required: [complete]
+                properties:
+                  complete:
+                    type: boolean
     ContractCase:
       type: object
-      required: [id, reference, type, title, project, eventDate, clauseBasis, description, currentStage, status, typeDetails, evidence, createdAt, updatedAt]
+      required: [id, reference, type, title, project, eventDate, clauseBasis, description, currentStage, status, typeDetails, evidence, stageChecklist, createdAt, updatedAt]
       properties:
         id:
           type: number
@@ -763,6 +797,8 @@ components:
         noticeDueDate:
           type: ["string", "null"]
           format: date
+        noticeReference:
+          type: ["string", "null"]
         clauseBasis:
           type: string
         description:
@@ -783,6 +819,14 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContractCaseEvidence"
+        reviewNotes:
+          type: ["string", "null"]
+        decisionOutcome:
+          type: ["string", "null"]
+        stageChecklist:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractCaseStageChecklist"
         createdAt:
           type: string
           format: date-time
@@ -837,6 +881,8 @@ components:
         noticeDueDate:
           type: ["string", "null"]
           format: date
+        noticeReference:
+          type: ["string", "null"]
         clauseBasis:
           type: string
         description:
@@ -859,6 +905,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContractCaseEvidence"
+        reviewNotes:
+          type: ["string", "null"]
+        decisionOutcome:
+          type: ["string", "null"]
         changeNote:
           type: string
     ContractCaseActivity:

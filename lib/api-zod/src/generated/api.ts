@@ -179,6 +179,7 @@ export const ListContractCasesResponseItem = zod.object({
   "project": zod.string(),
   "eventDate": zod.coerce.date(),
   "noticeDueDate": zod.coerce.date().nullish(),
+  "noticeReference": zod.string().nullish(),
   "clauseBasis": zod.string(),
   "description": zod.string(),
   "impactValue": zod.string().nullish(),
@@ -189,6 +190,20 @@ export const ListContractCasesResponseItem = zod.object({
   "evidence": zod.array(zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
+})),
+  "reviewNotes": zod.string().nullish(),
+  "decisionOutcome": zod.string().nullish(),
+  "stageChecklist": zod.array(zod.object({
+  "stage": zod.number(),
+  "title": zod.string(),
+  "complete": zod.boolean(),
+  "items": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "target": zod.string()
+}).and(zod.object({
+  "complete": zod.boolean()
+})))
 })),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -233,6 +248,7 @@ export const CreateContractCaseResponse = zod.object({
   "project": zod.string(),
   "eventDate": zod.coerce.date(),
   "noticeDueDate": zod.coerce.date().nullish(),
+  "noticeReference": zod.string().nullish(),
   "clauseBasis": zod.string(),
   "description": zod.string(),
   "impactValue": zod.string().nullish(),
@@ -243,6 +259,20 @@ export const CreateContractCaseResponse = zod.object({
   "evidence": zod.array(zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
+})),
+  "reviewNotes": zod.string().nullish(),
+  "decisionOutcome": zod.string().nullish(),
+  "stageChecklist": zod.array(zod.object({
+  "stage": zod.number(),
+  "title": zod.string(),
+  "complete": zod.boolean(),
+  "items": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "target": zod.string()
+}).and(zod.object({
+  "complete": zod.boolean()
+})))
 })),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -267,6 +297,7 @@ export const UpdateContractCaseBody = zod.object({
   "title": zod.string().min(updateContractCaseBodyTitleMin).optional(),
   "project": zod.string().optional(),
   "noticeDueDate": zod.coerce.date().nullish(),
+  "noticeReference": zod.string().nullish(),
   "clauseBasis": zod.string().optional(),
   "description": zod.string().optional(),
   "impactValue": zod.string().nullish(),
@@ -278,6 +309,8 @@ export const UpdateContractCaseBody = zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
 })).optional(),
+  "reviewNotes": zod.string().nullish(),
+  "decisionOutcome": zod.string().nullish(),
   "changeNote": zod.string().optional()
 })
 
@@ -289,6 +322,7 @@ export const UpdateContractCaseResponse = zod.object({
   "project": zod.string(),
   "eventDate": zod.coerce.date(),
   "noticeDueDate": zod.coerce.date().nullish(),
+  "noticeReference": zod.string().nullish(),
   "clauseBasis": zod.string(),
   "description": zod.string(),
   "impactValue": zod.string().nullish(),
@@ -299,6 +333,20 @@ export const UpdateContractCaseResponse = zod.object({
   "evidence": zod.array(zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
+})),
+  "reviewNotes": zod.string().nullish(),
+  "decisionOutcome": zod.string().nullish(),
+  "stageChecklist": zod.array(zod.object({
+  "stage": zod.number(),
+  "title": zod.string(),
+  "complete": zod.boolean(),
+  "items": zod.array(zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "target": zod.string()
+}).and(zod.object({
+  "complete": zod.boolean()
+})))
 })),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

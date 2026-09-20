@@ -5,7 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContractCaseChecklistItem } from './contractCaseChecklistItem';
 
 export interface Error {
   error: string;
+  missingItems?: ContractCaseChecklistItem[];
 }

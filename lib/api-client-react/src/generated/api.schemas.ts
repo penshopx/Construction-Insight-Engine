@@ -9,8 +9,15 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface ContractCaseChecklistItem {
+  key: string;
+  label: string;
+  target: string;
+}
+
 export interface Error {
   error: string;
+  missingItems?: ContractCaseChecklistItem[];
 }
 
 export type WorkspaceRole = typeof WorkspaceRole[keyof typeof WorkspaceRole];
@@ -173,6 +180,17 @@ export interface ContractCaseEvidence {
   note?: string;
 }
 
+export type ContractCaseStageChecklistItemsItem = ContractCaseChecklistItem & {
+  complete: boolean;
+};
+
+export interface ContractCaseStageChecklist {
+  stage: number;
+  title: string;
+  complete: boolean;
+  items: ContractCaseStageChecklistItemsItem[];
+}
+
 export type ContractCaseTypeDetails = {[key: string]: string};
 
 export interface ContractCase {
@@ -184,6 +202,8 @@ export interface ContractCase {
   eventDate: string;
   /** @nullable */
   noticeDueDate?: string | null;
+  /** @nullable */
+  noticeReference?: string | null;
   clauseBasis: string;
   description: string;
   /** @nullable */
@@ -194,6 +214,11 @@ export interface ContractCase {
   owner?: string | null;
   typeDetails: ContractCaseTypeDetails;
   evidence: ContractCaseEvidence[];
+  /** @nullable */
+  reviewNotes?: string | null;
+  /** @nullable */
+  decisionOutcome?: string | null;
+  stageChecklist: ContractCaseStageChecklist[];
   createdAt: string;
   updatedAt: string;
 }
@@ -226,6 +251,8 @@ export interface ContractCaseUpdate {
   project?: string;
   /** @nullable */
   noticeDueDate?: string | null;
+  /** @nullable */
+  noticeReference?: string | null;
   clauseBasis?: string;
   description?: string;
   /** @nullable */
@@ -240,6 +267,10 @@ export interface ContractCaseUpdate {
   status?: ContractCaseStatus;
   typeDetails?: ContractCaseUpdateTypeDetails;
   evidence?: ContractCaseEvidence[];
+  /** @nullable */
+  reviewNotes?: string | null;
+  /** @nullable */
+  decisionOutcome?: string | null;
   changeNote?: string;
 }
 

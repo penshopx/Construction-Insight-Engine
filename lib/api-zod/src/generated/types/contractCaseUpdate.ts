@@ -15,6 +15,8 @@ export interface ContractCaseUpdate {
   project?: string;
   /** @nullable */
   noticeDueDate?: Date | null;
+  /** @nullable */
+  noticeReference?: string | null;
   clauseBasis?: string;
   description?: string;
   /** @nullable */
@@ -29,5 +31,9 @@ export interface ContractCaseUpdate {
   status?: ContractCaseStatus;
   typeDetails?: ContractCaseUpdateTypeDetails;
   evidence?: ContractCaseEvidence[];
+  /** @nullable */
+  reviewNotes?: string | null;
+  /** @nullable */
+  decisionOutcome?: string | null;
   changeNote?: string;
 }

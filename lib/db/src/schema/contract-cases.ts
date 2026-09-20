@@ -11,6 +11,7 @@ export const contractCasesTable = pgTable("contract_cases", {
   project: text("project").notNull(),
   eventDate: date("event_date", { mode: "string" }).notNull(),
   noticeDueDate: date("notice_due_date", { mode: "string" }),
+  noticeReference: text("notice_reference"),
   clauseBasis: text("clause_basis").notNull(),
   description: text("description").notNull(),
   impactValue: text("impact_value"),
@@ -19,6 +20,8 @@ export const contractCasesTable = pgTable("contract_cases", {
   owner: text("owner"),
   typeDetails: jsonb("type_details").$type<Record<string, string>>().notNull().default({}),
   evidence: jsonb("evidence").$type<Array<{ name: string; note?: string }>>().notNull().default([]),
+  reviewNotes: text("review_notes"),
+  decisionOutcome: text("decision_outcome"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [

@@ -170,11 +170,17 @@ function CreateCaseDialog({ open, onClose }: { open: boolean; onClose: () => voi
 
 function CaseWorkflow({ caseData }: { caseData: ContractCase }) {
   const queryClient = useQueryClient();
+  const [stageError, setStageError] = useState('');
   const updateCase = useUpdateContractCase({
      mutation: {
         onSuccess: () => {
+            setStageError('');
            queryClient.invalidateQueries({ queryKey: getListContractCasesQueryKey() });
            queryClient.invalidateQueries({ queryKey: getListContractCaseActivitiesQueryKey(caseData.id) });
+         },
+         onError: (error) => {
+            const data = (error as { data?: { error?: string } }).data;
+            setStageError(data?.error || 'Tahap belum dapat diperbarui.');
         }
      }
   });
@@ -191,8 +197,17 @@ function CaseWorkflow({ caseData }: { caseData: ContractCase }) {
      const prevStage = STAGES[caseData.currentStage - 1];
      const note = prompt(`Kembali ke tahap "${prevStage.title}".\nMasukkan catatan alasan mundurnya tahap ini:`);
      if (note === null) return;
-     updateCase.mutate({ id: caseData.id, data: { currentStage: caseData.currentStage - 1, changeNote: note || `Mundur ke tahap ${prevStage.title}` } });
+      if (!note.trim()) {
+         setStageError('Alasan wajib diisi saat tahap dibuka kembali.');
+         return;
+      }
+      updateCase.mutate({ id: caseData.id, data: { currentStage: caseData.currentStage - 1, changeNote: note } });
   };
+
+   const nextChecklist = caseData.stageChecklist.find((item) => item.stage === caseData.currentStage + 1);
+   const scrollToTarget = (target: string) => {
+      document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+   };
 
   return (
     <div className="bg-card border border-border rounded-lg p-5">
@@ -205,6 +220,31 @@ function CaseWorkflow({ caseData }: { caseData: ContractCase }) {
              </button>
           </div>
        </div>
+        {nextChecklist && (
+          <div className={cn("mb-5 rounded border p-3", nextChecklist.complete ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5")}>
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <p className="text-xs font-bold text-slate-200">{nextChecklist.title}</p>
+              <span className={cn("text-[10px] font-bold", nextChecklist.complete ? "text-emerald-400" : "text-amber-400")}>
+                {nextChecklist.items.filter((item) => item.complete).length}/{nextChecklist.items.length} lengkap
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {nextChecklist.items.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => !item.complete && scrollToTarget(item.target)}
+                  className={cn("flex w-full items-center gap-2 text-left text-[11px]", item.complete ? "cursor-default text-emerald-400" : "text-amber-300 hover:text-amber-200")}
+                >
+                  {item.complete ? <CheckCircle2 size={13} /> : <AlertTriangle size={13} />}
+                  <span>{item.label}</span>
+                  {!item.complete && <span className="ml-auto text-[9px] font-bold uppercase">Lengkapi</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {stageError && <p role="alert" className="mb-4 rounded border border-red-500/20 bg-red-500/10 p-2 text-xs text-red-300">{stageError}</p>}
 
        <div className="relative pl-6">
           <div className="absolute left-[11px] top-2 bottom-4 w-[2px] bg-border z-0"></div>
@@ -248,6 +288,113 @@ function CaseWorkflow({ caseData }: { caseData: ContractCase }) {
           </div>
        </div>
     </div>
+  );
+}
+
+function CaseDetailsEditor({ caseData }: { caseData: ContractCase }) {
+  const queryClient = useQueryClient();
+  const [description, setDescription] = useState(caseData.description);
+  const [clauseBasis, setClauseBasis] = useState(caseData.clauseBasis);
+  const [noticeDueDate, setNoticeDueDate] = useState(caseData.noticeDueDate || '');
+  const [noticeReference, setNoticeReference] = useState(caseData.noticeReference || '');
+  const [impactValue, setImpactValue] = useState(caseData.impactValue || '');
+  const [typeDetails, setTypeDetails] = useState<Record<string, string>>(caseData.typeDetails);
+  const [reviewNotes, setReviewNotes] = useState(caseData.reviewNotes || '');
+  const [decisionOutcome, setDecisionOutcome] = useState(caseData.decisionOutcome || '');
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setDescription(caseData.description);
+    setClauseBasis(caseData.clauseBasis);
+    setNoticeDueDate(caseData.noticeDueDate || '');
+    setNoticeReference(caseData.noticeReference || '');
+    setImpactValue(caseData.impactValue || '');
+    setTypeDetails(caseData.typeDetails);
+    setReviewNotes(caseData.reviewNotes || '');
+    setDecisionOutcome(caseData.decisionOutcome || '');
+    setSaved(false);
+  }, [caseData.id, caseData.updatedAt]);
+
+  const updateCase = useUpdateContractCase({
+    mutation: {
+      onSuccess: () => {
+        setSaved(true);
+        queryClient.invalidateQueries({ queryKey: getListContractCasesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListContractCaseActivitiesQueryKey(caseData.id) });
+      }
+    }
+  });
+
+  const handleSave = (event: React.FormEvent) => {
+    event.preventDefault();
+    setSaved(false);
+    updateCase.mutate({
+      id: caseData.id,
+      data: {
+        description,
+        clauseBasis,
+        noticeDueDate: noticeDueDate || null,
+        noticeReference: noticeReference || null,
+        impactValue: impactValue || null,
+        typeDetails,
+        reviewNotes: reviewNotes || null,
+        decisionOutcome: decisionOutcome || null,
+        changeNote: 'Memperbarui kelengkapan workflow kasus.'
+      }
+    });
+  };
+
+  return (
+    <form onSubmit={handleSave} className="bg-card border border-border rounded-lg p-5 space-y-5">
+      <div id="case-details" className="scroll-mt-6 space-y-3">
+        <h4 className="text-sm font-bold flex items-center gap-2"><AlertTriangle size={16} className="text-primary" /> Data Wajib Kasus</h4>
+        <label className="block text-[10px] uppercase font-mono text-slate-500">Deskripsi Kejadian
+          <textarea required value={description} onChange={(event) => setDescription(event.target.value)} className="mt-1 min-h-20 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-[10px] uppercase font-mono text-slate-500">Klausul Referensi
+            <input required value={clauseBasis} onChange={(event) => setClauseBasis(event.target.value)} className="mt-1 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+          </label>
+          <label className="text-[10px] uppercase font-mono text-slate-500">Tenggat Notice
+            <input type="date" value={noticeDueDate} onChange={(event) => setNoticeDueDate(event.target.value)} className="mt-1 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+          </label>
+        </div>
+        <label className="block text-[10px] uppercase font-mono text-slate-500">Nomor / Referensi Notice Terkirim
+          <input value={noticeReference} onChange={(event) => setNoticeReference(event.target.value)} placeholder="Contoh: NTC/PROYEK/014" className="mt-1 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+        </label>
+        <label className="block text-[10px] uppercase font-mono text-slate-500">Nilai / Durasi Dampak
+          <input value={impactValue} onChange={(event) => setImpactValue(event.target.value)} placeholder="Contoh: Rp 500.000.000 atau 14 hari" className="mt-1 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+        </label>
+      </div>
+
+      <div id="type-details" className="scroll-mt-6 border-t border-border pt-4">
+        <h4 className="mb-3 text-xs font-bold font-mono text-primary uppercase">Spesifikasi {caseData.type}</h4>
+        <div className="grid gap-3">
+          {SPECIFIC_FIELDS[caseData.type].map((field) => (
+            <label key={field.key} className="text-[10px] uppercase font-mono text-slate-500">{field.label}
+              <input value={typeDetails[field.key] || ''} onChange={(event) => setTypeDetails({ ...typeDetails, [field.key]: event.target.value })} className="mt-1 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div id="review-decision" className="scroll-mt-6 space-y-3 border-t border-border pt-4">
+        <h4 className="text-xs font-bold font-mono text-primary uppercase">Review & Keputusan</h4>
+        <label className="block text-[10px] uppercase font-mono text-slate-500">Catatan Hasil Review
+          <textarea value={reviewNotes} onChange={(event) => setReviewNotes(event.target.value)} placeholder="Ringkasan evaluasi, pihak yang meninjau, dan rekomendasi." className="mt-1 min-h-20 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+        </label>
+        <label className="block text-[10px] uppercase font-mono text-slate-500">Hasil Keputusan
+          <textarea value={decisionOutcome} onChange={(event) => setDecisionOutcome(event.target.value)} placeholder="Isi setelah keputusan ditetapkan." className="mt-1 min-h-16 w-full rounded border border-border bg-background p-2 text-sm normal-case text-slate-200" />
+        </label>
+      </div>
+
+      <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
+        {saved && <span className="text-xs text-emerald-400">Tersimpan</span>}
+        <button type="submit" disabled={updateCase.isPending} className="rounded bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">
+          {updateCase.isPending ? 'Menyimpan...' : 'Simpan Kelengkapan'}
+        </button>
+      </div>
+    </form>
   );
 }
 
@@ -367,6 +514,7 @@ export default function Kasus() {
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [statusError, setStatusError] = useState('');
 
   const { data: cases = [], isLoading } = useListContractCases();
   const queryClient = useQueryClient();
@@ -374,8 +522,15 @@ export default function Kasus() {
   const updateCase = useUpdateContractCase({
      mutation: {
         onSuccess: (updated) => {
+            setStatusError('');
            queryClient.invalidateQueries({ queryKey: getListContractCasesQueryKey() });
            queryClient.invalidateQueries({ queryKey: getListContractCaseActivitiesQueryKey(updated.id) });
+         },
+         onError: (error) => {
+            const data = (error as { data?: { error?: string; missingItems?: Array<{ target: string }> } }).data;
+            setStatusError(data?.error || 'Status belum dapat diperbarui.');
+            const target = data?.missingItems?.[0]?.target;
+            if (target) document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
      }
   });
@@ -504,6 +659,7 @@ export default function Kasus() {
                               <option value="Closed" className="bg-card text-slate-200">Closed</option>
                            </select>
                         </div>
+                         {statusError && <p role="alert" className="max-w-xs text-right text-[10px] text-red-300">{statusError}</p>}
                         {activeCase.owner && (
                            <div className="flex items-center gap-2 px-2 mt-1">
                               <Briefcase size={12} className="text-slate-500" />
@@ -521,47 +677,7 @@ export default function Kasus() {
                         <ActivitiesPanel caseId={activeCase.id} />
                      </div>
                      <div className="space-y-6">
-                        <div className="bg-card border border-border rounded-lg p-5">
-                           <h4 className="text-sm font-bold mb-4 flex items-center gap-2"><AlertTriangle size={16} className="text-primary" /> Rincian Kasus</h4>
-                           <div className="space-y-4">
-                              <div>
-                                 <span className="text-[10px] uppercase font-mono text-slate-500">Deskripsi Kejadian</span>
-                                 <p className="text-sm text-slate-200 mt-1 leading-relaxed">{activeCase.description}</p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
-                                 <div>
-                                    <span className="text-[10px] uppercase font-mono text-slate-500">Tanggal Kejadian</span>
-                                    <p className="text-sm text-slate-200 font-bold mt-1">{new Date(activeCase.eventDate).toLocaleDateString('id-ID')}</p>
-                                 </div>
-                                 <div>
-                                    <span className="text-[10px] uppercase font-mono text-slate-500">Klausul Referensi</span>
-                                    <div><span className="text-xs text-slate-200 font-mono bg-white/5 px-2 py-0.5 rounded border border-border mt-1 inline-block">{activeCase.clauseBasis}</span></div>
-                                 </div>
-                              </div>
-                              {activeCase.noticeDueDate && (
-                                 <div className="pt-4 border-t border-border/50">
-                                    <span className="text-[10px] uppercase font-mono text-slate-500 flex items-center gap-1.5"><AlertTriangle size={12} className="text-amber-500" /> Tenggat Notice (Kontraktual)</span>
-                                    <p className="text-sm text-amber-400 font-bold mt-1">{new Date(activeCase.noticeDueDate).toLocaleDateString('id-ID')}</p>
-                                 </div>
-                              )}
-                           </div>
-                        </div>
-
-                        <div className="bg-primary/5 border border-primary/20 rounded-lg p-5">
-                           <h4 className="text-xs font-bold font-mono text-primary uppercase mb-4 tracking-widest border-b border-primary/20 pb-2">Spesifikasi {activeCase.type}</h4>
-                           <div className="grid gap-4">
-                              {Object.entries(activeCase.typeDetails || {}).map(([key, val]) => {
-                                 const label = SPECIFIC_FIELDS[activeCase.type]?.find(f => f.key === key)?.label || key;
-                                 return (
-                                    <div key={key}>
-                                       <span className="text-[10px] font-mono text-primary/70 uppercase">{label}</span>
-                                       <p className="text-sm text-slate-200 font-medium mt-0.5">{val as string}</p>
-                                    </div>
-                                 );
-                              })}
-                           </div>
-                        </div>
-
+                         <CaseDetailsEditor caseData={activeCase} />
                         <EvidenceManager caseData={activeCase} />
                          <CollaborationLinks caseId={activeCase.id} />
                      </div>
