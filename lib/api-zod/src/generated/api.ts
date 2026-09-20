@@ -400,6 +400,72 @@ export const UpdateWorkspaceResponse = zod.object({
 
 
 /**
+ * @summary Get external notice reminder settings
+ */
+export const getReminderSettingsResponseEmailRecipientsItemRegExp = new RegExp('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+
+
+export const GetReminderSettingsResponse = zod.object({
+  "emailEnabled": zod.boolean(),
+  "emailRecipients": zod.array(zod.string().regex(getReminderSettingsResponseEmailRecipientsItemRegExp)),
+  "emailFrom": zod.string().nullish(),
+  "emailCredentialConfigured": zod.boolean(),
+  "whatsappEnabled": zod.boolean(),
+  "whatsappRecipients": zod.array(zod.string()),
+  "whatsappPhoneNumberId": zod.string().nullish(),
+  "whatsappTemplateName": zod.string().nullish(),
+  "whatsappTemplateLanguage": zod.string(),
+  "whatsappCredentialConfigured": zod.boolean()
+})
+
+
+/**
+ * @summary Update external notice reminder settings
+ */
+export const updateReminderSettingsBodyEmailRecipientsItemRegExp = new RegExp('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+export const updateReminderSettingsBodyEmailRecipientsMax = 25;
+
+
+export const updateReminderSettingsBodyWhatsappRecipientsItemRegExp = new RegExp('^\\+?[1-9][0-9]{7,14}$');
+export const updateReminderSettingsBodyWhatsappRecipientsMax = 25;
+
+export const updateReminderSettingsBodyWhatsappTemplateLanguageMin = 2;
+export const updateReminderSettingsBodyWhatsappTemplateLanguageMax = 10;
+
+
+
+
+export const UpdateReminderSettingsBody = zod.object({
+  "emailEnabled": zod.boolean().optional(),
+  "emailRecipients": zod.array(zod.string().regex(updateReminderSettingsBodyEmailRecipientsItemRegExp)).max(updateReminderSettingsBodyEmailRecipientsMax).optional(),
+  "emailFrom": zod.string().nullish(),
+  "emailToken": zod.string().min(1).optional(),
+  "whatsappEnabled": zod.boolean().optional(),
+  "whatsappRecipients": zod.array(zod.string().regex(updateReminderSettingsBodyWhatsappRecipientsItemRegExp)).max(updateReminderSettingsBodyWhatsappRecipientsMax).optional(),
+  "whatsappPhoneNumberId": zod.string().nullish(),
+  "whatsappTemplateName": zod.string().nullish(),
+  "whatsappTemplateLanguage": zod.string().min(updateReminderSettingsBodyWhatsappTemplateLanguageMin).max(updateReminderSettingsBodyWhatsappTemplateLanguageMax).optional(),
+  "whatsappToken": zod.string().min(1).optional()
+})
+
+export const updateReminderSettingsResponseEmailRecipientsItemRegExp = new RegExp('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+
+
+export const UpdateReminderSettingsResponse = zod.object({
+  "emailEnabled": zod.boolean(),
+  "emailRecipients": zod.array(zod.string().regex(updateReminderSettingsResponseEmailRecipientsItemRegExp)),
+  "emailFrom": zod.string().nullish(),
+  "emailCredentialConfigured": zod.boolean(),
+  "whatsappEnabled": zod.boolean(),
+  "whatsappRecipients": zod.array(zod.string()),
+  "whatsappPhoneNumberId": zod.string().nullish(),
+  "whatsappTemplateName": zod.string().nullish(),
+  "whatsappTemplateLanguage": zod.string(),
+  "whatsappCredentialConfigured": zod.boolean()
+})
+
+
+/**
  * @summary List members of the active workspace
  */
 export const ListWorkspaceMembersResponseItem = zod.object({

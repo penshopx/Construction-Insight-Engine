@@ -200,6 +200,39 @@ paths:
                 $ref: "#/components/schemas/Workspace"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /workspace/reminder-settings:
+    get:
+      operationId: getReminderSettings
+      tags: [workspace]
+      summary: Get external notice reminder settings
+      responses:
+        "200":
+          description: Reminder settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReminderSettings"
+    patch:
+      operationId: updateReminderSettings
+      tags: [workspace]
+      summary: Update external notice reminder settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReminderSettingsUpdate"
+      responses:
+        "200":
+          description: Updated reminder settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReminderSettings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          description: Manager access required
   /workspace/members:
     get:
       operationId: listWorkspaceMembers
@@ -631,6 +664,73 @@ components:
         token:
           type: string
           minLength: 20
+    ReminderSettings:
+      type: object
+      required: [emailEnabled, emailRecipients, emailCredentialConfigured, whatsappEnabled, whatsappRecipients, whatsappTemplateLanguage, whatsappCredentialConfigured]
+      properties:
+        emailEnabled:
+          type: boolean
+        emailRecipients:
+          type: array
+          items:
+            type: string
+            pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+        emailFrom:
+          type: ["string", "null"]
+        emailCredentialConfigured:
+          type: boolean
+        whatsappEnabled:
+          type: boolean
+        whatsappRecipients:
+          type: array
+          items:
+            type: string
+        whatsappPhoneNumberId:
+          type: ["string", "null"]
+        whatsappTemplateName:
+          type: ["string", "null"]
+        whatsappTemplateLanguage:
+          type: string
+        whatsappCredentialConfigured:
+          type: boolean
+    ReminderSettingsUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        emailEnabled:
+          type: boolean
+        emailRecipients:
+          type: array
+          maxItems: 25
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^[^@\s]+@[^@\s]+\.[^@\s]+$'
+        emailFrom:
+          type: ["string", "null"]
+        emailToken:
+          type: string
+          minLength: 1
+        whatsappEnabled:
+          type: boolean
+        whatsappRecipients:
+          type: array
+          maxItems: 25
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^\+?[1-9][0-9]{7,14}$'
+        whatsappPhoneNumberId:
+          type: ["string", "null"]
+        whatsappTemplateName:
+          type: ["string", "null"]
+        whatsappTemplateLanguage:
+          type: string
+          minLength: 2
+          maxLength: 10
+        whatsappToken:
+          type: string
+          minLength: 1
     WorkItemCategory:
       type: string
       enum: [administration, decision, evidence, risk]

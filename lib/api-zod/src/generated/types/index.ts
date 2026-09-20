@@ -52,6 +52,8 @@ export * from './referenceSearchHit';
 export * from './referenceSearchResponse';
 export * from './referenceUploadRequest';
 export * from './referenceUploadResponse';
+export * from './reminderSettings';
+export * from './reminderSettingsUpdate';
 export * from './searchReferencesParams';
 export * from './workItem';
 export * from './workItemCategory';

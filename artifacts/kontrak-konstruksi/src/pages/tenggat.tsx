@@ -2,13 +2,18 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   getListWorkItemsQueryKey,
+  getGetReminderSettingsQueryKey,
   useCreateWorkItem,
+  useGetReminderSettings,
   useListWorkItems,
+  useUpdateReminderSettings,
   useUpdateWorkItem,
+  type ReminderSettings,
+  type ReminderSettingsUpdate,
   type WorkItem,
 } from '@workspace/api-client-react';
 import { PageHeader, Shell } from '@/components/layout';
-import { AlertTriangle, Bell, Check, Clock, Info, Plus, X } from 'lucide-react';
+import { AlertTriangle, Bell, Check, Clock, Info, Mail, MessageCircle, Plus, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type DeadlineFilter = 'all' | 'action_needed' | 'resolved';
@@ -19,6 +24,9 @@ export default function Tenggat() {
   const queryClient = useQueryClient();
   const { data: deadlines = [], isLoading, isError } = useListWorkItems({ category: 'administration' });
   const updateDeadline = useUpdateWorkItem();
+  const { data: reminderSettings } = useGetReminderSettings();
+  const updateReminderSettings = useUpdateReminderSettings();
+  const [showChannels, setShowChannels] = useState(false);
   const filtered = deadlines.filter((deadline) => {
     if (filter === 'resolved') return deadline.completed;
     if (filter === 'action_needed') return !deadline.completed && deadline.status === 'Perlu ditinjau';
@@ -48,9 +56,12 @@ export default function Tenggat() {
         title="Tenggat Hukum & Administrasi"
         description="Catat batas waktu notifikasi kontraktual. Dampak keterlambatan terhadap hak klaim atau denda bergantung pada kontrak, fakta, dan hukum yang berlaku."
         action={
-          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(0,180,255,0.2)]" data-testid="button-add-deadline">
-            <Plus size={14} /> Tambah Tenggat
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => setShowChannels(true)} className="flex items-center gap-2 rounded border border-primary/30 bg-primary/10 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/20" data-testid="button-reminder-channels"><Bell size={14} /> Kanal</button>
+            <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(0,180,255,0.2)]" data-testid="button-add-deadline">
+              <Plus size={14} /> Tambah Tenggat
+            </button>
+          </div>
         }
       />
       <div className="mb-6 flex items-start gap-3 rounded border border-amber-900/40 bg-amber-950/20 p-3 text-xs leading-relaxed text-amber-200/80">
@@ -156,8 +167,62 @@ export default function Tenggat() {
         ))}
       </div>
       {showAdd && <DeadlineModal onClose={() => setShowAdd(false)} onSaved={refresh} />}
+      {showChannels && reminderSettings && (
+        <ReminderChannelModal
+          settings={reminderSettings}
+          isSaving={updateReminderSettings.isPending}
+          onClose={() => setShowChannels(false)}
+          onSave={(data) => updateReminderSettings.mutate(
+            { data },
+            { onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: getGetReminderSettingsQueryKey() });
+              setShowChannels(false);
+            } },
+          )}
+        />
+      )}
     </Shell>
   );
+}
+
+function ReminderChannelModal({ settings, isSaving, onClose, onSave }: {
+  settings: ReminderSettings;
+  isSaving: boolean;
+  onClose: () => void;
+  onSave: (data: ReminderSettingsUpdate) => void;
+}) {
+  const [emailEnabled, setEmailEnabled] = useState(settings.emailEnabled);
+  const [emailRecipients, setEmailRecipients] = useState(settings.emailRecipients.join(', '));
+  const [emailFrom, setEmailFrom] = useState(settings.emailFrom ?? '');
+  const [emailToken, setEmailToken] = useState('');
+  const [whatsappEnabled, setWhatsappEnabled] = useState(settings.whatsappEnabled);
+  const [whatsappRecipients, setWhatsappRecipients] = useState(settings.whatsappRecipients.join(', '));
+  const [whatsappPhoneNumberId, setWhatsappPhoneNumberId] = useState(settings.whatsappPhoneNumberId ?? '');
+  const [whatsappTemplateName, setWhatsappTemplateName] = useState(settings.whatsappTemplateName ?? '');
+  const [whatsappTemplateLanguage, setWhatsappTemplateLanguage] = useState(settings.whatsappTemplateLanguage);
+  const [whatsappToken, setWhatsappToken] = useState('');
+  const split = (value: string) => value.split(',').map((item) => item.trim()).filter(Boolean);
+  const submit = () => onSave({
+    emailEnabled,
+    emailRecipients: split(emailRecipients),
+    emailFrom: emailFrom || null,
+    ...(emailToken ? { emailToken } : {}),
+    whatsappEnabled,
+    whatsappRecipients: split(whatsappRecipients),
+    whatsappPhoneNumberId: whatsappPhoneNumberId || null,
+    whatsappTemplateName: whatsappTemplateName || null,
+    whatsappTemplateLanguage,
+    ...(whatsappToken ? { whatsappToken } : {}),
+  });
+  return <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true"><div className="w-full max-w-2xl rounded-xl border border-border bg-card p-6 shadow-2xl"><div className="mb-5 flex items-start justify-between border-b border-border pb-4"><div><p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Pengingat Eksternal</p><h2 className="mt-1 font-display text-xl font-bold text-white">Kanal & penerima organisasi</h2><p className="mt-1 text-xs text-slate-400">Token disimpan terenkripsi dan tidak pernah ditampilkan kembali.</p></div><button onClick={onClose} className="rounded p-2 text-slate-500 hover:bg-white/5 hover:text-white"><X size={18} /></button></div><div className="grid gap-4 md:grid-cols-2"><ChannelPanel icon={<Mail size={16} />} title="Email via Resend" enabled={emailEnabled} onEnabled={setEmailEnabled}><Field label="Penerima (pisahkan dengan koma)" value={emailRecipients} onChange={setEmailRecipients} placeholder="site@firma.id, pm@firma.id" /><Field label="Alamat pengirim terverifikasi" value={emailFrom} onChange={setEmailFrom} placeholder="KontrakGuard <notice@firma.id>" /><Field label={`API token${settings.emailCredentialConfigured ? ' (sudah tersimpan)' : ''}`} value={emailToken} onChange={setEmailToken} placeholder={settings.emailCredentialConfigured ? 'Kosongkan untuk mempertahankan token' : 'Masukkan token Resend'} secret /></ChannelPanel><ChannelPanel icon={<MessageCircle size={16} />} title="WhatsApp Cloud API" enabled={whatsappEnabled} onEnabled={setWhatsappEnabled}><Field label="Nomor penerima (pisahkan dengan koma)" value={whatsappRecipients} onChange={setWhatsappRecipients} placeholder="+62812..., +62813..." /><Field label="Phone number ID" value={whatsappPhoneNumberId} onChange={setWhatsappPhoneNumberId} placeholder="ID nomor dari Meta" /><Field label="Template disetujui Meta" value={whatsappTemplateName} onChange={setWhatsappTemplateName} placeholder="notice_reminder" /><Field label="Kode bahasa template" value={whatsappTemplateLanguage} onChange={setWhatsappTemplateLanguage} placeholder="id" /><p className="text-[10px] leading-relaxed text-slate-500">Template harus memiliki dua variabel body: judul notice dan rincian tenggat.</p><Field label={`Access token${settings.whatsappCredentialConfigured ? ' (sudah tersimpan)' : ''}`} value={whatsappToken} onChange={setWhatsappToken} placeholder={settings.whatsappCredentialConfigured ? 'Kosongkan untuk mempertahankan token' : 'Masukkan token Meta'} secret /></ChannelPanel></div><div className="mt-6 flex justify-end gap-3 border-t border-border pt-4"><button onClick={onClose} className="rounded px-4 py-2 text-xs font-bold text-slate-400 hover:text-white">Batal</button><button onClick={submit} disabled={isSaving} className="flex items-center gap-2 rounded bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"><Save size={14} />{isSaving ? 'Menyimpan…' : 'Simpan Kanal'}</button></div></div></div>;
+}
+
+function ChannelPanel({ icon, title, enabled, onEnabled, children }: { icon: React.ReactNode; title: string; enabled: boolean; onEnabled: (value: boolean) => void; children: React.ReactNode }) {
+  return <section className="rounded-lg border border-border bg-background/50 p-4"><label className="mb-4 flex items-center justify-between"><span className="flex items-center gap-2 text-sm font-bold text-slate-200">{icon}{title}</span><input type="checkbox" checked={enabled} onChange={(event) => onEnabled(event.target.checked)} className="h-4 w-4 accent-sky-500" /></label><div className={cn("grid gap-3", !enabled && "opacity-50")}>{children}</div></section>;
+}
+
+function Field({ label, value, onChange, placeholder, secret = false }: { label: string; value: string; onChange: (value: string) => void; placeholder: string; secret?: boolean }) {
+  return <label><span className="mb-1.5 block text-[11px] font-bold text-slate-400">{label}</span><input type={secret ? 'password' : 'text'} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="w-full rounded border border-border bg-card px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:border-primary focus:outline-none" /></label>;
 }
 
 function DeadlineModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {

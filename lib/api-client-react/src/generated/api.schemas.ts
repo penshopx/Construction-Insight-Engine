@@ -59,6 +59,53 @@ export interface WorkspaceInvitationAccept {
   token: string;
 }
 
+export interface ReminderSettings {
+  emailEnabled: boolean;
+  /** @items.pattern ^[^@\s]+@[^@\s]+\.[^@\s]+$ */
+  emailRecipients: string[];
+  /** @nullable */
+  emailFrom?: string | null;
+  emailCredentialConfigured: boolean;
+  whatsappEnabled: boolean;
+  whatsappRecipients: string[];
+  /** @nullable */
+  whatsappPhoneNumberId?: string | null;
+  /** @nullable */
+  whatsappTemplateName?: string | null;
+  whatsappTemplateLanguage: string;
+  whatsappCredentialConfigured: boolean;
+}
+
+export interface ReminderSettingsUpdate {
+  emailEnabled?: boolean;
+  /**
+     * @maxItems 25
+     * @items.pattern ^[^@\s]+@[^@\s]+\.[^@\s]+$
+     */
+  emailRecipients?: string[];
+  /** @nullable */
+  emailFrom?: string | null;
+  /** @minLength 1 */
+  emailToken?: string;
+  whatsappEnabled?: boolean;
+  /**
+     * @maxItems 25
+     * @items.pattern ^\+?[1-9][0-9]{7,14}$
+     */
+  whatsappRecipients?: string[];
+  /** @nullable */
+  whatsappPhoneNumberId?: string | null;
+  /** @nullable */
+  whatsappTemplateName?: string | null;
+  /**
+     * @minLength 2
+     * @maxLength 10
+     */
+  whatsappTemplateLanguage?: string;
+  /** @minLength 1 */
+  whatsappToken?: string;
+}
+
 export type WorkItemCategory = typeof WorkItemCategory[keyof typeof WorkItemCategory];
 
 
