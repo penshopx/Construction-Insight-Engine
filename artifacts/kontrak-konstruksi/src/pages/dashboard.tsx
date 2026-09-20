@@ -12,8 +12,8 @@ import {
   Scale,
   Clock
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Link } from 'wouter';
+import { RiskIndicator, RiskValidationNotice } from '@/components/risk-indicator';
 
 export default function Dashboard() {
   return (
@@ -29,6 +29,7 @@ export default function Dashboard() {
           </div>
         }
       />
+      <div className="mb-6"><RiskValidationNotice /></div>
 
       {/* 3 Pillars Overview */}
       <section className="mb-8 grid gap-4 lg:grid-cols-3">
@@ -177,26 +178,21 @@ export default function Dashboard() {
           <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
             <div>
               <h2 className="font-display text-base font-bold text-slate-200">Indikator Prioritas Portofolio (Demo)</h2>
-              <p className="mt-1 text-xs text-slate-500">Skor ilustratif; belum memakai model risiko yang tervalidasi</p>
+              <p className="mt-1 text-xs text-slate-500">Skor operasional dikunci sampai validasi ahli tersedia</p>
             </div>
             <FileWarning size={18} className="text-slate-500" />
           </div>
           
           <div className="space-y-2">
             {[
-              { name: 'Tower A Jakarta', risk: 82, issue: 'Sengketa spesifikasi fasad (VO ditolak)', status: 'critical', trend: '+15%' },
-              { name: 'Bridge Kalimantan', risk: 91, issue: 'Somasi ke-3 dari Owner terkait deviasi', status: 'critical', trend: '+8%' },
-              { name: 'Toll Road Semarang', risk: 58, issue: 'Klaim EOT menunggu mediasi awal', status: 'warning', trend: '-2%' },
-              { name: 'Housing BSD', risk: 45, issue: '3 NCR terindikasi kegagalan konstruksi', status: 'warning', trend: '+5%' },
+              { id: 'PRJ-01', name: 'Tower A Jakarta', issue: 'Sengketa spesifikasi fasad (VO ditolak)' },
+              { id: 'PRJ-02', name: 'Bridge Kalimantan', issue: 'Somasi ke-3 dari Owner terkait deviasi' },
+              { id: 'PRJ-03', name: 'Toll Road Semarang', issue: 'Klaim EOT menunggu mediasi awal' },
+              { id: 'PRJ-04', name: 'Housing BSD', issue: '3 NCR terindikasi kegagalan konstruksi' },
             ].map((p, i) => (
               <Link href="/proyek" key={i} className="flex items-center justify-between rounded-lg p-3 hover:bg-white/5 border border-transparent hover:border-border transition-colors group">
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "grid h-9 w-9 place-items-center rounded bg-background border",
-                    p.status === 'critical' ? 'border-red-900/50 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 'border-amber-900/50 text-amber-400'
-                  )}>
-                    <span className="font-mono text-[11px] font-bold">{p.risk}</span>
-                  </div>
+                  <RiskIndicator projectId={p.id} compact />
                   <div>
                     <p className="text-sm font-bold text-slate-200 group-hover:text-primary transition-colors flex items-center gap-2">
                       {p.name}
@@ -205,7 +201,6 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end">
-                  <span className={cn("font-mono text-[10px]", p.status === 'critical' ? 'text-red-400' : 'text-amber-400')}>{p.trend}</span>
                   <ChevronRight size={16} className="text-slate-600 group-hover:text-primary mt-1" />
                 </div>
               </Link>

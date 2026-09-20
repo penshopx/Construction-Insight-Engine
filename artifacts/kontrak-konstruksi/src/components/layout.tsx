@@ -129,10 +129,10 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="rounded-lg border border-red-900/30 bg-red-950/20 p-3 mb-4">
             <div className="mb-2 flex items-center gap-2 text-red-400">
               <Zap size={14} className="animate-pulse" />
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] font-bold">Indikator Risiko Demo</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.1em] font-bold">Validasi Risiko Tertunda</span>
             </div>
-            <p className="font-mono text-[18px] font-bold text-red-400">Rp 127.4M</p>
-            <p className="text-[10px] text-red-400/60 mt-1">Data ilustratif, bukan penilaian risiko tervalidasi</p>
+            <p className="font-mono text-sm font-bold text-red-400">Skor dikunci</p>
+            <p className="text-[10px] text-red-400/60 mt-1">Menunggu uji kasus dan persetujuan ahli independen</p>
           </div>
           
           <div className="flex items-start gap-2 border-t border-sidebar-border pt-4">

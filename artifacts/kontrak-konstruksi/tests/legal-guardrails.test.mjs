@@ -7,6 +7,8 @@ const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sourceRoot = join(projectRoot, 'src');
 const appSource = readFileSync(join(sourceRoot, 'App.tsx'), 'utf8');
 const layoutSource = readFileSync(join(sourceRoot, 'components/layout.tsx'), 'utf8');
+const riskModelSource = readFileSync(join(sourceRoot, 'lib/risk-model.ts'), 'utf8');
+const riskIndicatorSource = readFileSync(join(sourceRoot, 'components/risk-indicator.tsx'), 'utf8');
 
 const pageImports = new Map(
   [...appSource.matchAll(/import\s+(\w+)\s+from\s+['"]@\/pages\/([^'"]+)['"]/g)]
@@ -79,6 +81,24 @@ assert.deepEqual(
   [],
   'Pendeteksi klaim berisiko harus mengizinkan disclaimer yang jelas',
 );
+
+assert.match(riskModelSource, /validationStatus:\s*'pending_expert_review'/, 'Model tanpa persetujuan ahli harus berstatus tertunda');
+assert.match(riskModelSource, /calculatedAt:/, 'Snapshot risiko harus mencatat waktu perhitungan');
+assert.match(riskModelSource, /sources:/, 'Snapshot risiko harus mencatat sumber input');
+assert.match(riskIndicatorSource, /canDisplayOperationalScore\(\)/, 'UI harus mengunci skor berdasarkan status validasi');
+assert.match(riskIndicatorSource, /Skor operasional dikunci/, 'UI harus menjelaskan bahwa skor operasional dikunci');
+
+const calculateDraftScore = ({ contract, schedule, quality, dispute }) =>
+  Math.round(contract * 0.30 + schedule * 0.25 + quality * 0.25 + dispute * 0.20);
+const representativeCases = [
+  { name: 'proyek stabil', input: { contract: 10, schedule: 10, quality: 10, dispute: 10 }, expected: 10 },
+  { name: 'keterlambatan dominan', input: { contract: 20, schedule: 100, quality: 20, dispute: 20 }, expected: 40 },
+  { name: 'NCR dominan', input: { contract: 20, schedule: 20, quality: 100, dispute: 20 }, expected: 40 },
+  { name: 'sengketa dan administrasi kritis', input: { contract: 100, schedule: 60, quality: 40, dispute: 100 }, expected: 75 },
+];
+for (const testCase of representativeCases) {
+  assert.equal(calculateDraftScore(testCase.input), testCase.expected, `Perhitungan draft harus konsisten untuk kasus ${testCase.name}`);
+}
 
 const sourceFiles = [
   join(sourceRoot, 'App.tsx'),

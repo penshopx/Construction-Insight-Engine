@@ -1,6 +1,7 @@
 import { PageHeader, Shell } from '@/components/layout';
-import { BarChart3, AlertCircle, Shield, FileText, CheckCircle, ChevronRight, Hash } from 'lucide-react';
+import { BarChart3, AlertCircle, Shield, FileText, ChevronRight, Hash } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RiskIndicator, RiskValidationNotice } from '@/components/risk-indicator';
 
 const projects = [
   { 
@@ -9,9 +10,7 @@ const projects = [
     owner: 'PT Mega Properti',
     contractValue: 'Rp 80.000.000.000', 
     progress: 42, 
-    risk: 82, 
     topIssue: 'Sengketa Fasad & EOT',
-    status: 'critical'
   },
   { 
     id: 'PRJ-02', 
@@ -19,9 +18,7 @@ const projects = [
     owner: 'Kementerian PUPR',
     contractValue: 'Rp 145.000.000.000', 
     progress: 68, 
-    risk: 91, 
     topIssue: 'Somasi 3 (Keterlambatan)',
-    status: 'critical'
   },
   { 
     id: 'PRJ-03', 
@@ -29,9 +26,7 @@ const projects = [
     owner: 'PT Jasa Marga',
     contractValue: 'Rp 320.000.000.000', 
     progress: 15, 
-    risk: 58, 
     topIssue: 'Pending EOT (Lahan)',
-    status: 'warning'
   },
   { 
     id: 'PRJ-04', 
@@ -39,9 +34,7 @@ const projects = [
     owner: 'PT Sinarmas Land',
     contractValue: 'Rp 45.000.000.000', 
     progress: 88, 
-    risk: 45, 
     topIssue: '3 Laporan Kegagalan',
-    status: 'warning'
   },
   { 
     id: 'PRJ-05', 
@@ -49,9 +42,7 @@ const projects = [
     owner: 'PT Pakuwon',
     contractValue: 'Rp 210.000.000.000', 
     progress: 100, 
-    risk: 23, 
     topIssue: 'Masa Pemeliharaan (DLP)',
-    status: 'safe'
   }
 ];
 
@@ -63,6 +54,7 @@ export default function Proyek() {
         title="Portfolio Proyek" 
         description="Contoh pemantauan nilai kontrak, progres, dan indikator prioritas internal. Seluruh angka di halaman ini adalah data ilustratif."
       />
+      <div className="mb-6"><RiskValidationNotice /></div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         {[
@@ -116,15 +108,7 @@ export default function Proyek() {
                     </div>
                   </td>
                   <td className="px-5 py-4">
-                    <span className={cn(
-                      "inline-flex items-center gap-1.5 px-2 py-1 rounded font-mono text-[10px] font-bold border",
-                      p.status === 'critical' ? 'bg-red-500/10 text-red-400 border-red-500/20' : 
-                      p.status === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                    )}>
-                      {p.status === 'critical' ? <AlertCircle size={10} /> : p.status === 'warning' ? <Shield size={10} /> : <CheckCircle size={10} />}
-                      Skor ilustratif {p.risk}
-                    </span>
+                    <RiskIndicator projectId={p.id} />
                   </td>
                   <td className="px-5 py-4">
                     <p className="text-xs text-slate-400 max-w-[200px] truncate">{p.topIssue}</p>
@@ -139,7 +123,7 @@ export default function Proyek() {
         </div>
       </div>
       <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-        Skor dan kategori di atas belum berasal dari model risiko yang tervalidasi. Nilai tersebut bukan probabilitas sengketa, estimasi kerugian, atau penilaian hukum.
+        Model draft hanya mendukung pengujian internal. Nilai numerik tidak ditampilkan sebelum validasi ahli tersedia dan bukan probabilitas sengketa, estimasi kerugian, atau penilaian hukum.
       </p>
     </Shell>
   );
