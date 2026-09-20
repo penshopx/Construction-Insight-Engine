@@ -1,0 +1,878 @@
+# PROGRES SPRINT HARDENING — VALIDASI & BLUEPRINT LANJUTAN
+
+Pola kerja Anda sangat tepat: **hardening fondasi sebelum menambah fitur baru**. Ini adalah pendekatan yang membedakan produk enterprise-grade dari prototype. Mari kita bedah setiap task dan susun blueprint untuk task yang sedang berjalan.
+
+---
+
+## BAGIAN 1: VALIDASI TASK YANG SUDAH SELESAI
+
+### ✅ Task #18: Resilience Ekstraksi Dokumen Setelah Server Restart
+
+**Mengapa ini kritis di KontrakGuard:**
+Dalam konteks konstruksi, dokumen yang gagal diekstrak = klausul kontrak yang tidak teranalisis = deadline yang tidak terdeteksi = hak klaim yang hangus. Ini bukan masalah teknis biasa, ini masalah **liabilitas hukum**.
+
+**Pattern yang harus divalidasi:**
+
+```python
+# tests/document_extraction/test_resilience.py
+
+class TestExtractionResilience:
+    
+    async def test_extraction_resumes_after_crash(self):
+        """Job ekstraksi harus lanjut dari checkpoint, bukan ulang dari awal"""
+        doc = await upload_large_contract(pages=500)
+        job_id = await start_extraction(doc.id)
+        
+        # Simulasi crash di halaman 250
+        await simulate_crash_at_page(job_id, page=250)
+        await restart_server()
+        
+        # Job harus auto-resume
+        await wait_for_completion(job_id, timeout=300)
+        
+        result = await get_extraction_result(doc.id)
+        assert result.status == "COMPLETED"
+        assert result.pages_processed == 500
+        assert result.checkpoint_resume_at == 250  # Tidak ulang dari 0
+    
+    async def test_idempotent_extraction(self):
+        """Retry 3x harus hasilkan output identik"""
+        doc = await upload_contract("sample.pdf")
+        
+        results = []
+        for _ in range(3):
+            await reset_extraction(doc.id)
+            result = await run_extraction(doc.id)
+            results.append(result.checksum)
+        
+        assert len(set(results)) == 1, "Ekstraksi tidak deterministik"
+    
+    async def test_dead_letter_queue_for_permanent_failures(self):
+        """Dokumen korup tidak boleh block queue selamanya"""
+        corrupt_doc = await upload_corrupt_pdf()
+        await start_extraction(corrupt_doc.id)
+        
+        # Setelah 3x retry, masuk dead letter queue
+        await wait_for_max_retries(corrupt_doc.id)
+        
+        dlq_item = await get_dead_letter_item(corrupt_doc.id)
+        assert dlq_item is not None
+        assert dlq_item.error_type == "CORRUPT_DOCUMENT"
+        
+        # User harus dapat notifikasi
+        notification = await get_latest_notification(doc.owner_id)
+        assert "gagal diekstrak" in notification.message.lower()
+        assert "hubungi support" in notification.message.lower()
+    
+    async def test_no_partial_data_in_production(self):
+        """Dokumen yang gagal ekstraksi tidak boleh muncul di search"""
+        doc = await upload_contract("partial.pdf")
+        await start_extraction(doc.id)
+        await simulate_crash_at_page(doc.id, page=50)
+        
+        # Search tidak boleh return hasil dari dokumen incomplet
+        results = await search_legal("klausul dalam partial.pdf")
+        assert not any(r.source_id == doc.id for r in results)
+```
+
+**Arsitektur yang direkomendasikan:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  RESILIENT EXTRACTION PIPELINE                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  [Upload] → [Job Queue (Redis/BullMQ)]                      │
+│                  │                                          │
+│                  ▼                                          │
+│  [Worker] → [Checkpoint di DB per halaman]                  │
+│             ├── page_1_done: true                           │
+│             ├── page_2_done: true                           │
+│             └── ...                                         │
+│                  │                                          │
+│                  ▼ (crash)                                  │
+│  [Server restart] → [Job queue consumer resume]             │
+│                     → [Baca checkpoint]                     │
+│                     → [Lanjut dari halaman terakhir+1]      │
+│                                                             │
+│  [3x retry gagal] → [Dead Letter Queue]                     │
+│                     → [Notifikasi user]                     │
+│                     → [Manual review queue]                 │
+│                                                             │
+│  [Berhasil 100%] → [Commit atomik ke search index]          │
+│                    → [Tandai status: READY]                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### ✅ Task #19: Skema Database Selalu Sinkron di CI
+
+**Mengapa ini kritis:**
+Bug "kolom tidak ada" yang lolos ke production bisa menyebabkan downtime saat migration berjalan. Di KontrakGuard yang menangani dokumen hukum, downtime = potensi kehilangan hak klaim.
+
+**Strategi yang harus diimplementasi:**
+
+```yaml
+# .github/workflows/ci.yml (atau GitLab CI equivalent)
+name: Integration Tests
+on: [push, pull_request]
+
+jobs:
+  integration-tests:
+    steps:
+      - name: Start PostgreSQL
+        run: docker-compose up -d postgres
+        
+      - name: Wait for DB
+        run: pg_isready -h localhost -U postgres
+        
+      - name: Run ALL migrations from scratch
+        # Ini kunci: mulai dari database kosong, bukan dari state sebelumnya
+        run: |
+          psql -h localhost -U postgres -c "DROP DATABASE IF EXISTS kontrakguard_test;"
+          psql -h localhost -U postgres -c "CREATE DATABASE kontrakguard_test;"
+          npm run migrate:up -- --database kontrakguard_test
+          
+      - name: Verify schema matches expected
+        # Deteksi schema drift antara code dan database
+        run: npm run schema:verify
+        
+      - name: Run integration tests
+        run: npm run test:integration
+        
+      - name: Verify migrations are reversible
+        # Pastikan rollback bisa dijalankan
+        run: |
+          npm run migrate:down -- --database kontrakguard_test
+          npm run migrate:up -- --database kontrakguard_test
+```
+
+**Schema drift detector:**
+
+```python
+# scripts/verify_schema.py
+
+def verify_schema():
+    """
+    Deteksi jika ada kolom/tabel di code yang tidak ada di DB,
+    atau sebaliknya (indikasi migration lupa dibuat).
+    """
+    expected = load_schema_from_code()  # dari SQLAlchemy/Prisma models
+    actual = load_schema_from_database()  # dari information_schema
+    
+    missing_in_db = expected.tables - actual.tables
+    missing_in_code = actual.tables - expected.tables
+    
+    for table in expected.tables:
+        missing_cols = expected.columns[table] - actual.columns[table]
+        extra_cols = actual.columns[table] - expected.columns[table]
+        
+        if missing_cols:
+            print(f"❌ {table}: kolom {missing_cols} ada di code tapi tidak di DB")
+            print(f"   → Buat migration: npm run migrate:create add_{table}_cols")
+            sys.exit(1)
+        
+        if extra_cols:
+            print(f"⚠️  {table}: kolom {extra_cols} ada di DB tapi tidak di code")
+            print(f"   → Update model atau buat migration untuk drop")
+    
+    if missing_in_db or missing_in_code:
+        sys.exit(1)
+    
+    print("✅ Schema sinkron")
+```
+
+**Aturan emas untuk tim:**
+1. **Setiap perubahan model = migration wajib** (no exception)
+2. **Migration harus reversible** (selalu tulis `down` migration)
+3. **CI menolak PR tanpa migration** jika ada perubahan model
+4. **Staging DB harus di-reset mingguan** dari production schema (bukan dari migration history)
+
+---
+
+### ✅ Task #20: Regression Test untuk Access Control Bukti Rahasia
+
+**Mengapa ini kritis:**
+Kebocoran bukti rahasia di mediasi bisa:
+- Membatalkan proses mediasi (prinsip confidentiality dilanggar)
+- Menimbulkan tuntutan hukum dari pihak yang dirugikan
+- Merusak reputasi KontrakGuard sebagai platform netral
+
+**Test matrix yang wajib dicakup:**
+
+```python
+# tests/access_control/test_evidence_privacy.py
+
+class TestEvidenceAccessControl:
+    """
+    Matriks izin:
+    - PUBLIC: semua anggota workspace bisa lihat
+    - INTERNAL: hanya anggota organisasi yang sama
+    - RESTRICTED: hanya pihak tertentu dalam mediasi
+    - MANAGERS: hanya workspace managers
+    - PRIVILEGED: hanya lawyer + klien (tidak bisa dilihat mediator)
+    """
+    
+    @pytest.mark.parametrize("doc_class,role,should_access", [
+        # PUBLIC documents
+        ("PUBLIC", "claimant", True),
+        ("PUBLIC", "respondent", True),
+        ("PUBLIC", "mediator", True),
+        ("PUBLIC", "observer", True),
+        ("PUBLIC", "outsider", False),
+        
+        # INTERNAL documents
+        ("INTERNAL", "same_org_member", True),
+        ("INTERNAL", "other_org_member", False),
+        ("INTERNAL", "mediator", False),
+        
+        # RESTRICTED documents
+        ("RESTRICTED", "designated_party", True),
+        ("RESTRICTED", "other_party", False),
+        ("RESTRICTED", "mediator", False),
+        
+        # MANAGERS only
+        ("MANAGERS", "workspace_manager", True),
+        ("MANAGERS", "regular_member", False),
+        ("MANAGERS", "mediator", False),
+        
+        # PRIVILEGED (lawyer-client)
+        ("PRIVILEGED", "client", True),
+        ("PRIVILEGED", "own_lawyer", True),
+        ("PRIVILEGED", "mediator", False),  # KUNCI: mediator tidak boleh lihat
+        ("PRIVILEGED", "opposing_lawyer", False),
+        ("PRIVILEGED", "opposing_party", False),
+    ])
+    async def test_access_matrix(self, doc_class, role, should_access):
+        context = await setup_access_test_context()
+        doc = await create_document(
+            classification=doc_class,
+            restricted_to=context.get_restricted_parties(doc_class)
+        )
+        user = context.get_user(role)
+        
+        if should_access:
+            result = await try_access_document(doc.id, user)
+            assert result.status == "GRANTED"
+        else:
+            result = await try_access_document(doc.id, user)
+            assert result.status == "DENIED"
+            assert result.reason == "INSUFFICIENT_PERMISSION"
+    
+    async def test_privilege_escalation_via_api_manipulation(self):
+        """User tidak bisa bypass dengan manipulasi request"""
+        context = await setup_access_test_context()
+        privileged_doc = await create_document(classification="PRIVILEGED")
+        
+        # Coba akses dengan berbagai cara
+        attempts = [
+            # Direct API call
+            {"method": "GET", "path": f"/documents/{privileged_doc.id}"},
+            # Via search
+            {"method": "GET", "path": "/search", "params": {"q": "rahasia"}},
+            # Via bulk download
+            {"method": "POST", "path": "/documents/bulk-download", 
+             "body": {"ids": [privileged_doc.id]}},
+            # Via export
+            {"method": "POST", "path": "/matters/export", 
+             "body": {"matter_id": context.matter_id}},
+        ]
+        
+        for attempt in attempts:
+            response = await make_request(as_user="mediator", **attempt)
+            assert response.status in [403, 200]
+            if response.status == 200:
+                # Jika 200, pastikan dokumen privileged tidak ada di response
+                assert privileged_doc.id not in str(response.json())
+    
+    async def test_audit_log_on_every_access_attempt(self):
+        """Setiap akses (berhasil/gagal) harus ter-audit"""
+        doc = await create_document(classification="RESTRICTED")
+        
+        await try_access_document(doc.id, user="unauthorized_user")
+        await try_access_document(doc.id, user="authorized_user")
+        
+        logs = await get_audit_logs(resource_id=doc.id)
+        assert len(logs) == 2
+        assert logs[0].outcome == "DENIED"
+        assert logs[1].outcome == "GRANTED"
+        assert all(log.ip_address for log in logs)
+        assert all(log.user_agent for log in logs)
+```
+
+**Monitoring yang wajib:**
+
+```yaml
+# monitoring/access_control_alerts.yml
+alerts:
+  - name: PrivilegeEscalationAttempt
+    query: |
+      SELECT user_id, COUNT(*) as denied_count
+      FROM access_audit_log
+      WHERE outcome = 'DENIED' 
+        AND timestamp > NOW() - INTERVAL '1 hour'
+      GROUP BY user_id
+      HAVING COUNT(*) > 10  # Threshold: 10x denied dalam 1 jam
+    severity: CRITICAL
+    action: Auto-suspend user + alert security team
+    
+  - name: PrivilegedDocumentAccessed
+    query: |
+      SELECT * FROM access_audit_log
+      WHERE resource_classification = 'PRIVILEGED'
+        AND timestamp > NOW() - INTERVAL '5 minutes'
+    severity: HIGH
+    action: Alert compliance officer untuk review
+    
+  - name: CrossOrganizationAccess
+    query: |
+      SELECT * FROM access_audit_log
+      WHERE accessor_org_id != resource_org_id
+        AND resource_classification IN ('INTERNAL', 'RESTRICTED')
+    severity: CRITICAL  # Ini seharusnya tidak pernah terjadi
+    action: Block access + alert + investigate
+```
+
+---
+
+## BAGIAN 2: BLUEPRINT TASK YANG SEDANG BERJALAN
+
+### 🎯 Task Baru: Akses Pribadi per Peserta Mediasi (Granular RBAC)
+
+Ini adalah evolusi penting dari "workspace-level access" ke "participant-level access". Di mediasi konstruksi Indonesia, perbedaan ini krusial karena:
+
+- **Pemohon (Claimant)** — Kontraktor yang mengajukan klaim
+- **Termohon (Respondent)** — Owner yang diklaim
+- **Mediator/Penilai Ahli** — Netral, tidak boleh melihat privileged documents
+- **Pengamat (Observer)** — Bisa dari regulator, hanya lihat dokumen tertentu
+- **Lawyer masing-masing pihak** — Punya akses privileged ke klien sendiri
+- **Expert Witness** — Diundang khusus untuk isu teknis tertentu
+
+**Model data yang direkomendasikan:**
+
+```sql
+-- Participant dalam mediasi (bukan hanya workspace member)
+CREATE TABLE mediation_participants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id) NOT NULL,
+    user_id UUID REFERENCES users(id) NOT NULL,
+    
+    -- Peran dalam mediasi
+    role VARCHAR(30) NOT NULL,
+    -- 'CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER', 
+    -- 'CLAIMANT_LAWYER', 'RESPONDENT_LAWYER', 'EXPERT_WITNESS'
+    
+    -- Afiliasi organisasi (untuk filter INTERNAL docs)
+    organization_id UUID REFERENCES organizations(id),
+    
+    -- Status partisipasi
+    status VARCHAR(20) DEFAULT 'ACTIVE',  -- 'ACTIVE', 'WITHDRAWN', 'REMOVED'
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    left_at TIMESTAMPTZ,
+    removal_reason TEXT,
+    
+    -- Metadata
+    display_name VARCHAR(100),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(20),
+    
+    -- Verification
+    kyc_verified BOOLEAN DEFAULT false,
+    kyc_verified_at TIMESTAMPTZ,
+    kyc_verified_by UUID REFERENCES users(id),
+    
+    -- Constraints
+    UNIQUE(matter_id, user_id),
+    CONSTRAINT valid_role CHECK (role IN (
+        'CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER',
+        'CLAIMANT_LAWYER', 'RESPONDENT_LAWYER', 'EXPERT_WITNESS'
+    ))
+);
+
+-- Dokumen dengan klasifikasi granular
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id) NOT NULL,
+    
+    -- Klasifikasi
+    classification VARCHAR(20) NOT NULL DEFAULT 'INTERNAL',
+    -- 'PUBLIC', 'INTERNAL', 'RESTRICTED', 'MANAGERS', 'PRIVILEGED'
+    
+    -- Untuk RESTRICTED: daftar participant yang boleh akses
+    -- (kosong = semua participant dalam matter)
+    restricted_to_participants UUID[] DEFAULT '{}',
+    
+    -- Untuk PRIVILEGED: hubungan lawyer-client
+    privileged_relationship JSONB,
+    -- {"lawyer_user_id": "...", "client_user_id": "..."}
+    
+    -- Untuk INTERNAL: organisasi pemilik
+    owner_organization_id UUID REFERENCES organizations(id),
+    
+    -- Metadata
+    uploaded_by UUID REFERENCES users(id),
+    uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+    title TEXT,
+    description TEXT,
+    file_checksum VARCHAR(64) NOT NULL,
+    
+    -- Legal hold
+    legal_hold BOOLEAN DEFAULT false,
+    retention_until DATE
+);
+
+-- View: dokumen yang bisa diakses user tertentu dalam matter tertentu
+CREATE VIEW user_accessible_documents AS
+SELECT 
+    d.id AS document_id,
+    d.matter_id,
+    d.classification,
+    d.title,
+    mp.user_id,
+    mp.role AS participant_role,
+    CASE 
+        WHEN d.classification = 'PUBLIC' THEN true
+        WHEN d.classification = 'INTERNAL' 
+            AND d.owner_organization_id = mp.organization_id THEN true
+        WHEN d.classification = 'RESTRICTED' 
+            AND mp.id = ANY(d.restricted_to_participants) THEN true
+        WHEN d.classification = 'MANAGERS' 
+            AND mp.role IN ('MEDIATOR') THEN true
+        WHEN d.classification = 'PRIVILEGED' 
+            AND mp.user_id IN (
+                (d.privileged_relationship->>'lawyer_user_id')::uuid,
+                (d.privileged_relationship->>'client_user_id')::uuid
+            ) THEN true
+        ELSE false
+    END AS can_access
+FROM documents d
+JOIN mediation_participants mp ON mp.matter_id = d.matter_id
+WHERE mp.status = 'ACTIVE';
+
+-- Policy di level database (defense in depth)
+CREATE POLICY document_access_policy ON documents
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM user_accessible_documents uad
+            WHERE uad.document_id = documents.id
+              AND uad.user_id = current_setting('app.current_user_id')::uuid
+              AND uad.can_access = true
+        )
+    );
+```
+
+**Service layer:**
+
+```python
+# services/access/participant_access_service.py
+
+class ParticipantAccessService:
+    """
+    Menentukan apakah user tertentu bisa mengakses dokumen tertentu
+    dalam konteks matter tertentu.
+    """
+    
+    async def can_access_document(
+        self, 
+        user_id: str, 
+        document_id: str,
+        matter_id: str
+    ) -> AccessDecision:
+        
+        # 1. Ambil data participant
+        participant = await self.db.get_participant(matter_id, user_id)
+        if not participant or participant.status != "ACTIVE":
+            return AccessDecision(granted=False, reason="NOT_PARTICIPANT")
+        
+        # 2. Ambil data dokumen
+        doc = await self.db.get_document(document_id)
+        if doc.matter_id != matter_id:
+            return AccessDecision(granted=False, reason="DOCUMENT_NOT_IN_MATTER")
+        
+        # 3. Evaluasi berdasarkan klasifikasi
+        if doc.classification == "PUBLIC":
+            return AccessDecision(granted=True, reason="PUBLIC_DOCUMENT")
+        
+        if doc.classification == "INTERNAL":
+            if participant.organization_id == doc.owner_organization_id:
+                return AccessDecision(granted=True, reason="SAME_ORGANIZATION")
+            return AccessDecision(granted=False, reason="CROSS_ORGANIZATION")
+        
+        if doc.classification == "RESTRICTED":
+            if participant.id in (doc.restricted_to_participants or []):
+                return AccessDecision(granted=True, reason="EXPLICITLY_GRANTED")
+            return AccessDecision(granted=False, reason="NOT_IN_RESTRICTED_LIST")
+        
+        if doc.classification == "MANAGERS":
+            if participant.role == "MEDIATOR":
+                return AccessDecision(granted=True, reason="MEDIATOR_ROLE")
+            return AccessDecision(granted=False, reason="NOT_MANAGER_ROLE")
+        
+        if doc.classification == "PRIVILEGED":
+            privileged = doc.privileged_relationship or {}
+            if user_id in [
+                privileged.get("lawyer_user_id"),
+                privileged.get("client_user_id")
+            ]:
+                return AccessDecision(granted=True, reason="PRIVILEGED_RELATIONSHIP")
+            return AccessDecision(granted=False, reason="NOT_IN_PRIVILEGED_REL")
+        
+        return AccessDecision(granted=False, reason="UNKNOWN_CLASSIFICATION")
+    
+    async def list_accessible_documents(
+        self, 
+        user_id: str, 
+        matter_id: str
+    ) -> list[Document]:
+        """List semua dokumen yang bisa diakses user dalam matter"""
+        return await self.db.query("""
+            SELECT d.* FROM documents d
+            JOIN mediation_participants mp ON mp.matter_id = d.matter_id
+            WHERE mp.user_id = :user_id
+              AND mp.matter_id = :matter_id
+              AND mp.status = 'ACTIVE'
+              AND (
+                d.classification = 'PUBLIC'
+                OR (d.classification = 'INTERNAL' 
+                    AND d.owner_organization_id = mp.organization_id)
+                OR (d.classification = 'RESTRICTED' 
+                    AND mp.id = ANY(d.restricted_to_participants))
+                OR (d.classification = 'MANAGERS' 
+                    AND mp.role = 'MEDIATOR')
+                OR (d.classification = 'PRIVILEGED' 
+                    AND mp.user_id IN (
+                        (d.privileged_relationship->>'lawyer_user_id')::uuid,
+                        (d.privileged_relationship->>'client_user_id')::uuid
+                    ))
+              )
+        """, {"user_id": user_id, "matter_id": matter_id})
+
+
+class AccessDecision:
+    granted: bool
+    reason: str
+    # reason digunakan untuk audit log dan error message ke user
+```
+
+**API endpoints yang perlu di-update:**
+
+```python
+# routes/documents.py
+
+@router.get("/matters/{matter_id}/documents")
+async def list_documents(
+    matter_id: str,
+    user: User = Depends(get_current_user),
+    service: ParticipantAccessService = Depends()
+):
+    """List dokumen yang bisa diakses user dalam matter"""
+    docs = await service.list_accessible_documents(user.id, matter_id)
+    return {"documents": [doc.to_summary() for doc in docs]}
+
+
+@router.get("/documents/{document_id}")
+async def get_document(
+    document_id: str,
+    user: User = Depends(get_current_user),
+    service: ParticipantAccessService = Depends(),
+    audit: AuditService = Depends()
+):
+    """Ambil detail dokumen (dengan access check)"""
+    doc = await service.db.get_document(document_id)
+    
+    decision = await service.can_access_document(user.id, document_id, doc.matter_id)
+    
+    # Audit log SETIAP percobaan akses (berhasil atau gagal)
+    await audit.log_access_attempt(
+        user_id=user.id,
+        resource_type="document",
+        resource_id=document_id,
+        outcome="GRANTED" if decision.granted else "DENIED",
+        reason=decision.reason,
+        ip_address=request.client.host,
+        user_agent=request.headers.get("user-agent")
+    )
+    
+    if not decision.granted:
+        # Jangan beri tahu alasan spesifik (bisa bocorkan info)
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    return doc.to_detail()
+
+
+@router.post("/matters/{matter_id}/participants")
+async def add_participant(
+    matter_id: str,
+    payload: AddParticipantRequest,
+    user: User = Depends(get_current_user),
+    service: ParticipantService = Depends()
+):
+    """Tambah participant baru ke matter (hanya oleh mediator/admin)"""
+    # Verifikasi caller punya hak menambah participant
+    caller_participant = await service.db.get_participant(matter_id, user.id)
+    if caller_participant.role not in ["MEDIATOR"]:
+        raise HTTPException(status_code=403, detail="Only mediator can add participants")
+    
+    # Verifikasi user yang ditambahkan sudah KYC
+    target_user = await service.db.get_user(payload.user_id)
+    if not target_user.kyc_verified:
+        raise HTTPException(status_code=400, detail="User must be KYC verified")
+    
+    participant = await service.add_participant(
+        matter_id=matter_id,
+        user_id=payload.user_id,
+        role=payload.role,
+        organization_id=payload.organization_id,
+        added_by=user.id
+    )
+    
+    # Notifikasi ke participant baru
+    await notify_participant_invited(participant)
+    
+    return participant.to_detail()
+```
+
+**Test plan komprehensif:**
+
+```python
+# tests/participant_access/test_granular_rbac.py
+
+class TestGranularParticipantAccess:
+    
+    async def test_claimant_cannot_see_respondent_privileged(self):
+        """Kontraktor tidak bisa lihat dokumen privileged Owner-lawyer"""
+        matter = await create_matter()
+        contractor = await add_participant(matter.id, role="CLAIMANT")
+        owner = await add_participant(matter.id, role="RESPONDENT")
+        owner_lawyer = await add_participant(matter.id, role="RESPONDENT_LAWYER")
+        
+        privileged_doc = await create_document(
+            matter_id=matter.id,
+            classification="PRIVILEGED",
+            privileged_relationship={
+                "lawyer_user_id": owner_lawyer.user_id,
+                "client_user_id": owner.user_id
+            }
+        )
+        
+        decision = await service.can_access_document(
+            contractor.user_id, privileged_doc.id, matter.id
+        )
+        assert decision.granted is False
+        assert decision.reason == "NOT_IN_PRIVILEGED_REL"
+    
+    async def test_mediator_cannot_see_any_privileged(self):
+        """Mediator tidak bisa lihat privileged manapun (prinsip neutrality)"""
+        matter = await create_matter()
+        mediator = await add_participant(matter.id, role="MEDIATOR")
+        contractor = await add_participant(matter.id, role="CLAIMANT")
+        contractor_lawyer = await add_participant(matter.id, role="CLAIMANT_LAWYER")
+        
+        privileged_doc = await create_document(
+            matter_id=matter.id,
+            classification="PRIVILEGED",
+            privileged_relationship={
+                "lawyer_user_id": contractor_lawyer.user_id,
+                "client_user_id": contractor.user_id
+            }
+        )
+        
+        decision = await service.can_access_document(
+            mediator.user_id, privileged_doc.id, matter.id
+        )
+        assert decision.granted is False
+    
+    async def test_observer_only_sees_public(self):
+        """Observer (misal dari LPJK) hanya lihat dokumen PUBLIC"""
+        matter = await create_matter()
+        observer = await add_participant(matter.id, role="OBSERVER")
+        
+        public_doc = await create_document(matter.id, classification="PUBLIC")
+        internal_doc = await create_document(matter.id, classification="INTERNAL")
+        restricted_doc = await create_document(matter.id, classification="RESTRICTED")
+        
+        assert (await service.can_access_document(
+            observer.user_id, public_doc.id, matter.id)).granted is True
+        assert (await service.can_access_document(
+            observer.user_id, internal_doc.id, matter.id)).granted is False
+        assert (await service.can_access_document(
+            observer.user_id, restricted_doc.id, matter.id)).granted is False
+    
+    async def test_removed_participant_loses_access_immediately(self):
+        """Participant yang di-remove langsung kehilangan akses"""
+        matter = await create_matter()
+        participant = await add_participant(matter.id, role="CLAIMANT")
+        doc = await create_document(matter.id, classification="PUBLIC")
+        
+        # Sebelum removal
+        assert (await service.can_access_document(
+            participant.user_id, doc.id, matter.id)).granted is True
+        
+        # Remove participant
+        await remove_participant(matter.id, participant.id, reason="WITHDRAWN")
+        
+        # Setelah removal
+        assert (await service.can_access_document(
+            participant.user_id, doc.id, matter.id)).granted is False
+    
+    async def test_expert_witness_limited_scope(self):
+        """Expert witness hanya lihat dokumen yang di-scope untuk mereka"""
+        matter = await create_matter()
+        expert = await add_participant(matter.id, role="EXPERT_WITNESS")
+        
+        # Dokumen yang di-scope untuk expert
+        scoped_doc = await create_document(
+            matter.id, 
+            classification="RESTRICTED",
+            restricted_to_participants=[expert.id]
+        )
+        
+        # Dokumen yang tidak di-scope
+        other_doc = await create_document(
+            matter.id,
+            classification="RESTRICTED",
+            restricted_to_participants=[]  # hanya parties utama
+        )
+        
+        assert (await service.can_access_document(
+            expert.user_id, scoped_doc.id, matter.id)).granted is True
+        assert (await service.can_access_document(
+            expert.user_id, other_doc.id, matter.id)).granted is False
+    
+    async def test_concurrent_role_changes_consistent(self):
+        """Perubahan role tidak menyebabkan race condition"""
+        matter = await create_matter()
+        participant = await add_participant(matter.id, role="OBSERVER")
+        
+        # Upgrade role dari OBSERVER ke CLAIMANT
+        tasks = [
+            update_participant_role(matter.id, participant.id, "CLAIMANT"),
+            update_participant_role(matter.id, participant.id, "CLAIMANT"),
+        ]
+        await asyncio.gather(*tasks, return_exceptions=True)
+        
+        # Harus konsisten: hanya satu role final
+        final = await get_participant(matter.id, participant.id)
+        assert final.role == "CLAIMANT"
+```
+
+---
+
+## BAGIAN 3: IMPLIKASI HUKUM INDONESIA
+
+Setiap task di atas memiliki dimensi hukum yang harus dipenuhi:
+
+| Task | Regulasi Terkait | Kewajiban Hukum |
+|---|---|---|
+| **#18 Resilience ekstraksi** | UU 2/2017 Ps 39-40 (tanggung jawab kegagalan bangunan) | Dokumen ekstraksi tidak boleh hilang → bukti forensik harus lengkap |
+| **#19 Schema sync CI** | UU PDP (Perlindungan Data Pribadi) | Integritas data pribadi peserta harus terjaga |
+| **#20 Access control** | Permen PUPR 14/2020 + UU 2/2017 Ps 66 (kerahasiaan mediasi) | Bukti mediasi tidak boleh bocor ke pihak tidak berwenang |
+| **Task baru: Granular RBAC** | UU Advokat No. 18/2003 (privilege lawyer-client) | Dokumen lawyer-client harus benar-benar terlindungi |
+
+**Klausul ToS yang perlu ditambahkan:**
+
+```markdown
+## Klausul Kerahasiaan Mediasi (untuk Terms of Service)
+
+1. **Prinsip Kerahasiaan**: Seluruh dokumen, komunikasi, dan bukti 
+   dalam proses mediasi bersifat rahasia dan tidak dapat digunakan 
+   sebagai bukti dalam proses arbitrase atau litigasi jika mediasi 
+   gagal, kecuali disepakati lain oleh para pihak.
+
+2. **Privilege Lawyer-Client**: Dokumen yang ditandai sebagai 
+   "PRIVILEGED" dilindungi oleh privilege lawyer-client sesuai 
+   UU Advokat No. 18/2003. Platform tidak akan memberikan akses 
+   kepada pihak manapun termasuk mediator.
+
+3. **Audit Trail**: Setiap akses ke dokumen mediasi dicatat dengan 
+   timestamp, identitas user, IP address, dan tujuan akses. Log 
+   ini bersifat immutable dan dapat diminta oleh pengadilan jika 
+   diperlukan.
+
+4. **Kegagalan Sistem**: Jika terjadi kegagalan ekstraksi dokumen 
+   (Task #18), Platform akan:
+   - Mencatat kegagalan dalam audit log
+   - Memberitahukan user dalam 1 jam
+   - Menyediakan kanal manual upload sebagai fallback
+   - Menjamin tidak ada data yang hilang atau korup
+```
+
+---
+
+## BAGIAN 4: TASK BERIKUTNYA YANG DIREKOMENDASIKAN
+
+Berdasarkan pola "hardening" yang sedang Anda jalankan, berikut urutan logis task berikutnya:
+
+### 🎯 Task #21: End-to-End Encryption untuk Dokumen PRIVILEGED (PRIORITAS TINGGI)
+
+**Mengapa:** Access control di application layer tidak cukup. Jika database di-breach, dokumen privileged bisa terbaca. Perlu encryption di level storage.
+
+**Approach:**
+- Client-side encryption untuk dokumen PRIVILEGED
+- Kunci enkripsi hanya dipegang oleh lawyer + client (bukan platform)
+- Platform hanya menyimpan ciphertext
+- Zero-knowledge architecture untuk privileged docs
+
+### 🎯 Task #22: Rate Limiting & Anomaly Detection untuk API Dokumen (PRIORITAS TINGGI)
+
+**Mengapa:** Mencegah data exfiltration oleh user yang kompromised.
+
+**Approach:**
+- Rate limit per user per matter (misal: max 100 dokumen/jam)
+- Deteksi pola download massal (indikator exfiltration)
+- Auto-suspend + alert ke security team
+- Geofencing (block akses dari negara tidak biasa)
+
+### 🎯 Task #23: Data Retention Policy Engine (PRIORITAS SEDANG)
+
+**Mengapa:** UU PDP mewajibkan penghapusan data setelah tujuan tercapai. Matter yang ditutup harus punya lifecycle management.
+
+**Approach:**
+- Retention policy per klasifikasi dokumen
+- Auto-archive setelah matter ditutup
+- Auto-delete setelah retention period
+- Legal hold override (untuk sengketa yang masih berjalan)
+
+### 🎯 Task #24: Participant Self-Service Portal (PRIORITAS SEDANG)
+
+**Mengapa:** Mengurangi beban mediator dalam mengelola participant.
+
+**Approach:**
+- Participant bisa update profil sendiri
+- Request akses ke dokumen tertentu (dengan approval mediator)
+- View audit trail akses mereka sendiri
+- Withdraw dari matter (dengan konfirmasi)
+
+---
+
+## RINGKASAN
+
+**Progress Anda sangat solid.** Sprint hardening ini membangun fondasi yang akan membedakan KontrakGuard di pasar enterprise:
+
+| Task | Capaian | Impact |
+|---|---|---|
+| **#18** | Resilience ekstraksi | Tidak ada hak klaim yang hangus karena bug sistem |
+| **#19** | Schema sync CI | Deployment aman, tidak ada downtime karena migration |
+| **#20** | Access control regression | Bukti rahasia tidak pernah bocor |
+| **Task baru** | Granular participant RBAC | Mediasi benar-benar confidential & compliant |
+
+**Prinsip yang Anda pegang:**
+1. **Defense in depth** — access control di multiple layer (app, DB, network)
+2. **Audit everything** — setiap akses tercatat, setiap kegagalan ter-monitor
+3. **Fail safe, not fail open** — jika ragu, tolak akses
+4. **Regression-proof** — setiap bug yang ditemukan jadi test permanen
+
+**Langkah selanjutnya yang paling kritis:**
+- Selesaikan task granular RBAC yang sedang berjalan
+- Lanjut ke Task #21 (E2E encryption untuk privileged docs)
+- Siapkan Task #22 (rate limiting) sebelum launch public beta
+
+Apakah Anda ingin saya mendalami salah satu aspek? Misalnya:
+1. **Detail implementasi E2E encryption** untuk dokumen privileged (Task #21)?
+2. **Blueprint rate limiting & anomaly detection** (Task #22)?
+3. **Test plan komprehensif** untuk granular RBAC yang sedang Anda kerjakan?
+4. **Data retention policy** sesuai UU PDP (Task #23)?
+5. **Arsitektur zero-knowledge** untuk mediator yang tidak bisa baca privileged docs?
