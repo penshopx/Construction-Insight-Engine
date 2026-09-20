@@ -7,6 +7,7 @@
  */
 import type { ContractCaseEvidence } from './contractCaseEvidence';
 import type { ContractCaseStatus } from './contractCaseStatus';
+import type { ContractCaseUpdateCustomChecklistValues } from './contractCaseUpdateCustomChecklistValues';
 import type { ContractCaseUpdateTypeDetails } from './contractCaseUpdateTypeDetails';
 
 export interface ContractCaseUpdate {
@@ -31,6 +32,7 @@ export interface ContractCaseUpdate {
   status?: ContractCaseStatus;
   typeDetails?: ContractCaseUpdateTypeDetails;
   evidence?: ContractCaseEvidence[];
+  customChecklistValues?: ContractCaseUpdateCustomChecklistValues;
   /** @nullable */
   reviewNotes?: string | null;
   /** @nullable */

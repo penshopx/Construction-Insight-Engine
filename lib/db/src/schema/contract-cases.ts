@@ -20,12 +20,26 @@ export const contractCasesTable = pgTable("contract_cases", {
   owner: text("owner"),
   typeDetails: jsonb("type_details").$type<Record<string, string>>().notNull().default({}),
   evidence: jsonb("evidence").$type<Array<{ name: string; note?: string }>>().notNull().default([]),
+  customChecklistValues: jsonb("custom_checklist_values").$type<Record<string, string>>().notNull().default({}),
   reviewNotes: text("review_notes"),
   decisionOutcome: text("decision_outcome"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [
   index("contract_cases_organization_id_idx").on(table.organizationId),
+]);
+
+export const contractCaseChecklistRequirementsTable = pgTable("contract_case_checklist_requirements", {
+  id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull(),
+  caseType: text("case_type").notNull(),
+  stage: integer("stage").notNull(),
+  label: text("label").notNull(),
+  instructions: text("instructions").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("contract_case_checklist_requirements_org_idx").on(table.organizationId),
+  index("contract_case_checklist_requirements_lookup_idx").on(table.organizationId, table.caseType, table.stage),
 ]);
 
 export const contractCaseActivitiesTable = pgTable("contract_case_activities", {
@@ -49,3 +63,4 @@ export const insertContractCaseSchema = createInsertSchema(contractCasesTable).o
 });
 export type InsertContractCase = z.infer<typeof insertContractCaseSchema>;
 export type ContractCase = typeof contractCasesTable.$inferSelect;
+export type ContractCaseChecklistRequirement = typeof contractCaseChecklistRequirementsTable.$inferSelect;

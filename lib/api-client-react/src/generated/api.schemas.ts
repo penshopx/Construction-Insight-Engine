@@ -9,10 +9,20 @@ export interface HealthStatus {
   status: string;
 }
 
+export type ContractCaseChecklistItemSource = typeof ContractCaseChecklistItemSource[keyof typeof ContractCaseChecklistItemSource];
+
+
+export const ContractCaseChecklistItemSource = {
+  default: 'default',
+  organization: 'organization',
+} as const;
+
 export interface ContractCaseChecklistItem {
   key: string;
   label: string;
   target: string;
+  source: ContractCaseChecklistItemSource;
+  instructions?: string;
 }
 
 export interface Error {
@@ -240,6 +250,8 @@ export interface ContractCaseStageChecklist {
 
 export type ContractCaseTypeDetails = {[key: string]: string};
 
+export type ContractCaseCustomChecklistValues = {[key: string]: string};
+
 export interface ContractCase {
   id: number;
   reference: string;
@@ -261,6 +273,7 @@ export interface ContractCase {
   owner?: string | null;
   typeDetails: ContractCaseTypeDetails;
   evidence: ContractCaseEvidence[];
+  customChecklistValues: ContractCaseCustomChecklistValues;
   /** @nullable */
   reviewNotes?: string | null;
   /** @nullable */
@@ -271,6 +284,8 @@ export interface ContractCase {
 }
 
 export type ContractCaseInputTypeDetails = {[key: string]: string};
+
+export type ContractCaseInputCustomChecklistValues = {[key: string]: string};
 
 export interface ContractCaseInput {
   type: ContractCaseType;
@@ -288,9 +303,12 @@ export interface ContractCaseInput {
   owner?: string;
   typeDetails: ContractCaseInputTypeDetails;
   evidence?: ContractCaseEvidence[];
+  customChecklistValues?: ContractCaseInputCustomChecklistValues;
 }
 
 export type ContractCaseUpdateTypeDetails = {[key: string]: string};
+
+export type ContractCaseUpdateCustomChecklistValues = {[key: string]: string};
 
 export interface ContractCaseUpdate {
   /** @minLength 2 */
@@ -314,11 +332,44 @@ export interface ContractCaseUpdate {
   status?: ContractCaseStatus;
   typeDetails?: ContractCaseUpdateTypeDetails;
   evidence?: ContractCaseEvidence[];
+  customChecklistValues?: ContractCaseUpdateCustomChecklistValues;
   /** @nullable */
   reviewNotes?: string | null;
   /** @nullable */
   decisionOutcome?: string | null;
   changeNote?: string;
+}
+
+export interface ContractCaseChecklistRequirement {
+  id: number;
+  caseType: ContractCaseType;
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  stage: number;
+  label: string;
+  instructions: string;
+  createdAt: string;
+}
+
+export interface ContractCaseChecklistRequirementInput {
+  caseType: ContractCaseType;
+  /**
+     * @minimum 1
+     * @maximum 4
+     */
+  stage: number;
+  /**
+     * @minLength 2
+     * @maxLength 160
+     */
+  label: string;
+  /**
+     * @minLength 2
+     * @maxLength 500
+     */
+  instructions: string;
 }
 
 export interface ContractCaseActivity {

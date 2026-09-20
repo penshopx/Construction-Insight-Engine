@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContractCaseEvidence } from './contractCaseEvidence';
+import type { ContractCaseInputCustomChecklistValues } from './contractCaseInputCustomChecklistValues';
 import type { ContractCaseInputTypeDetails } from './contractCaseInputTypeDetails';
 import type { ContractCaseType } from './contractCaseType';
 
@@ -25,4 +26,5 @@ export interface ContractCaseInput {
   owner?: string;
   typeDetails: ContractCaseInputTypeDetails;
   evidence?: ContractCaseEvidence[];
+  customChecklistValues?: ContractCaseInputCustomChecklistValues;
 }

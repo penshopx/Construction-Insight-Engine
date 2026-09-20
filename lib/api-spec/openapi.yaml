@@ -169,6 +169,51 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ContractCaseActivity"
+  /contract-case-checklist-requirements:
+    get:
+      operationId: listContractCaseChecklistRequirements
+      tags: [contract-cases]
+      summary: List organization checklist requirements
+      responses:
+        "200":
+          description: Organization checklist requirements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContractCaseChecklistRequirement"
+    post:
+      operationId: createContractCaseChecklistRequirement
+      tags: [contract-cases]
+      summary: Add an organization checklist requirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContractCaseChecklistRequirementInput"
+      responses:
+        "201":
+          description: Created organization checklist requirement
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractCaseChecklistRequirement"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /contract-case-checklist-requirements/{id}:
+    delete:
+      operationId: deleteContractCaseChecklistRequirement
+      tags: [contract-cases]
+      summary: Delete an organization checklist requirement
+      parameters:
+        - $ref: "#/components/parameters/ContractCaseChecklistRequirementId"
+      responses:
+        "204":
+          description: Requirement deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
   /workspace:
     get:
       operationId: getWorkspace
@@ -581,6 +626,12 @@ components:
       required: true
       schema:
         type: number
+    ContractCaseChecklistRequirementId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: number
     CollaborationId:
       in: path
       name: id
@@ -871,13 +922,18 @@ components:
           type: string
     ContractCaseChecklistItem:
       type: object
-      required: [key, label, target]
+      required: [key, label, target, source]
       properties:
         key:
           type: string
         label:
           type: string
         target:
+          type: string
+        source:
+          type: string
+          enum: [default, organization]
+        instructions:
           type: string
     ContractCaseStageChecklist:
       type: object
@@ -901,7 +957,7 @@ components:
                     type: boolean
     ContractCase:
       type: object
-      required: [id, reference, type, title, project, eventDate, clauseBasis, description, currentStage, status, typeDetails, evidence, stageChecklist, createdAt, updatedAt]
+      required: [id, reference, type, title, project, eventDate, clauseBasis, description, currentStage, status, typeDetails, evidence, customChecklistValues, stageChecklist, createdAt, updatedAt]
       properties:
         id:
           type: number
@@ -941,6 +997,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContractCaseEvidence"
+        customChecklistValues:
+          type: object
+          additionalProperties:
+            type: string
         reviewNotes:
           type: ["string", "null"]
         decisionOutcome:
@@ -991,6 +1051,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContractCaseEvidence"
+        customChecklistValues:
+          type: object
+          additionalProperties:
+            type: string
     ContractCaseUpdate:
       type: object
       minProperties: 1
@@ -1027,12 +1091,53 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ContractCaseEvidence"
+        customChecklistValues:
+          type: object
+          additionalProperties:
+            type: string
         reviewNotes:
           type: ["string", "null"]
         decisionOutcome:
           type: ["string", "null"]
         changeNote:
           type: string
+    ContractCaseChecklistRequirement:
+      type: object
+      required: [id, caseType, stage, label, instructions, createdAt]
+      properties:
+        id:
+          type: number
+        caseType:
+          $ref: "#/components/schemas/ContractCaseType"
+        stage:
+          type: number
+          minimum: 1
+          maximum: 4
+        label:
+          type: string
+        instructions:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    ContractCaseChecklistRequirementInput:
+      type: object
+      required: [caseType, stage, label, instructions]
+      properties:
+        caseType:
+          $ref: "#/components/schemas/ContractCaseType"
+        stage:
+          type: number
+          minimum: 1
+          maximum: 4
+        label:
+          type: string
+          minLength: 2
+          maxLength: 160
+        instructions:
+          type: string
+          minLength: 2
+          maxLength: 500
     ContractCaseActivity:
       type: object
       required: [id, action, detail, createdAt]

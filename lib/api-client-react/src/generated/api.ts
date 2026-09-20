@@ -23,6 +23,8 @@ import type {
   BadRequestResponse,
   ContractCase,
   ContractCaseActivity,
+  ContractCaseChecklistRequirement,
+  ContractCaseChecklistRequirementInput,
   ContractCaseInput,
   ContractCaseUpdate,
   ExpertAssignment,
@@ -693,6 +695,225 @@ export function useListContractCaseActivities<TData = Awaited<ReturnType<typeof 
 
 
 
+
+export const getListContractCaseChecklistRequirementsUrl = () => {
+
+
+
+
+  return `/api/contract-case-checklist-requirements`
+}
+
+/**
+ * @summary List organization checklist requirements
+ */
+export const listContractCaseChecklistRequirements = async ( options?: Parameters<typeof customFetch>[1]): Promise<ContractCaseChecklistRequirement[]> => {
+
+  return customFetch<ContractCaseChecklistRequirement[]>(getListContractCaseChecklistRequirementsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListContractCaseChecklistRequirementsQueryKey = () => {
+    return [
+    `/api/contract-case-checklist-requirements`
+    ] as const;
+    }
+
+
+export const getListContractCaseChecklistRequirementsQueryOptions = <TData = Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListContractCaseChecklistRequirementsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>> = ({ signal }) => listContractCaseChecklistRequirements({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListContractCaseChecklistRequirementsQueryResult = NonNullable<Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>>
+export type ListContractCaseChecklistRequirementsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List organization checklist requirements
+ */
+
+export function useListContractCaseChecklistRequirements<TData = Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listContractCaseChecklistRequirements>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListContractCaseChecklistRequirementsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateContractCaseChecklistRequirementUrl = () => {
+
+
+
+
+  return `/api/contract-case-checklist-requirements`
+}
+
+/**
+ * @summary Add an organization checklist requirement
+ */
+export const createContractCaseChecklistRequirement = async (contractCaseChecklistRequirementInput: ContractCaseChecklistRequirementInput, options?: Parameters<typeof customFetch>[1]): Promise<ContractCaseChecklistRequirement> => {
+
+  return customFetch<ContractCaseChecklistRequirement>(getCreateContractCaseChecklistRequirementUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contractCaseChecklistRequirementInput)
+  }
+);}
+
+
+
+
+
+export const getCreateContractCaseChecklistRequirementMutationOptions = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContractCaseChecklistRequirement>>, TError,{data: BodyType<ContractCaseChecklistRequirementInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createContractCaseChecklistRequirement>>, TError,{data: BodyType<ContractCaseChecklistRequirementInput>}, TContext> => {
+
+const mutationKey = ['createContractCaseChecklistRequirement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createContractCaseChecklistRequirement>>, {data: BodyType<ContractCaseChecklistRequirementInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createContractCaseChecklistRequirement(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateContractCaseChecklistRequirementMutationResult = NonNullable<Awaited<ReturnType<typeof createContractCaseChecklistRequirement>>>
+    export type CreateContractCaseChecklistRequirementMutationBody = BodyType<ContractCaseChecklistRequirementInput>
+    export type CreateContractCaseChecklistRequirementMutationError = ErrorType<BadRequestResponse>
+
+    /**
+ * @summary Add an organization checklist requirement
+ */
+export const useCreateContractCaseChecklistRequirement = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContractCaseChecklistRequirement>>, TError,{data: BodyType<ContractCaseChecklistRequirementInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createContractCaseChecklistRequirement>>,
+        TError,
+        {data: BodyType<ContractCaseChecklistRequirementInput>},
+        TContext
+      > => {
+      return useMutation(getCreateContractCaseChecklistRequirementMutationOptions(options));
+    }
+
+export const getDeleteContractCaseChecklistRequirementUrl = (id: number,) => {
+
+
+
+
+  return `/api/contract-case-checklist-requirements/${id}`
+}
+
+/**
+ * @summary Delete an organization checklist requirement
+ */
+export const deleteContractCaseChecklistRequirement = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteContractCaseChecklistRequirementUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteContractCaseChecklistRequirementMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteContractCaseChecklistRequirement>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteContractCaseChecklistRequirement>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteContractCaseChecklistRequirement'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteContractCaseChecklistRequirement>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteContractCaseChecklistRequirement(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteContractCaseChecklistRequirementMutationResult = NonNullable<Awaited<ReturnType<typeof deleteContractCaseChecklistRequirement>>>
+
+    export type DeleteContractCaseChecklistRequirementMutationError = ErrorType<NotFoundResponse>
+
+    /**
+ * @summary Delete an organization checklist requirement
+ */
+export const useDeleteContractCaseChecklistRequirement = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteContractCaseChecklistRequirement>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteContractCaseChecklistRequirement>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteContractCaseChecklistRequirementMutationOptions(options));
+    }
 
 export const getGetWorkspaceUrl = () => {
 

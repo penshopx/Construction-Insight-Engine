@@ -191,6 +191,7 @@ export const ListContractCasesResponseItem = zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
 })),
+  "customChecklistValues": zod.record(zod.string(), zod.string()),
   "reviewNotes": zod.string().nullish(),
   "decisionOutcome": zod.string().nullish(),
   "stageChecklist": zod.array(zod.object({
@@ -200,7 +201,9 @@ export const ListContractCasesResponseItem = zod.object({
   "items": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
-  "target": zod.string()
+  "target": zod.string(),
+  "source": zod.enum(['default', 'organization']),
+  "instructions": zod.string().optional()
 }).and(zod.object({
   "complete": zod.boolean()
 })))
@@ -237,7 +240,8 @@ export const CreateContractCaseBody = zod.object({
   "evidence": zod.array(zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
-})).optional()
+})).optional(),
+  "customChecklistValues": zod.record(zod.string(), zod.string()).optional()
 })
 
 export const CreateContractCaseResponse = zod.object({
@@ -260,6 +264,7 @@ export const CreateContractCaseResponse = zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
 })),
+  "customChecklistValues": zod.record(zod.string(), zod.string()),
   "reviewNotes": zod.string().nullish(),
   "decisionOutcome": zod.string().nullish(),
   "stageChecklist": zod.array(zod.object({
@@ -269,7 +274,9 @@ export const CreateContractCaseResponse = zod.object({
   "items": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
-  "target": zod.string()
+  "target": zod.string(),
+  "source": zod.enum(['default', 'organization']),
+  "instructions": zod.string().optional()
 }).and(zod.object({
   "complete": zod.boolean()
 })))
@@ -309,6 +316,7 @@ export const UpdateContractCaseBody = zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
 })).optional(),
+  "customChecklistValues": zod.record(zod.string(), zod.string()).optional(),
   "reviewNotes": zod.string().nullish(),
   "decisionOutcome": zod.string().nullish(),
   "changeNote": zod.string().optional()
@@ -334,6 +342,7 @@ export const UpdateContractCaseResponse = zod.object({
   "name": zod.string(),
   "note": zod.string().optional()
 })),
+  "customChecklistValues": zod.record(zod.string(), zod.string()),
   "reviewNotes": zod.string().nullish(),
   "decisionOutcome": zod.string().nullish(),
   "stageChecklist": zod.array(zod.object({
@@ -343,7 +352,9 @@ export const UpdateContractCaseResponse = zod.object({
   "items": zod.array(zod.object({
   "key": zod.string(),
   "label": zod.string(),
-  "target": zod.string()
+  "target": zod.string(),
+  "source": zod.enum(['default', 'organization']),
+  "instructions": zod.string().optional()
 }).and(zod.object({
   "complete": zod.boolean()
 })))
@@ -368,6 +379,68 @@ export const ListContractCaseActivitiesResponseItem = zod.object({
   "createdAt": zod.coerce.date()
 })
 export const ListContractCaseActivitiesResponse = zod.array(ListContractCaseActivitiesResponseItem)
+
+
+/**
+ * @summary List organization checklist requirements
+ */
+export const listContractCaseChecklistRequirementsResponseStageMax = 4;
+
+
+
+export const ListContractCaseChecklistRequirementsResponseItem = zod.object({
+  "id": zod.number(),
+  "caseType": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "stage": zod.number().min(1).max(listContractCaseChecklistRequirementsResponseStageMax),
+  "label": zod.string(),
+  "instructions": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+export const ListContractCaseChecklistRequirementsResponse = zod.array(ListContractCaseChecklistRequirementsResponseItem)
+
+
+/**
+ * @summary Add an organization checklist requirement
+ */
+export const createContractCaseChecklistRequirementBodyStageMax = 4;
+
+export const createContractCaseChecklistRequirementBodyLabelMin = 2;
+export const createContractCaseChecklistRequirementBodyLabelMax = 160;
+
+export const createContractCaseChecklistRequirementBodyInstructionsMin = 2;
+export const createContractCaseChecklistRequirementBodyInstructionsMax = 500;
+
+
+
+export const CreateContractCaseChecklistRequirementBody = zod.object({
+  "caseType": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "stage": zod.number().min(1).max(createContractCaseChecklistRequirementBodyStageMax),
+  "label": zod.string().min(createContractCaseChecklistRequirementBodyLabelMin).max(createContractCaseChecklistRequirementBodyLabelMax),
+  "instructions": zod.string().min(createContractCaseChecklistRequirementBodyInstructionsMin).max(createContractCaseChecklistRequirementBodyInstructionsMax)
+})
+
+export const createContractCaseChecklistRequirementResponseStageMax = 4;
+
+
+
+export const CreateContractCaseChecklistRequirementResponse = zod.object({
+  "id": zod.number(),
+  "caseType": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "stage": zod.number().min(1).max(createContractCaseChecklistRequirementResponseStageMax),
+  "label": zod.string(),
+  "instructions": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an organization checklist requirement
+ */
+export const DeleteContractCaseChecklistRequirementParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteContractCaseChecklistRequirementResponse = zod.void()
 
 
 /**

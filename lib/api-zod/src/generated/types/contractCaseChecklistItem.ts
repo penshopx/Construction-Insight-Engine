@@ -5,9 +5,12 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContractCaseChecklistItemSource } from './contractCaseChecklistItemSource';
 
 export interface ContractCaseChecklistItem {
   key: string;
   label: string;
   target: string;
+  source: ContractCaseChecklistItemSource;
+  instructions?: string;
 }

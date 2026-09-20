@@ -4,24 +4,26 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest
 import { eq, inArray } from "drizzle-orm";
 import {
   contractCaseActivitiesTable,
+  contractCaseChecklistRequirementsTable,
   contractCasesTable,
   db,
   workItemsTable,
 } from "@workspace/db";
 
-const workspaceState = vi.hoisted(() => ({ organizationId: 810_001 }));
+const workspaceState = vi.hoisted(() => ({ organizationId: 810_001, role: "manager" as "manager" | "member" }));
 
 vi.mock("../lib/workspace", () => ({
   requireWorkspace: vi.fn(async () => ({
     organizationId: workspaceState.organizationId,
     userId: 1,
-    role: "manager",
+    role: workspaceState.role,
   })),
 }));
 
 import contractCasesRouter from "./contract-cases";
 
 const caseIds: number[] = [];
+const requirementIds: number[] = [];
 let server: Server;
 let baseUrl: string;
 
@@ -98,6 +100,13 @@ beforeAll(async () => {
 
 afterEach(async () => {
   workspaceState.organizationId = 810_001;
+  workspaceState.role = "manager";
+  if (requirementIds.length) {
+    await db.delete(contractCaseChecklistRequirementsTable).where(inArray(
+      contractCaseChecklistRequirementsTable.id,
+      requirementIds.splice(0),
+    ));
+  }
   if (!caseIds.length) return;
   const ids = caseIds.splice(0);
   await db.delete(workItemsTable).where(inArray(workItemsTable.caseId, ids));
@@ -230,5 +239,44 @@ describe("contract case workflow guardrails", () => {
     const [unchangedOtherCase] = await db.select().from(contractCasesTable)
       .where(eq(contractCasesTable.id, otherCase.id));
     expect(unchangedOtherCase.currentStage).toBe(0);
+  });
+
+  it("merges organization requirements into stage validation and accepts their fulfillment", async () => {
+    const [requirement] = await db.insert(contractCaseChecklistRequirementsTable).values({
+      organizationId: workspaceState.organizationId,
+      caseType: "VO",
+      stage: 1,
+      label: "Persetujuan direksi proyek",
+      instructions: "Cantumkan nomor memo persetujuan.",
+    }).returning();
+    requirementIds.push(requirement.id);
+    const item = await insertCase("VO");
+
+    const rejected = await patchCase(item.id, { currentStage: 1 });
+    expect(rejected.status).toBe(400);
+    expect(rejected.body.missingItems).toEqual(expect.arrayContaining([
+      expect.objectContaining({ key: `custom.${requirement.id}` }),
+    ]));
+
+    const accepted = await patchCase(item.id, {
+      currentStage: 1,
+      customChecklistValues: { [requirement.id]: "Memo DIR-014" },
+    });
+    expect(accepted.status).toBe(200);
+  });
+
+  it("limits requirement management to organization managers", async () => {
+    workspaceState.role = "member";
+    const response = await fetch(`${baseUrl}/api/contract-case-checklist-requirements`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        caseType: "CLAIM",
+        stage: 2,
+        label: "Persetujuan tambahan",
+        instructions: "Lampirkan referensi persetujuan.",
+      }),
+    });
+    expect(response.status).toBe(403);
   });
 });

@@ -2,15 +2,20 @@ import { Router, type IRouter } from "express";
 import { and, asc, count, desc, eq } from "drizzle-orm";
 import {
   contractCaseActivitiesTable,
+  contractCaseChecklistRequirementsTable,
   contractCasesTable,
   db,
   workItemsTable,
 } from "@workspace/db";
 import {
   CreateContractCaseBody,
+  CreateContractCaseChecklistRequirementBody,
+  CreateContractCaseChecklistRequirementResponse,
+  DeleteContractCaseChecklistRequirementParams,
   CreateContractCaseResponse,
   ListContractCaseActivitiesParams,
   ListContractCaseActivitiesResponse,
+  ListContractCaseChecklistRequirementsResponse,
   ListContractCasesResponse,
   UpdateContractCaseBody,
   UpdateContractCaseParams,
@@ -21,7 +26,15 @@ import { requireWorkspace } from "../lib/workspace";
 const router: IRouter = Router();
 const stageNames = ["Kejadian", "Notice", "Bukti & Dampak", "Review", "Keputusan"];
 type ContractCase = typeof contractCasesTable.$inferSelect;
-type ChecklistItem = { key: string; label: string; target: string; complete: boolean };
+type ChecklistRequirement = typeof contractCaseChecklistRequirementsTable.$inferSelect;
+type ChecklistItem = {
+  key: string;
+  label: string;
+  target: string;
+  source: "default" | "organization";
+  instructions?: string;
+  complete: boolean;
+};
 
 const hasText = (value: unknown) => typeof value === "string" && value.trim().length > 0;
 const specificRequirements: Record<string, Array<{ key: string; label: string }>> = {
@@ -44,19 +57,20 @@ const specificRequirements: Record<string, Array<{ key: string; label: string }>
   ],
 };
 
-const getStageChecklist = (item: ContractCase) => {
+const getStageChecklist = (item: ContractCase, customRequirements: ChecklistRequirement[] = []) => {
   const specific = specificRequirements[item.type] ?? [];
   const stages: Array<{ stage: number; title: string; items: ChecklistItem[] }> = [
     {
       stage: 1,
       title: "Siap masuk tahap Notice",
       items: [
-        { key: "description", label: "Deskripsi kejadian", target: "case-details", complete: hasText(item.description) },
-        { key: "clauseBasis", label: "Klausul referensi", target: "case-details", complete: hasText(item.clauseBasis) },
+        { key: "description", label: "Deskripsi kejadian", target: "case-details", source: "default", complete: hasText(item.description) },
+        { key: "clauseBasis", label: "Klausul referensi", target: "case-details", source: "default", complete: hasText(item.clauseBasis) },
         ...specific.map(({ key, label }) => ({
           key: `typeDetails.${key}`,
           label,
           target: "type-details",
+          source: "default" as const,
           complete: hasText(item.typeDetails?.[key]),
         })),
       ],
@@ -65,33 +79,46 @@ const getStageChecklist = (item: ContractCase) => {
       stage: 2,
       title: "Siap masuk tahap Bukti & Dampak",
       items: [
-        { key: "noticeDueDate", label: "Tenggat notice", target: "case-details", complete: hasText(item.noticeDueDate) },
-        { key: "noticeReference", label: "Nomor atau referensi notice terkirim", target: "case-details", complete: hasText(item.noticeReference) },
+        { key: "noticeDueDate", label: "Tenggat notice", target: "case-details", source: "default", complete: hasText(item.noticeDueDate) },
+        { key: "noticeReference", label: "Nomor atau referensi notice terkirim", target: "case-details", source: "default", complete: hasText(item.noticeReference) },
       ],
     },
     {
       stage: 3,
       title: "Siap masuk tahap Review",
       items: [
-        { key: "evidence", label: "Minimal satu bukti pendukung", target: "evidence", complete: item.evidence.length > 0 },
-        { key: "impactValue", label: "Nilai atau durasi dampak", target: "case-details", complete: hasText(item.impactValue) },
+        { key: "evidence", label: "Minimal satu bukti pendukung", target: "evidence", source: "default", complete: item.evidence.length > 0 },
+        { key: "impactValue", label: "Nilai atau durasi dampak", target: "case-details", source: "default", complete: hasText(item.impactValue) },
       ],
     },
     {
       stage: 4,
       title: "Siap masuk tahap Keputusan",
       items: [
-        { key: "reviewNotes", label: "Catatan hasil review", target: "review-decision", complete: hasText(item.reviewNotes) },
+        { key: "reviewNotes", label: "Catatan hasil review", target: "review-decision", source: "default", complete: hasText(item.reviewNotes) },
       ],
     },
   ];
-  return stages.map((stage) => ({
-    ...stage,
-    complete: stage.items.every((entry) => entry.complete),
-  }));
+  return stages.map((stage) => {
+    const organizationItems: ChecklistItem[] = customRequirements
+      .filter((requirement) => requirement.caseType === item.type && requirement.stage === stage.stage)
+      .map((requirement) => ({
+        key: `custom.${requirement.id}`,
+        label: requirement.label,
+        target: "organization-checklist",
+        source: "organization",
+        instructions: requirement.instructions,
+        complete: hasText(item.customChecklistValues[String(requirement.id)]),
+      }));
+    const items = [...stage.items, ...organizationItems];
+    return { ...stage, items, complete: items.every((entry) => entry.complete) };
+  });
 };
 
-const withChecklist = (item: ContractCase) => ({ ...item, stageChecklist: getStageChecklist(item) });
+const withChecklist = (item: ContractCase, requirements: ChecklistRequirement[] = []) => ({
+  ...item,
+  stageChecklist: getStageChecklist(item, requirements),
+});
 const toCalendarDate = (value: Date | string | null | undefined) => {
   if (value == null || typeof value === "string") return value;
   return value.toISOString().slice(0, 10);
@@ -103,7 +130,60 @@ router.get("/contract-cases", async (req, res): Promise<void> => {
   const cases = await db.select().from(contractCasesTable)
     .where(eq(contractCasesTable.organizationId, workspace.organizationId))
     .orderBy(desc(contractCasesTable.updatedAt));
-  res.json(ListContractCasesResponse.parse(cases.map(withChecklist)));
+  const requirements = await db.select().from(contractCaseChecklistRequirementsTable)
+    .where(eq(contractCaseChecklistRequirementsTable.organizationId, workspace.organizationId));
+  res.json(ListContractCasesResponse.parse(cases.map((item) => withChecklist(item, requirements))));
+});
+
+router.get("/contract-case-checklist-requirements", async (req, res): Promise<void> => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
+  const requirements = await db.select().from(contractCaseChecklistRequirementsTable)
+    .where(eq(contractCaseChecklistRequirementsTable.organizationId, workspace.organizationId))
+    .orderBy(asc(contractCaseChecklistRequirementsTable.caseType), asc(contractCaseChecklistRequirementsTable.stage));
+  res.json(ListContractCaseChecklistRequirementsResponse.parse(requirements));
+});
+
+router.post("/contract-case-checklist-requirements", async (req, res): Promise<void> => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
+  if (workspace.role !== "manager") {
+    res.status(403).json({ error: "Hanya pengelola yang dapat menambah persyaratan checklist" });
+    return;
+  }
+  const body = CreateContractCaseChecklistRequirementBody.safeParse(req.body);
+  if (!body.success) {
+    res.status(400).json({ error: body.error.message });
+    return;
+  }
+  const [created] = await db.insert(contractCaseChecklistRequirementsTable).values({
+    ...body.data,
+    organizationId: workspace.organizationId,
+  }).returning();
+  res.status(201).json(CreateContractCaseChecklistRequirementResponse.parse(created));
+});
+
+router.delete("/contract-case-checklist-requirements/:id", async (req, res): Promise<void> => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
+  if (workspace.role !== "manager") {
+    res.status(403).json({ error: "Hanya pengelola yang dapat menghapus persyaratan checklist" });
+    return;
+  }
+  const params = DeleteContractCaseChecklistRequirementParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  const [deleted] = await db.delete(contractCaseChecklistRequirementsTable).where(and(
+    eq(contractCaseChecklistRequirementsTable.id, params.data.id),
+    eq(contractCaseChecklistRequirementsTable.organizationId, workspace.organizationId),
+  )).returning();
+  if (!deleted) {
+    res.status(404).json({ error: "Persyaratan checklist tidak ditemukan" });
+    return;
+  }
+  res.sendStatus(204);
 });
 
 router.post("/contract-cases", async (req, res): Promise<void> => {
@@ -155,7 +235,9 @@ router.post("/contract-cases", async (req, res): Promise<void> => {
     }
     return created;
   });
-  res.status(201).json(CreateContractCaseResponse.parse(withChecklist(item)));
+  const requirements = await db.select().from(contractCaseChecklistRequirementsTable)
+    .where(eq(contractCaseChecklistRequirementsTable.organizationId, workspace.organizationId));
+  res.status(201).json(CreateContractCaseResponse.parse(withChecklist(item, requirements)));
 });
 
 router.patch("/contract-cases/:id", async (req, res): Promise<void> => {
@@ -181,6 +263,8 @@ router.patch("/contract-cases/:id", async (req, res): Promise<void> => {
       : {}),
   };
   const updated = await db.transaction(async (tx) => {
+    const requirements = await tx.select().from(contractCaseChecklistRequirementsTable)
+      .where(eq(contractCaseChecklistRequirementsTable.organizationId, workspace.organizationId));
     const [current] = await tx.select().from(contractCasesTable).where(and(
       eq(contractCasesTable.id, params.data.id),
       eq(contractCasesTable.organizationId, workspace.organizationId),
@@ -195,7 +279,7 @@ router.patch("/contract-cases/:id", async (req, res): Promise<void> => {
       if (changes.currentStage! !== current.currentStage + 1) {
         return { validationError: "Tahap hanya dapat dimajukan satu per satu.", missingItems: [] };
       }
-      const checklist = getStageChecklist(nextState);
+      const checklist = getStageChecklist(nextState, requirements);
       const target = checklist.find((entry) => entry.stage === changes.currentStage);
       const missingItems = target?.items.filter((entry) => !entry.complete) ?? [];
       if (missingItems.length > 0) {
@@ -274,7 +358,9 @@ router.patch("/contract-cases/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: updated.validationError, missingItems: updated.missingItems });
     return;
   }
-  res.json(UpdateContractCaseResponse.parse(withChecklist(updated)));
+  const requirements = await db.select().from(contractCaseChecklistRequirementsTable)
+    .where(eq(contractCaseChecklistRequirementsTable.organizationId, workspace.organizationId));
+  res.json(UpdateContractCaseResponse.parse(withChecklist(updated, requirements)));
 });
 
 router.get("/contract-cases/:id/activities", async (req, res): Promise<void> => {

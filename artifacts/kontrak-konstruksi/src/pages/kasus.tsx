@@ -21,6 +21,11 @@ import {
   getListFailureCasesQueryKey,
   getListExpertAssignmentsQueryKey,
   getListMediationRoomsQueryKey,
+  useGetWorkspace,
+  useListContractCaseChecklistRequirements,
+  useCreateContractCaseChecklistRequirement,
+  useDeleteContractCaseChecklistRequirement,
+  getListContractCaseChecklistRequirementsQueryKey,
   useListFailureCases,
   useListExpertAssignments,
   useListMediationRooms,
@@ -301,6 +306,7 @@ function CaseDetailsEditor({ caseData }: { caseData: ContractCase }) {
   const [typeDetails, setTypeDetails] = useState<Record<string, string>>(caseData.typeDetails);
   const [reviewNotes, setReviewNotes] = useState(caseData.reviewNotes || '');
   const [decisionOutcome, setDecisionOutcome] = useState(caseData.decisionOutcome || '');
+  const [customChecklistValues, setCustomChecklistValues] = useState<Record<string, string>>(caseData.customChecklistValues);
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -312,6 +318,7 @@ function CaseDetailsEditor({ caseData }: { caseData: ContractCase }) {
     setTypeDetails(caseData.typeDetails);
     setReviewNotes(caseData.reviewNotes || '');
     setDecisionOutcome(caseData.decisionOutcome || '');
+    setCustomChecklistValues(caseData.customChecklistValues);
     setSaved(false);
   }, [caseData.id, caseData.updatedAt]);
 
@@ -339,6 +346,7 @@ function CaseDetailsEditor({ caseData }: { caseData: ContractCase }) {
         typeDetails,
         reviewNotes: reviewNotes || null,
         decisionOutcome: decisionOutcome || null,
+        customChecklistValues,
         changeNote: 'Memperbarui kelengkapan workflow kasus.'
       }
     });
@@ -388,6 +396,27 @@ function CaseDetailsEditor({ caseData }: { caseData: ContractCase }) {
         </label>
       </div>
 
+      <div id="organization-checklist" className="scroll-mt-6 space-y-3 border-t border-border pt-4">
+        <h4 className="text-xs font-bold font-mono text-primary uppercase">Persyaratan Kontrak Organisasi</h4>
+        {caseData.stageChecklist.flatMap((stage) => stage.items.filter((item) => item.source === 'organization')).length === 0 ? (
+          <p className="text-xs italic text-slate-500">Belum ada persyaratan tambahan untuk tipe kasus ini.</p>
+        ) : caseData.stageChecklist.map((stage) => stage.items.filter((item) => item.source === 'organization').map((item) => (
+          <label key={item.key} className="block rounded border border-primary/15 bg-primary/5 p-3 text-[10px] uppercase font-mono text-slate-400">
+            <span className="flex items-center justify-between gap-2">
+              <span>{item.label}</span>
+              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[9px] text-primary">Tahap {stage.stage}</span>
+            </span>
+            {item.instructions && <span className="mt-1 block normal-case font-sans text-[11px] text-slate-500">{item.instructions}</span>}
+            <textarea
+              value={customChecklistValues[item.key.replace('custom.', '')] || ''}
+              onChange={(event) => setCustomChecklistValues({ ...customChecklistValues, [item.key.replace('custom.', '')]: event.target.value })}
+              placeholder="Catat referensi dokumen, persetujuan, atau cara persyaratan ini dipenuhi."
+              className="mt-2 min-h-16 w-full rounded border border-border bg-background p-2 text-sm normal-case font-sans text-slate-200"
+            />
+          </label>
+        )))}
+      </div>
+
       <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
         {saved && <span className="text-xs text-emerald-400">Tersimpan</span>}
         <button type="submit" disabled={updateCase.isPending} className="rounded bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">
@@ -395,6 +424,69 @@ function CaseDetailsEditor({ caseData }: { caseData: ContractCase }) {
         </button>
       </div>
     </form>
+  );
+}
+
+function ChecklistSettings() {
+  const queryClient = useQueryClient();
+  const { data: workspace } = useGetWorkspace();
+  const { data: requirements = [] } = useListContractCaseChecklistRequirements();
+  const [open, setOpen] = useState(false);
+  const [caseType, setCaseType] = useState<ContractCaseType>('VO');
+  const [stage, setStage] = useState(1);
+  const [label, setLabel] = useState('');
+  const [instructions, setInstructions] = useState('');
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: getListContractCaseChecklistRequirementsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getListContractCasesQueryKey() });
+  };
+  const createRequirement = useCreateContractCaseChecklistRequirement({
+    mutation: { onSuccess: () => { refresh(); setLabel(''); setInstructions(''); setOpen(false); } },
+  });
+  const deleteRequirement = useDeleteContractCaseChecklistRequirement({
+    mutation: { onSuccess: refresh },
+  });
+  if (workspace?.role !== 'manager') return null;
+
+  return (
+    <div className="mb-6 rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        <div>
+          <h3 className="text-sm font-bold text-slate-100">Checklist Kontrak Organisasi</h3>
+          <p className="mt-1 text-[11px] text-slate-500">Aturan bawaan tetap aktif dan tidak dapat dihapus. Persyaratan organisasi ditambahkan sesuai kontrak proyek.</p>
+        </div>
+        <button onClick={() => setOpen(!open)} className="rounded bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">+ Tambah Persyaratan</button>
+      </div>
+      {open && (
+        <form onSubmit={(event) => { event.preventDefault(); createRequirement.mutate({ data: { caseType, stage, label, instructions } }); }} className="mt-4 grid gap-3 rounded border border-border bg-background p-3 md:grid-cols-2">
+          <select value={caseType} onChange={(event) => setCaseType(event.target.value as ContractCaseType)} className="rounded border border-border bg-card p-2 text-sm text-slate-200">
+            {(['VO', 'EOT', 'CLAIM', 'NCR'] as ContractCaseType[]).map((type) => <option key={type} value={type}>{type}</option>)}
+          </select>
+          <select value={stage} onChange={(event) => setStage(Number(event.target.value))} className="rounded border border-border bg-card p-2 text-sm text-slate-200">
+            {STAGES.slice(1).map((item) => <option key={item.level} value={item.level}>Masuk tahap {item.title}</option>)}
+          </select>
+          <input required minLength={2} value={label} onChange={(event) => setLabel(event.target.value)} placeholder="Nama dokumen atau persetujuan wajib" className="rounded border border-border bg-card p-2 text-sm text-slate-200" />
+          <input required minLength={2} value={instructions} onChange={(event) => setInstructions(event.target.value)} placeholder="Instruksi pemenuhan" className="rounded border border-border bg-card p-2 text-sm text-slate-200" />
+          <div className="flex justify-end gap-2 md:col-span-2">
+            <button type="button" onClick={() => setOpen(false)} className="px-3 py-2 text-xs text-slate-400">Batal</button>
+            <button disabled={createRequirement.isPending} className="rounded bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50">Simpan</button>
+          </div>
+        </form>
+      )}
+      {requirements.length > 0 && (
+        <div className="mt-4 grid gap-2 md:grid-cols-2">
+          {requirements.map((item) => (
+            <div key={item.id} className="flex items-start justify-between gap-3 rounded border border-border bg-background p-3">
+              <div><p className="text-xs font-bold text-slate-200">{item.label}</p><p className="mt-1 text-[10px] text-primary">{item.caseType} · masuk tahap {item.stage}</p><p className="mt-1 text-[11px] text-slate-500">{item.instructions}</p></div>
+              <button
+                onClick={() => window.confirm('Hapus persyaratan organisasi ini? Aturan bawaan tidak terpengaruh.') && deleteRequirement.mutate({ id: item.id })}
+                className="text-[10px] font-bold text-red-300 hover:text-red-200"
+              >Hapus</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -564,6 +656,7 @@ export default function Kasus() {
         title="Joint Case Room"
         description="Ruang kerja operasional untuk alur VO, EOT, CLAIM, dan NCR. Catatan aplikasi membantu administrasi, tetapi bukan audit independen, pendapat hukum, atau chain of custody."
       />
+      <ChecklistSettings />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
          <div className="flex flex-col gap-4 h-full max-h-[800px]">
