@@ -2544,3 +2544,2549 @@ Apakah Anda ingin saya mendalami salah satu aspek spesifik? Misalnya:
     }
   ]
 }
+# KONTRAKGUARD v3.0 — PLATFORM TERINTEGRASI HUKUM, KEGAGALAN BANGUNAN, & PENILAI AHLI
+
+## Paradigma Baru: "Penyelesaian Konstruktif Berbasis Kompetensi"
+
+---
+
+## BAGIAN 1: FILOSOFI DASAR — PERGESERAN PARADIGMA
+
+### Dari Adversarial ke Konstruktif
+
+Selama ini, penyelesaian sengketa konstruksi di Indonesia mengikuti pola **adversarial** (saling serang):
+
+```
+POLA LAMA (ADVERSARIAL):
+Sengketa → Somasi → Negosiasi Gagal → Arbitrase/Litigasi → Menang/Kalah
+                 ↓
+         Hubungan rusak, proyek mangkrak, biaya bengkak
+```
+
+Aplikasi ini memperkenalkan paradigma **Penyelesaian Konstruktif**:
+
+```
+POLA BARU (KONSTRUKTIF):
+Potensi Sengketa → Early Detection → Penilai Ahli介入 → Mediasi → Win-Win
+                      ↓                    ↓
+              Dicegah sebelum         Solusi teknis + hukum
+              membesar                yang menjaga hubungan
+```
+
+### Tiga Pilar Integrasi
+
+```
+                    ┌──────────────────────┐
+                    │   PENILAI AHLI       │
+                    │  (Expert Assessor)   │
+                    │  Mediator • Konsultan│
+                    │     • Advokat        │
+                    └──────────┬───────────┘
+                               │
+            ┌──────────────────┼──────────────────┐
+            │                  │                  │
+            ▼                  ▼                  ▼
+   ┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+   │  HUKUM &       │ │  KEGAGALAN     │ │  SKKNI &       │
+   │  ADMINISTRASI  │ │  BANGUNAN &    │ │  STANDAR       │
+   │  KONTRAK       │ │  KONSTRUKSI    │ │  KOMPETENSI    │
+   └────────────────┘ └────────────────┘ └────────────────┘
+            │                  │                  │
+            └──────────────────┼──────────────────┘
+                               │
+                    ┌──────────▼───────────┐
+                    │   KONTRAKGUARD       │
+                    │   PLATFORM           │
+                    └──────────────────────┘
+```
+
+---
+
+## BAGIAN 2: LANDASAN REGULASI & STANDAR
+
+### Regulasi Kunci yang Diintegrasikan
+
+| Regulasi | Isi Relevan | Implementasi di Aplikasi |
+|---|---|---|
+| **UU No. 2/2017** (Jasa Konstruksi) | Pasal 64-68: Penyelesaian sengketa, peran Penilai Ahli | Modul Penilai Ahli Digital |
+| **PP No. 22/2020** | Peraturan Pelaksanaan UU 2/2017 — detail Penilai Ahli | Sertifikasi & marketplace Penilai Ahli |
+| **Permen PUPR No. 14/2020** | Standar & pedoman kontrak konstruksi | Template kontrak berbasis standar |
+| **Permen PUPR No. 11/2019** | Sistem Manajemen Keselamatan Konstruksi | Modul K3L & kegagalan bangunan |
+| **Permen PUPR No. 7/2019** | Standar penilaian kegagalan bangunan | Modul forensik kegagalan |
+| **Keppmen PU No. 145/2020** | SKKNI bidang konstruksi | Basis kompetensi user & Penilai Ahli |
+| **Peraturan LPJK** | Lembaga Pengembangan Jasa Konstruksi | Verifikasi SBU & sertifikat kompetensi |
+| **Peraturan BANI No. 01/2024** | Prosedur arbitrase | Modul dispute resolution |
+
+### SKKNI sebagai Tulang Punggung Kompetensi
+
+Aplikasi ini menjadikan **SKKNI (Standar Kompetensi Kerja Nasional Indonesia)** sebagai fondasi:
+
+```
+STRUKTUR SKKNI BIDANG KONSTRUKSI (Contoh)
+═══════════════════════════════════════════
+
+BIDANG: Konstruksi Bangunan Gedung
+  ├── JENIS: Manajemen Konstruksi
+  │   ├── Sub-jenis: Perencanaan
+  │   ├── Sub-jenis: Pelaksanaan
+  │   └── Sub-jenis: Pengawasan
+  │
+  ├── UNIT KOMPETENSI (Contoh untuk MK):
+  │   ├── KON.K01.001 — Menyusun dokumen kontrak
+  │   ├── KON.K01.002 — Mengelola administrasi kontrak
+  │   ├── KON.K01.003 — Melakukan pengendalian mutu
+  │   ├── KON.K01.004 — Mengelola perubahan pekerjaan (VO)
+  │   ├── KON.K01.005 — Menilai klaim perpanjangan waktu
+  │   ├── KON.K01.006 — Melakukan mediasi sengketa
+  │   └── KON.K01.007 — Menyusun laporan kegagalan bangunan
+  │
+  └── LEVEL KUALIFIKASI:
+      ├── Level 1-3: Teknisi
+      ├── Level 4-5: Ahli Madya
+      ├── Level 6-7: Ahli Muda
+      └── Level 8-9: Ahli Utama
+```
+
+**Implementasi di Aplikasi:**
+1. **User Profiling berbasis SKKNI** — Setiap user (kontraktor, MK, Penilai Ahli) memiliki profil kompetensi berdasarkan SKKNI
+2. **Checklist kerja berbasis unit kompetensi** — Setiap tugas di aplikasi terhubung ke unit SKKNI yang relevan
+3. **Verifikasi kompetensi otomatis** — Integrasi dengan SIKa/LPJK untuk validasi sertifikat
+4. **Learning path** — Rekomendasi pelatihan berdasarkan gap kompetensi
+
+---
+
+## BAGIAN 3: ARSITEKTUR APLIKASI TERINTEGRASI
+
+### High-Level Architecture v3.0
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    KONTRAKGUARD PLATFORM v3.0                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │              LAYER 1: FOUNDATION                          │ │
+│  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │ │
+│  │  │  SKKNI      │ │  REGULASI   │ │  STANDAR TEKNIS     │ │ │
+│  │  │  Framework  │ │  Database   │ │  (SNI, FIDIC,       │ │ │
+│  │  │             │ │  (UU, PP,   │ │   PUPR, ASTM)       │ │ │
+│  │  │             │ │   Permen)   │ │                     │ │ │
+│  │  └─────────────┘ └─────────────┘ └─────────────────────┘ │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                              │                                  │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │              LAYER 2: CORE MODULES                        │ │
+│  │                                                           │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │  MODUL A: HUKUM & ADMINISTRASI KONTRAK              │ │ │
+│  │  │  ├── AI Contract Analyzer                           │ │ │
+│  │  │  ├── Obligation & Deadline Tracker                  │ │ │
+│  │  │  ├── Correspondence & Notice Management             │ │ │
+│  │  │  ├── VO & EOT Administration                        │ │ │
+│  │  │  ├── Payment & Retention Tracking                   │ │ │
+│  │  │  └── Evidence Vault (Forensic-Ready)                │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  │                                                           │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │  MODUL B: KEGAGALAN BANGUNAN & KONSTRUKSI           │ │ │
+│  │  │  ├── Building Failure Forensics                     │ │ │
+│  │  │  ├── NCR (Non-Conformance Report) Tracker           │ │ │
+│  │  │  ├── Material Traceability & Lab Integration        │ │ │
+│  │  │  ├── Structural Health Monitoring (IoT)             │ │ │
+│  │  │  ├── DLP (Defect Liability Period) Manager          │ │ │
+│  │  │  └── Liability Exposure Dashboard                   │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  │                                                           │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │  MODUL C: PENILAI AHLI & PENYELESAIAN SENGKETA      │ │ │
+│  │  │  ├── Expert Assessor Marketplace                    │ │ │
+│  │  │  ├── Mediation Platform                             │ │ │
+│  │  │  ├── Expert Opinion Generator                       │ │ │
+│  │  │  ├── Dispute Resolution Ladder                      │ │ │
+│  │  │  ├── Advocacy & Consultancy Module                  │ │ │
+│  │  │  └── Arbitration Support (BANI Integration)         │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  │                                                           │ │
+│  │  ┌─────────────────────────────────────────────────────┐ │ │
+│  │  │  MODUL D: KOMPETENSI & STANDARISASI                 │ │ │
+│  │  │  ├── SKKNI Competency Framework                     │ │ │
+│  │  │  ├── Contract Drafting Guide (berbasis standar)     │ │ │
+│  │  │  ├── Best Practice Library                          │ │ │
+│  │  │  ├── Training & Certification Path                  │ │ │
+│  │  │  └── Compliance Auto-Check                          │ │ │
+│  │  └─────────────────────────────────────────────────────┘ │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                              │                                  │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │              LAYER 3: INTELLIGENCE                        │ │
+│  │  ├── AI/ML Engine (NLP, Predictive Risk, Forensics)      │ │
+│  │  ├── Knowledge Graph (regulasi, yurisprudensi, kasus)    │ │
+│  │  └── Decision Support System                             │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                              │                                  │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │              LAYER 4: INTEGRATION                         │ │
+│  │  ├── LPSE • SIKa • BSrE • OSS • BANI • DJP • BMKG       │ │
+│  └───────────────────────────────────────────────────────────┘ │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 4: MODUL PENILAI AHLI DIGITAL — INOVASI UTAMA
+
+Ini adalah **diferensiasi terbesar** KontrakGuard v3.0. Tidak ada platform lain di dunia yang mengintegrasikan Penilai Ahli sebagai fitur inti.
+
+### 4.1 Siapa Penilai Ahli? (Konteks Indonesia)
+
+Berdasarkan **UU 2/2017 Pasal 1 angka 19** dan **PP 22/2020**:
+
+> **Penilai Ahli** adalah orang atau badan yang memiliki keahlian di bidang konstruksi, ditunjuk oleh para pihak atau pengadilan/arbitrase, untuk memberikan penilaian objektif atas sengketa jasa konstruksi.
+
+**Tiga Peran Penilai Ahli:**
+1. **Mediator** — Memfasilitasi negosiasi antar pihak yang bersengketa
+2. **Konsultan** — Memberikan pendapat ahli (expert opinion) atas isu teknis/hukum
+3. **Advokat** — Mendampingi salah satu pihak dalam proses penyelesaian sengketa
+
+### 4.2 Expert Assessor Marketplace
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  EXPERT ASSESSOR MARKETPLACE                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  CARI PENILAI AHLI                                  │   │
+│  │  ┌──────────────────────────────────────────────┐  │   │
+│  │  │  Jenis Sengketa: [▼ Struktur ▼]              │  │   │
+│  │  │  Lokasi: [Jabodetabek ▼]                     │  │   │
+│  │  │  Level: [Ahli Utama ▼]                       │  │   │
+│  │  │  Peran: [Mediator / Konsultan / Advokat]     │  │   │
+│  │  │  Bahasa: [Indonesia, English]                │  │   │
+│  │  │  Ketersediaan: [Minggu ini ▼]                │  │   │
+│  │  └──────────────────────────────────────────────┘  │   │
+│  │                                                     │   │
+│  │  [🔍 Cari Penilai Ahli]                            │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  HASIL PENCARIAN (3 dari 47 Penilai Ahli cocok):            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  👤 Prof. Ir. Bambang Sutanto, M.Sc., Ph.D.         │   │
+│  │  ⭐ 4.9/5 (127 kasus) • Jakarta                     │   │
+│  │  Spesialis: Struktur, Kegagalan Bangunan            │   │
+│  │  Kualifikasi: Ahli Utama (SKKNI Level 9)            │   │
+│  │  Sertifikasi: LPJK, BANI, PII                       │   │
+│  │  Pengalaman: 32 tahun, 200+ kasus sengketa          │   │
+│  │  Peran: [Mediator] [Konsultan] [Advokat]            │   │
+│  │  Tarif: Rp15-25 juta/hari                           │   │
+│  │  Ketersediaan: ✅ Minggu ini                        │   │
+│  │  [Lihat Profil] [Ajukan Penunjukan]                 │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  👤 Ir. Siti Rahayu, M.T.                           │   │
+│  │  ⭐ 4.8/5 (89 kasus) • Surabaya                     │   │
+│  │  Spesialis: MEP, Manajemen Konstruksi               │   │
+│  │  ...                                                │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  VERIFIKASI OTOMATIS:                                       │
+│  ✅ SBU aktif (verified via SIKa)                           │
+│  ✅ Sertifikat kompetensi LPJK valid                        │
+│  ✅ SKA (Sertifikat Keahlian) sesuai level                  │
+│  ✅ Tidak masuk daftar hitam LPJK                           │
+│  ✅ Asuransi profesional indemnitas aktif                   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 4.3 Workflow Penunjukan Penilai Ahli
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ALUR PENUNJUKAN PENILAI AHLI                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  TAHAP 1: IDENTIFIKASI KEBUTUHAN                            │
+│  ├── Pihak A/B mengidentifikasi sengketa                    │
+│  ├── Sistem menganalisis:                                   │
+│  │   ├── Jenis sengketa (teknis/hukum/campuran)            │
+│  │   ├── Nilai sengketa                                     │
+│  │   ├── Kompleksitas                                       │
+│  │   └── Rekomendasi peran Penilai Ahli yang dibutuhkan    │
+│  └── Output: "Disarankan: Penilai Ahli Ahli Utama          │
+│               spesialis struktur, peran mediator"           │
+│                                                             │
+│  TAHAP 2: PENUNJUKAN                                        │
+│  ├── Opsi A: Para pihak sepakat memilih Penilai Ahli        │
+│  │   └── Via marketplace → kesepakatan bersama              │
+│  ├── Opsi B: Ditunjuk oleh Ketua BANI (jika arbitrase)      │
+│  └── Opsi C: Ditunjuk oleh Pengadilan (jika litigasi)       │
+│                                                             │
+│  TAHAP 3: PENGANGKATAN RESMI                                │
+│  ├── Surat Penunjukan ditandatangani digital (BSrE)         │
+│  ├── Terms of Reference (TOR) disusun bersama               │
+│  ├── Ruang lingkup penilaian didefinisikan                  │
+│  ├── Jadwal & biaya disepakati                              │
+│  └── Deposit fee dibayar ke escrow account                  │
+│                                                             │
+│  TAHAP 4: PELAKSANAAN PENILAIAN                             │
+│  ├── Penilai Ahli mengakses data proyek via KontrakGuard    │
+│  │   (dengan persetujuan para pihak)                        │
+│  ├── Melakukan inspeksi lapangan (dokumentasi via app)      │
+│  ├── Menganalisis dokumen, bukti, data teknis               │
+│  ├── Mengadakan pertemuan dengan para pihak                 │
+│  └── Menyusun laporan penilaian                             │
+│                                                             │
+│  TAHAP 5: OUTPUT                                            │
+│  ├── Expert Opinion Report (pendapat ahli)                  │
+│  ├── Mediation Recommendation (jika mediator)               │
+│  ├── Settlement Proposal (usulan penyelesaian)              │
+│  └── Testimony Support (jika untuk arbitrase/pengadilan)    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 4.4 Fitur Khusus Penilai Ahli di Aplikasi
+
+**A. Expert Workspace (Ruang Kerja Penilai Ahli)**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  EXPERT WORKSPACE — Kasus #PA-2026-0089                     │
+│  Penilai Ahli: Prof. Ir. Bambang Sutanto                    │
+│  Peran: Mediator • Jenis: Sengketa VO & EOT                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  TAB 1: CASE OVERVIEW                                       │
+│  ├── Para pihak: PT ABC (Kontraktor) vs PT XYZ (Owner)      │
+│  ├── Nilai sengketa: Rp4.2 miliar                           │
+│  ├── Isu utama:                                             │
+│  │   ├── VO tidak dibayar (Rp2.8M)                          │
+│  │   ├── EOT ditolak (klaim 45 hari)                        │
+│  │   └── Denda keterlambatan ditagih (Rp1.4M)               │
+│  └── Status: Mediasi tahap 2 dari 3                         │
+│                                                             │
+│  TAB 2: EVIDENCE ROOM (terintegrasi Evidence Vault)         │
+│  ├── 📄 Kontrak utama + amandemen                           │
+│  ├── 📄 12 Variation Orders                                 │
+│  ├── 📄 8 EOT claims + responses                            │
+│  ├── 📷 347 foto lapangan (timestamped, GPS)                │
+│  ├── 📊 Daily reports (730 hari)                            │
+│  ├── 📧 89 korespondensi                                    │
+│  ├── 📄 Hasil uji lab (beton, tanah, besi)                  │
+│  └── 🔍 AI-generated timeline of events                     │
+│                                                             │
+│  TAB 3: ANALYSIS TOOLS                                      │
+│  ├── Delay Analysis Wizard                                  │
+│  │   ├── As-Planned vs As-Built comparison                  │
+│  │   ├── Critical Path Method analysis                      │
+│  │   ├── Concurrent Delay identification                    │
+│  │   └── Apportionment recommendation                       │
+│  │                                                          │
+│  ├── Cost Analysis Tool                                     │
+│  │   ├── VO pricing verification                            │
+│  │   ├── Idle cost calculation                              │
+│  │   └── Prolongation cost assessment                       │
+│  │                                                          │
+│  └── Legal Reference Library                                │
+│      ├── KUHPerdata (pasal terkait)                         │
+│      ├── UU 2/2017 & PP 22/2020                             │
+│      ├── Yurisprudensi MA terkait                           │
+│      └── Putusan BANI serupa (anonim)                       │
+│                                                             │
+│  TAB 4: MEDIATION SESSIONS                                  │
+│  ├── Session 1: 15 Sep 2026 — ✅ Selesai                   │
+│  │   └── MoM + recording (encrypted)                        │
+│  ├── Session 2: 22 Sep 2026 — ⏳ Terjadwal                 │
+│  │   └── Agenda, dokumen persiapan                          │
+│  └── Session 3: 29 Sep 2026 — ⏳ Pending                   │
+│                                                             │
+│  TAB 5: DRAFTING TOOLS                                      │
+│  ├── Expert Opinion Report template                         │
+│  ├── Settlement Agreement template                          │
+│  ├── Mediation Recommendation template                      │
+│  └── E-signature + e-meterai integration                    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**B. Conflict of Interest Checker**
+
+Sistem otomatis mengecek apakah Penilai Ahli memiliki konflik kepentingan:
+- Pernah bekerja dengan salah satu pihak dalam 3 tahun terakhir?
+- Memiliki saham di salah satu pihak?
+- Memiliki hubungan keluarga dengan personel kunci?
+- Sedang menangani kasus lain yang melibatkan pihak yang sama?
+
+**C. Escrow Payment System**
+
+Fee Penilai Ahli dikelola via escrow:
+- Deposit dibayar di awal → ditahan di rekening escrow
+- Milestone-based release (25% per tahap)
+- Proteksi untuk Penilai Ahli (dibayar pasti) dan para pihak (refund jika tidak selesai)
+
+---
+
+## BAGIAN 5: MODUL KEGAGALAN BANGUNAN — FORENSIK DIGITAL
+
+### 5.1 Building Failure Forensics Framework
+
+Berdasarkan **Permen PUPR No. 7/2019** tentang standar penilaian kegagalan bangunan:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  BUILDING FAILURE FORENSICS WORKFLOW                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  TAHAP 1: DETEKSI & DOKUMENTASI AWAL                        │
+│  ├── Trigger:                                               │
+│  │   ├── Laporan dari lapangan (via mobile app)             │
+│  │   ├── Inspeksi berkala                                   │
+│  │   ├── Monitoring IoT (sensor retak,沉降, dll)            │
+│  │   └── Laporan penghuni/pengguna                          │
+│  │                                                          │
+│  ├── Dokumentasi wajib (via app):                           │
+│  │   ├── Foto 360° dengan GPS + timestamp                   │
+│  │   ├── Video kondisi eksisting                            │
+│  │   ├── Pengukuran retak (width, length, depth)            │
+│  │   ├── Sketsa lokasi kerusakan                            │
+│  │   └── Catatan kondisi lingkungan                         │
+│  │                                                          │
+│  └── Output: Initial Damage Report (IDR)                    │
+│                                                             │
+│  TAHAP 2: INVESTIGASI DETAIL                                │
+│  ├── Non-Destructive Testing (NDT):                         │
+│  │   ├── Ultrasonic test                                    │
+│  │   ├── Rebound hammer                                     │
+│  │   ├── Ground Penetrating Radar (GPR)                     │
+│  │   └── Hasil uji langsung input ke app                    │
+│  │                                                          │
+│  ├── Destructive Testing (jika perlu):                      │
+│  │   ├── Core drill beton                                   │
+│  │   ├── Uji tarik besi                                     │
+│  │   └── Hasil lab terintegrasi otomatis                    │
+│  │                                                          │
+│  └── Output: Investigation Report                           │
+│                                                             │
+│  TAHAP 3: ANALISIS PENYEBAB                                 │
+│  ├── AI-assisted root cause analysis:                       │
+│  │   ├── Pattern recognition (jenis retak → penyebab)       │
+│  │   ├── Timeline correlation (kapan mulai muncul)          │
+│  │   ├── Material traceability (batch material terkait)     │
+│  │   └── Design vs As-Built comparison                      │
+│  │                                                          │
+│  ├── Kategori penyebab (sesuai standar):                    │
+│  │   ├── Penyebab desain (perencana)                        │
+│  │   ├── Penyebab pelaksanaan (kontraktor)                  │
+│  │   ├── Penyebab pengawasan (MK)                           │
+│  │   ├── Penyebab material (supplier)                       │
+│  │   ├── Penyebab alam (force majeure)                      │
+│  │   └── Penyebab penggunaan (owner/pengguna)               │
+│  │                                                          │
+│  └── Output: Root Cause Analysis Report                     │
+│                                                             │
+│  TAHAP 4: PENILAIAN DAMPAK & LIABILITAS                     │
+│  ├── Penilaian tingkat kegagalan:                           │
+│  │   ├── Tingkat 1: Kegagalan fungsi (minor)                │
+│  │   ├── Tingkat 2: Kegagalan sebagian (moderate)           │
+│  │   └── Tingkat 3: Kegagalan total (major/collapse)        │
+│  │                                                          │
+│  ├── Estimasi biaya perbaikan                               │
+│  ├── Estimasi downtime                                      │
+│  ├── Apportionment of liability (% per pihak)               │
+│  │   └── AI recommendation + expert validation              │
+│  └── Output: Liability Assessment Report                    │
+│                                                             │
+│  TAHAP 5: REKOMENDASI PENYELESAIAN                          │
+│  ├── Opsi perbaikan teknis                                  │
+│  ├── Skema pembagian biaya                                  │
+│  ├── Timeline perbaikan                                     │
+│  └── Output: Remediation Plan + Settlement Proposal         │
+│                                                             │
+│  TAHAP 6: MONITORING PERBAIKAN                              │
+│  ├── Tracking progres perbaikan via app                     │
+│  ├── Quality control inspeksi                               │
+│  └── Post-repair monitoring (IoT)                           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 5.2 Integrasi IoT untuk Structural Health Monitoring
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  STRUCTURAL HEALTH MONITORING (IoT Integration)             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  SENSOR YANG DIDUKUNG:                                      │
+│  ├── Crack gauge (pengukur lebar retak)                     │
+│  ├── Tilt meter (pengukur kemiringan)                       │
+│  ├── Settlement marker (pengukur penurunan)                 │
+│  ├── Strain gauge (pengukur regangan)                       │
+│  ├── Vibration sensor (pengukur getaran)                    │
+│  ├── Load cell (pengukur beban)                             │
+│  └── Corrosion sensor (pengukur korosi)                     │
+│                                                             │
+│  DATA PIPELINE:                                             │
+│  Sensor → Gateway → Cloud → KontrakGuard Dashboard          │
+│                                                             │
+│  DASHBOARD MONITORING:                                      │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  🏢 Gedung XYZ — Lantai Basement                    │   │
+│  │  Status: ⚠️ WARNING                                 │   │
+│  │                                                     │   │
+│  │  Sensor CRK-001 (Retak Dinding):                    │   │
+│  │  ├── Lebar saat ini: 2.3 mm                         │   │
+│  │  ├── Threshold warning: 2.0 mm                      │   │
+│  │  ├── Threshold danger: 5.0 mm                       │   │
+│  │  ├── Tren: +0.1 mm/minggu (stabil)                  │   │
+│  │  └── Status: ⚠️ Melebihi warning threshold          │   │
+│  │                                                     │   │
+│  │  Sensor STL-003 (Penurunan):                        │   │
+│  │  ├── Total settlement: 18 mm                        │   │
+│  │  ├── Differential: 8 mm (OK)                        │   │
+│  │  └── Status: ✅ Normal                               │   │
+│  │                                                     │   │
+│  │  AI Prediction:                                     │   │
+│  │  "Jika tren berlanjut, CRK-001 akan mencapai        │   │
+│  │   danger threshold dalam 27 minggu. Rekomendasi:    │   │
+│  │   Inspeksi visual dalam 2 minggu."                  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  AUTO-ALERT:                                                │
+│  ├── Email/SMS/WhatsApp ke pemilik & pengelola              │
+│  ├── Auto-create incident report                            │
+│  └── Rekomendasi penunjukan Penilai Ahli jika perlu         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 6: DISPUTE RESOLUTION LADDER — PENYELESAIAN KONSTRUKTIF
+
+Ini adalah **jantung filosofis** aplikasi. Bukan litigasi sebagai pilihan pertama, tapi sebagai pilihan terakhir.
+
+### 6.1 Lima Anak Tangga Penyelesaian
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DISPUTE RESOLUTION LADDER                                  │
+│  (Naik hanya jika tangga di bawahnya gagal)                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  TANGGA 5: LITIGASI (Pengadilan Negeri)             │   │
+│  │  ⚖️ Pilihan terakhir, waktu 2-5 tahun, biaya tinggi  │   │
+│  │  → Hanya jika semua tangga lain gagal               │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                        ▲                                    │
+│                        │ (gagal)                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  TANGGA 4: ARBITRASE (BANI atau institusi lain)     │   │
+│  │  ⚖️ Final & binding, waktu 6-18 bulan               │   │
+│  │  → Jika kontrak mensyaratkan arbitrase              │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                        ▲                                    │
+│                        │ (gagal)                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  TANGGA 3: ADJUDIKASI / PENILAIAN AHLI              │   │
+│  │  👨‍⚖️ Penilai Ahli memberikan expert opinion          │   │
+│  │  → Binding jika disepakati, non-binding jika tidak  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                        ▲                                    │
+│                        │ (gagal)                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  TANGGA 2: MEDIASI / KONSILIASI                     │   │
+│  │  🤝 Fasilitator netral, win-win solution            │   │
+│  │  → Waktu 30-90 hari, biaya rendah                   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                        ▲                                    │
+│                        │ (gagal)                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  TANGGA 1: NEGOSIASI LANGSUNG                       │   │
+│  │  💬 Para pihak berunding langsung                    │   │
+│  │  → Waktu 14-30 hari, biaya nol                      │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                        ▲                                    │
+│                        │                                    │
+│              ┌──────────────────────┐                       │
+│              │  PENCEGAHAN (PRE)    │                       │
+│              │  Early Warning System│                       │
+│              │  & Compliance Check  │                       │
+│              └──────────────────────┘                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Fitur Aplikasi per Tangga
+
+**TANGGA 1: NEGOSIASI LANGSUNG**
+- **Negotiation Room:** Ruang virtual terenkripsi untuk negosiasi
+- **AI Negotiation Assistant:** Menganalisis posisi masing-masing pihak, merekomendasikan zona kesepakatan (ZOPA — Zone of Possible Agreement)
+- **Offer/Counter-offer Tracker:** Melacak semua tawaran dengan timestamp
+- **Settlement Draft Generator:** Otomatis membuat draf perjanjian penyelesaian
+
+**TANGGA 2: MEDIASI**
+- **Mediator Selection:** Pilih dari marketplace Penilai Ahli
+- **Mediation Session Manager:** Jadwal, MoM, dokumen
+- **Virtual Mediation Room:** Video conference terintegrasi dengan evidence sharing
+- **Mediation Agreement Template:** Sesuai standar BANI
+- **Confidentiality Vault:** Semua dokumen mediasi terenkripsi, tidak bisa digunakan di arbitrase jika mediasi gagal (sesuai prinsip confidentiality)
+
+**TANGGA 3: ADJUDIKASI / PENILAIAN AHLI**
+- **Expert Assessor Workspace:** (seperti dijelaskan di Bagian 4)
+- **Expert Opinion Template:** Sesuai standar profesi
+- **Technical Analysis Tools:** Delay analysis, cost analysis, root cause
+- **Binding/Non-Binding Option:** Para pihak pilih di awal
+- **Compliance Check:** Memastikan proses sesuai UU 2/2017
+
+**TANGGA 4: ARBITRASE**
+- **BANI Integration:** E-filing dokumen ke BANI
+- **Arbitrator Selection:** Dari panel BANI
+- **Hearing Management:** Jadwal, dokumen, saksi
+- **Award Template:** Sesuai format BANI
+- **Enforcement Support:** Panduan eksekusi putusan arbitrase
+
+**TANGGA 5: LITIGASI**
+- **Court Export:** (seperti dijelaskan di v2.0)
+- **Litigation Support:** Template gugatan, jawaban, replik, duplik
+- **Expert Witness Coordination:** Penilai Ahli sebagai saksi ahli
+- **Case Law Research:** Database yurisprudensi terkait
+
+### 6.3 AI-Powered Settlement Recommender
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  AI SETTLEMENT RECOMMENDER                                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  INPUT:                                                     │
+│  ├── Data sengketa (klaim, bukti, posisi para pihak)        │
+│  ├── 500+ kasus serupa dalam database                       │
+│  ├── Yurisprudensi MA & putusan BANI                        │
+│  ├── Biaya & waktu per tangga penyelesaian                  │
+│  └── Risk profile masing-masing pihak                       │
+│                                                             │
+│  ANALISIS:                                                  │
+│  ├── Probabilitas menang di arbitrase: 62% (Owner)          │
+│  ├── Probabilitas menang di litigasi: 58% (Owner)           │
+│  ├── Estimasi biaya arbitrase: Rp750 juta                   │
+│  ├── Estimasi biaya litigasi: Rp1.2 miliar                  │
+│  ├── Estimasi waktu arbitrase: 12 bulan                     │
+│  ├── Estimasi waktu litigasi: 36 bulan                      │
+│  └── Hubungan bisnis: masih ingin dilanjutkan? [Ya]         │
+│                                                             │
+│  REKOMENDASI:                                               │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  🎯 REKOMENDASI UTAMA: MEDIASI                      │   │
+│  │                                                     │   │
+│  │  Alasan:                                            │   │
+│  │  ├── Hubungan bisnis ingin dilanjutkan              │   │
+│  │  ├── Probabilitas menang tidak dominan (>70%)       │   │
+│  │  ├── Biaya mediasi hanya Rp150 juta (vs Rp750jt)    │   │
+│  │  └── Waktu 60 hari (vs 12 bulan)                    │   │
+│  │                                                     │   │
+│  │  USULAN PENYELESAIAN:                               │   │
+│  │  ├── Kontraktor tarik klaim EOT (hemat waktu Owner) │   │
+│  │  ├── Owner bayar 70% VO (Rp1.96M dari Rp2.8M)       │   │
+│  │  ├── Denda keterlambatan dihapus                    │   │
+│  │  ├── Total settlement: Rp1.96M                      │   │
+│  │  └── Win-win: Owner hemat Rp840jt, Kontraktor       │   │
+│  │      dapat cash flow cepat                          │   │
+│  │                                                     │   │
+│  │  Penilai Ahli yang direkomendasikan:                │   │
+│  │  └── Ir. Siti Rahayu, M.T. (mediator, ⭐4.8)        │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 7: PANDUAN PEMBUATAN KONTRAK BERBASIS STANDAR
+
+### 7.1 Contract Drafting Wizard
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  CONTRACT DRAFTING WIZARD                                   │
+│  Berbasis SKKNI, PUPR, FIDIC, dan Best Practice             │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  STEP 1: INFORMASI DASAR                                    │
+│  ├── Jenis proyek: [Gedung / Infrastruktur / MEP / dll]     │
+│  ├── Sumber dana: [Pemerintah / Swasta / BUMN / APBN]      │
+│  ├── Skema kontrak: [Lump Sum / Harga Satuan / Turnkey /   │
+│  │                    Design & Build / EPC]                  │
+│  ├── Nilai estimasi: Rp_____                                │
+│  └── Jangka waktu: _____ bulan                              │
+│                                                             │
+│  STEP 2: TEMPLATE DASAR                                     │
+│  Sistem merekomendasikan template berdasarkan input:        │
+│  ├── Proyek Pemerintah → Permen PUPR 14/2020               │
+│  ├── Swasta + FIDIC → FIDIC Red Book (adaptasi)            │
+│  ├── Design & Build → FIDIC Yellow Book                     │
+│  └── EPC → FIDIC Silver Book                                │
+│                                                             │
+│  STEP 3: KUSTOMISASI KLAUSUL                                │
+│  Sistem memandu kustomisasi dengan panduan:                 │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  KLAUSUL: DENDA KETERLAMBATAN                       │   │
+│  │                                                     │   │
+│  │  Template standar: "1‰ per hari, maksimal 5%"       │   │
+│  │                                                     │   │
+│  │  💡 Panduan:                                        │   │
+│  │  ├── Untuk proyek pemerintah: WAJIB mengikuti      │   │
+│  │  │   Permen PUPR (maks 1‰, cap 5%)                  │   │
+│  │  ├── Untuk proyek swasta: Bebas, tapi              │   │
+│  │  │   pengadilan bisa batalkan jika tidak wajar     │   │
+│  │  ├── Best practice: 0.5-1‰ dengan cap 5-10%        │   │
+│  │  └── Pertimbangan: Semakin tinggi denda, semakin   │   │
+│  │      mahal harga tender (kontraktor include risk)  │   │
+│  │                                                     │   │
+│  │  [Gunakan Standar] [Kustomisasi] [Konsultasi PA]   │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  STEP 4: INTEGRASI KLAUSUL PENYELESAIAN SENGKETA            │
+│  Sistem mewajibkan klausul penyelesaian sengketa:           │
+│  ├── Multi-tier dispute resolution (5 tangga)              │
+│  ├── Penunjukan Penilai Ahli (opsi)                         │
+│  ├── Arbitrase BANI (rekomendasi)                           │
+│  └── Governing law: Hukum Indonesia                         │
+│                                                             │
+│  STEP 5: COMPLIANCE CHECK                                   │
+│  ├── ✅ Sesuai UU 2/2017                                    │
+│  ├── ✅ Sesuai Permen PUPR 14/2020                          │
+│  ├── ✅ Sesuai Perpres 16/2018 (jika pemerintah)            │
+│  ├── ⚠️ Klausul force majeure perlu diperluas              │
+│  └── Skor kepatuhan: 92/100                                 │
+│                                                             │
+│  STEP 6: REVIEW & APPROVAL                                  │
+│  ├── Review oleh Penilai Ahli (opsional, berbayar)          │
+│  ├── E-signature semua pihak (BSrE)                         │
+│  ├── E-meterai otomatis                                     │
+│  └── Generate final contract package                        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7.2 Klausul Wajib Berdasarkan SKKNI & Regulasi
+
+Aplikasi memastikan kontrak memuat klausul wajib sesuai standar:
+
+| Klausul | Dasar Hukum | SKKNI Terkait |
+|---|---|---|
+| Lingkup pekerjaan jelas | UU 2/2017 Ps 31 | KON.K01.001 |
+| Hak & kewajiban para pihak | KUHPerdata 1320 | KON.K01.001 |
+| Harga & mekanisme pembayaran | Permen PUPR 14/2020 | KON.K01.002 |
+| Jangka waktu & perpanjangan | UU 2/2017 Ps 34 | KON.K01.005 |
+| Jaminan (pelaksanaan, uang muka, retensi) | Perpres 16/2018 | KON.K01.002 |
+| Asuransi (CAR) | UU 2/2017 Ps 34 | KON.K01.002 |
+| K3L (SMK3) | PP 50/2012 | KON.K01.003 |
+| Penyelesaian sengketa | UU 2/2017 Ps 64-68 | KON.K01.006 |
+| Tanggung jawab kegagalan bangunan | UU 2/2017 Ps 39-40 | KON.K01.007 |
+| Peran Pengawas & MK | UU 2/2017 Ps 35 | KON.K01.004 |
+
+---
+
+## BAGIAN 8: MODEL BISNIS TERINTEGRASI
+
+### 8.1 Multi-Sided Platform
+
+KontrakGuard v3.0 adalah **platform multi-sisi** yang menghubungkan:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MULTI-SIDED PLATFORM MODEL                                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌──────────────┐         ┌──────────────┐                 │
+│  │  OWNER /     │         │  KONTRAKTOR  │                 │
+│  │  DEVELOPER   │◄───────►│  (Utama &    │                 │
+│  │              │ kontrak │  Sub)        │                 │
+│  └──────┬───────┘         └──────┬───────┘                 │
+│         │                        │                          │
+│         │                        │                          │
+│         ▼                        ▼                          │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              KONTRAKGUARD PLATFORM                  │   │
+│  │  (Hukum + Administrasi + Kegagalan + Penilai Ahli)  │   │
+│  └─────────────────────────────────────────────────────┘   │
+│         │                        │                          │
+│         │                        │                          │
+│         ▼                        ▼                          │
+│  ┌──────────────┐         ┌──────────────┐                 │
+│  │  PENILAI     │         │  KONSULTAN   │                 │
+│  │  AHLI        │         │  MK /        │                 │
+│  │  (Marketplace│         │  Pengawas    │                 │
+│  │   + Tools)   │         │              │                 │
+│  └──────────────┘         └──────────────┘                 │
+│                                                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │  FIRMA       │  │  LABORATORIUM│  │  ASURANSI    │     │
+│  │  HUKUM       │  │  UJI         │  │  KONSTRUKSI  │     │
+│  └──────────────┘  └──────────────┘  └──────────────┘     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 8.2 Revenue Streams
+
+| Stream | Sumber | Estimasi % Revenue |
+|---|---|---|
+| **SaaS Subscription** | Owner, Kontraktor, MK | 45% |
+| **Marketplace Commission** | 10-15% dari fee Penilai Ahli | 25% |
+| **AI Analysis Credits** | Per analisis kontrak | 8% |
+| **Court Export Service** | Per dossier hukum | 7% |
+| **Training & Certification** | Kursus SKKNI, sertifikasi | 5% |
+| **Enterprise Integration** | Custom API, on-premise | 7% |
+| **Data & Insights** | Industry benchmarking reports | 3% |
+
+### 8.3 Pricing yang Disempurnakan
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PRICING v3.0                                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  🏢 OWNER / DEVELOPER                                       │
+│  ├── Starter: Rp10 juta/bulan (1 proyek)                    │
+│  ├── Professional: Rp35 juta/bulan (5 proyek)               │
+│  ├── Enterprise: Rp100 juta/bulan (unlimited)               │
+│  └── Government: Custom                                     │
+│                                                             │
+│  🏗️ KONTRAKTOR                                              │
+│  ├── Starter: Rp7.5 juta/bulan                              │
+│  ├── Professional: Rp25 juta/bulan                          │
+│  └── Enterprise: Rp75 juta/bulan                            │
+│                                                             │
+│  👷 KONSULTAN MK / PENGAWAS                                  │
+│  ├── Professional: Rp20 juta/bulan                          │
+│  └── Enterprise: Rp60 juta/bulan                            │
+│                                                             │
+│  👨‍⚖️ PENILAI AHLI                                           │
+│  ├── Basic: GRATIS (untuk profil & listing)                 │
+│  ├── Professional: Rp2 juta/bulan                           │
+│  │   └── Expert Workspace + Analysis Tools                   │
+│  └── Enterprise: Rp8 juta/bulan                             │
+│      └── + Priority listing + marketing support              │
+│                                                             │
+│  🎓 TRAINING & CERTIFICATION                                │
+│  ├── SKKNI Course: Rp5-15 juta/orang                        │
+│  ├── Penilai Ahli Certification Prep: Rp25 juta             │
+│  └── Corporate Training: Custom                             │
+│                                                             │
+│  💎 PREMIUM SERVICES                                        │
+│  ├── Expert Assessor Commission: 12% dari fee               │
+│  ├── Court Export: Rp5-15 juta/dossier                      │
+│  ├── AI Contract Review: Rp1-5 juta/analisis                │
+│  └── Mediation Facilitation: Rp25-100 juta/kasus            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 9: USER JOURNEY TERINTEGRASI (SKENARIO LENGKAP)
+
+### Skenario: Sengketa VO + Kegagalan Dinding Basement
+
+**Konteks:** Proyek gedung komersial Rp120 miliar. 18 bulan setelah serah terima, dinding basement retak dan bocor. Owner menolak bayar VO senilai Rp3.2 miliar, menuduh kontraktor lalai. Kontraktor mengklaim VO sudah dikerjakan dan kegagalan adalah akibat desain drainase yang kurang.
+
+**Perjalanan di KontrakGuard v3.0:**
+
+```
+HARI 1: KEGAGALAN TERDETEKSI
+├── Sensor IoT di basement mendeteksi retak melebar
+├── Auto-alert ke Owner, Kontraktor, MK
+├── Building Failure Forensics module aktif
+│   └── Initial Damage Report otomatis dibuat
+└── Semua pihak terima notifikasi
+
+HARI 2-7: INVESTIGASI AWAL
+├── Kontraktor kirim tim ke lapangan
+│   └── Input data via mobile app (foto 360°, pengukuran)
+├── MK lakukan inspeksi independen
+├── Sistem kumpulkan:
+│   ├── Data as-built (dari Evidence Vault)
+│   ├── Hasil uji lab saat konstruksi
+│   ├── Daily reports periode pengecoran
+│   └── VO terkait drainase (yang dulu tidak dibayar)
+└── AI Root Cause Analysis:
+    └── "70% penyebab: desain drainase kurang (Owner/Perencana)
+         20% penyebab: kualitas beton di bawah spec (Kontraktor)
+         10% penyebab: pembebanan melebihi desain (Owner)"
+
+HARI 8: POTENSI SENGKETA TERDETEKSI
+├── Predictive Risk Engine: "85% probabilitas sengketa"
+├── Rekomendasi sistem: "Mediasi dengan Penilai Ahli"
+├── Owner buka Expert Assessor Marketplace
+└── Pilih: Prof. Ir. Bambang Sutanto (Ahli Utama, ⭐4.9)
+
+HARI 9-14: PENUNJUKAN PENILAI AHLI
+├── Kedua pihak sepakat menunjuk Prof. Bambang
+├── TOR ditandatangani digital (BSrE)
+├── Deposit fee Rp75 juta masuk escrow
+└── Prof. Bambang dapat akses ke Expert Workspace
+
+HARI 15-45: PROSES MEDIASI
+├── Prof. Bambang analisis data via Expert Workspace
+│   ├── Delay Analysis Tool → konfirmasi VO valid
+│   ├── Root Cause Analysis → validasi temuan AI
+│   └── Cost Analysis → verifikasi klaim Rp3.2M
+├── 3 sesi mediasi (virtual + tatap muka)
+├── AI Settlement Recommender给出 usulan:
+│   ├── Owner bayar 80% VO (Rp2.56M)
+│   ├── Kontraktor tanggung 20% biaya perbaikan (Rp180M)
+│   ├── Owner tanggung 80% biaya perbaikan (Rp720M)
+│   └── Total settlement: Rp3.46M (vs klaim Rp3.2M + perbaikan Rp900M = Rp4.1M)
+└── Para pihak terima usulan
+
+HARI 46: SETTLEMENT AGREEMENT
+├── Settlement Agreement di-draft otomatis
+├── Review oleh lawyer masing-masing (via app)
+├── E-signature + e-meterai
+├── Escrow release ke Prof. Bambang
+└── Sengketa selesai dalam 46 hari (vs 12-36 bulan jika arbitrase/litigasi)
+
+HASIL:
+├── Owner hemat: Rp640 juta + waktu 1 tahun
+├── Kontraktor dapat: Rp2.56M cash flow + hubungan terjaga
+├── Prof. Bambang: Fee Rp75 juta + reputasi naik
+├── KontrakGuard: Revenue Rp15 juta (subscription + commission)
+└── Proyek tetap berjalan, tidak mangkrak
+```
+
+---
+
+## BAGIAN 10: ROADMAP PENGEMBANGAN v3.0
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ROADMAP 24 BULAN                                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  FASE 1: FOUNDATION (Bulan 1-6)                             │
+│  ├── MVP Modul A: Administrasi Kontrak                      │
+│  ├── MVP Modul D: Contract Drafting Wizard                  │
+│  ├── SKKNI Framework integration                            │
+│  ├── 50 kontrak training data                               │
+│  ├── 10 pilot customers                                     │
+│  └── Target: ARR Rp3 miliar                                 │
+│                                                             │
+│  FASE 2: FORENSICS (Bulan 7-12)                             │
+│  ├── Modul B: Building Failure Forensics                    │
+│  ├── Evidence Vault (forensic-ready)                        │
+│  ├── NCR & Material Traceability                            │
+│  ├── AI Contract Analyzer v1.0                              │
+│  ├── 50 customers                                           │
+│  └── Target: ARR Rp15 miliar                                │
+│                                                             │
+│  FASE 3: EXPERT ASSESSOR (Bulan 13-18)                      │
+│  ├── Modul C: Expert Assessor Marketplace                   │
+│  ├── Mediation Platform                                     │
+│  ├── Dispute Resolution Ladder                              │
+│  ├── Rekrut 100 Penilai Ahli                                │
+│  ├── Partnership dengan BANI & LPJK                         │
+│  ├── 150 customers                                          │
+│  └── Target: ARR Rp50 miliar                                │
+│                                                             │
+│  FASE 4: ECOSYSTEM (Bulan 19-24)                            │
+│  ├── IoT Integration (Structural Health Monitoring)         │
+│  ├── AI Settlement Recommender                              │
+│  ├── Training & Certification Platform                      │
+│  ├── International expansion (Malaysia, Singapore)          │
+│  ├── 400 customers                                          │
+│  └── Target: ARR Rp150 miliar                               │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## RINGKASAN EKSEKUTIF v3.0
+
+**KontrakGuard v3.0** adalah platform terintegrasi pertama di dunia yang menyatukan:
+
+1. **Hukum & Administrasi Kontrak** — AI-powered contract management
+2. **Kegagalan Bangunan** — Forensik digital + IoT monitoring
+3. **Penilai Ahli Digital** — Marketplace + tools + mediation platform
+4. **SKKNI & Standar** — Basis kompetensi & kepatuhan regulasi
+5. **Penyelesaian Konstruktif** — 5-tangga dispute resolution
+
+**Visi:**
+> "Mengubah sengketa konstruksi dari pertarungan menang-kalah menjadi kolaborasi menang-menang, dengan Penilai Ahli sebagai katalisator penyelesaian konstruktif."
+
+**Diferensiasi Utama:**
+- Satu-satunya platform yang mengintegrasikan **Penilai Ahli** sebagai fitur inti
+- Berbasis **SKKNI** dan regulasi Indonesia (moat regulasi)
+- **Forensic-ready** evidence vault (court-admissible)
+- **Predictive risk** + **AI settlement recommender**
+- **Multi-sided platform** yang menghubungkan semua stakeholder
+
+**Target Pasar Indonesia:**
+- 10.000+ perusahaan konstruksi
+- 5.000+ Penilai Ahli terdaftar
+- 500+ konsultan MK
+- 1.000+ developer/owner
+- Total addressable market: Rp5 triliun/tahun
+
+**Impact yang Diinginkan:**
+- Mengurangi sengketa konstruksi 50% dalam 5 tahun
+- Memangkas waktu penyelesaian sengketa dari 2 tahun → 2 bulan
+- Menghemat biaya hukum industri konstruksi Rp10 triliun/tahun
+- Meningkatkan kualitas bangunan Indonesia melalui forensik digital
+
+---
+
+Apakah Anda ingin saya mendalami salah satu aspek spesifik? Misalnya:
+
+1. **Detail teknis Expert Assessor Marketplace** — algoritma matching, sistem rating, escrow?
+2. **Blueprint Building Failure Forensics** — integrasi IoT, AI root cause analysis?
+3. **Dispute Resolution Ladder** — detail workflow per tangga, template dokumen?
+4. **SKKNI Integration** — mapping unit kompetensi ke fitur aplikasi?
+5. **Go-to-market strategy** — bagaimana mendekati Penilai Ahli sebagai early adopter?
+6. **Regulatory roadmap** — strategi MoU dengan LPJK, BANI, PUPR?
+7. **Financial model lengkap** — unit economics, proyeksi 5 tahun, funding needs?{
+  "generated_from_documents": 38,
+  "documents": [
+    {
+      "currency_warning": "Dokumen diterbitkan tahun 2002; peraturan dan standar yang disebutkan mungkin tidak lagi mencerminkan undang-undang atau standar industri terbaru [L1, L22].",
+      "document_type": "Jurnal Akademik",
+      "failure_causes": [
+        "Kesalahan perencanaan",
+        "Ketidaksesuaian pelaksanaan"
+      ],
+      "filename": "142228332-Analisis-Aspek-Hukum-Dan-Manajemen-Kontrak-Industri-_1789883561349.pdf",
+      "id": "62f47060add9",
+      "key_topics": [
+        "Manajemen Kontrak",
+        "FIDIC",
+        "Administrasi Kontrak",
+        "Siklus Hidup Konstruksi"
+      ],
+      "legal_concepts": [
+        "Keabsahan Kontrak",
+        "Hak dan Kewajiban",
+        "Risk Management"
+      ],
+      "named_cases": [],
+      "primary_category": "administrasi_kontrak",
+      "recommended_use": "Gunakan untuk referensi kerangka kerja manajemen kontrak dan perbandingan jenis kontrak.",
+      "regulations_mentioned": [
+        "UUJK No. 18 Tahun 1999",
+        "KUH Perdata"
+      ],
+      "reliability_note": "Berfungsi sebagai tinjauan akademis dan praktis yang sistematis namun referensi hukum perlu diverifikasi dengan regulasi terkini.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Makalah ini menganalisis siklus hidup proyek konstruksi, manajemen kontrak, dan berbagai bentuk kontrak termasuk penggunaan standar FIDIC. Fokus utamanya adalah pada peran kontrak sebagai pedoman dan alat pengendalian administratif untuk mengelola risiko serta hak dan kewajiban para pihak [L3-L6, L11-L22]. Dokumen ini sangat berguna untuk memahami kerangka kerja manajemen kontrak sistematis dan struktur kontrak internasional maupun lokal [L6-L10, L17].",
+      "tags": [
+        "Manajemen Kontrak",
+        "Kontrak Konstruksi",
+        "FIDIC",
+        "Hukum Konstruksi"
+      ],
+      "title": "Adventus: Analisis Aspek Hukum & Manajemen Kontrak dalam Industri Konstruksi"
+    },
+    {
+      "currency_warning": "Data dan referensi berasal dari tahun 2013; pastikan untuk memeriksa pembaruan pada UU Jasa Konstruksi dan standar teknis terkait [L1].",
+      "document_type": "Makalah Mahasiswa",
+      "failure_causes": [
+        "Kesalahan Desain",
+        "Penyimpangan Spesifikasi",
+        "Kegagalan Material",
+        "Bencana Alam"
+      ],
+      "filename": "191999651-Kegagalan-Konstruksi-Bangunan_1789888870299.docx",
+      "id": "83b51bc4d4dc",
+      "key_topics": [
+        "Kegagalan Struktur",
+        "Pemeliharaan Bangunan",
+        "Manajemen Risiko",
+        "Studi Kasus Keruntuhan"
+      ],
+      "legal_concepts": [
+        "Definisi Kegagalan Bangunan",
+        "Tanggung Jawab Penyedia Jasa"
+      ],
+      "named_cases": [
+        "Skyline Plaza",
+        "Harbour Cay Condominium",
+        "David L. Lawrence Convention Center"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Gunakan untuk memahami profil risiko kegagalan bangunan dan dasar-dasar pertanggungjawaban hukum terkait.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "PP No. 29 Tahun 2000",
+        "UU No. 28 Tahun 2002"
+      ],
+      "reliability_note": "Materi bersifat edukatif; studi kasus memberikan wawasan praktis namun analisis teknis harus diverifikasi oleh ahli profesional.",
+      "source_quality": "sekunder_umum",
+      "summary": "Makalah ini mendefinisikan kegagalan bangunan menurut regulasi dan mengidentifikasi penyebab kegagalan baik yang dapat diprediksi (desain, material, pengawasan) maupun tidak dapat diprediksi (alam) [L3-L12]. Dokumen ini mencakup studi kasus kegagalan struktural seperti Skyline Plaza dan Harbour Cay untuk menyoroti pentingnya kepatuhan terhadap desain dan standar pemeliharaan [L12-L21]. Penekanan diberikan pada pentingnya pemeliharaan berkala dan penggunaan teknologi seperti SHMS untuk mencegah keruntuhan [L25-L35].",
+      "tags": [
+        "Kegagalan Konstruksi",
+        "Pemeliharaan",
+        "Struktur Bangunan",
+        "Hukum Jasa Konstruksi"
+      ],
+      "title": "KEGAGALAN KONSTRUKSI Bangunan"
+    },
+    {
+      "currency_warning": "Mengacu pada Keppres 80/2003 yang telah mengalami perubahan melalui regulasi pengadaan barang/jasa pemerintah terbaru; harap verifikasi dengan aturan pengadaan terkini [L12].",
+      "document_type": "Materi Pelatihan/Teknis",
+      "failure_causes": [
+        "Perubahan Lingkup Pekerjaan",
+        "Ketidakjelasan Spesifikasi"
+      ],
+      "filename": "206352755-DOKUMEN-KONTRAK-docx_1789883561350.docx",
+      "id": "fa17b673475f",
+      "key_topics": [
+        "Dokumen Kontrak",
+        "Spesifikasi Teknis",
+        "Amandemen Kontrak",
+        "Pelelangan"
+      ],
+      "legal_concepts": [
+        "Cidera Janji",
+        "Force Majeure",
+        "Kegagalan Bangunan",
+        "Amandemen Kontrak"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Gunakan untuk menyusun atau meninjau kelengkapan dokumen kontrak konstruksi sesuai standar nasional.",
+      "regulations_mentioned": [
+        "PP 29 Tahun 2000",
+        "UU No. 18 Tahun 1999",
+        "Keppres No. 80/2003"
+      ],
+      "reliability_note": "Sangat informatif untuk memahami struktur dokumen formal namun perlu disesuaikan dengan regulasi pengadaan terbaru yang berlaku.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Dokumen ini menjelaskan struktur formal dokumen kontrak konstruksi sesuai dengan regulasi Indonesia serta urutan prioritas hukum dokumen dalam pelelangan nasional maupun internasional [L1-L15]. Dokumen merinci isi minimum kontrak kerja konstruksi dan penggunaan spesifikasi teknis untuk pengendalian proyek serta prosedur amandemen saat terjadi perubahan lingkup pekerjaan [L16-L45]. Panduan ini memberikan kejelasan bagi para pihak mengenai posisi dokumen kontrak dalam mencegah kesalahpahaman dan perselisihan [L46-L55].",
+      "tags": [
+        "Kontrak",
+        "Dokumen Tender",
+        "Spesifikasi",
+        "Amandemen",
+        "Pengadaan"
+      ],
+      "title": "DOKUMEN KONTRAK"
+    },
+    {
+      "currency_warning": "Konten tahun 2014; pastikan untuk memvalidasi persyaratan kelaikan fungsi bangunan dengan peraturan daerah dan pusat terkini [L1].",
+      "document_type": "Tugas Akademik",
+      "failure_causes": [
+        "Kesalahan Perencanaan",
+        "Kesalahan Pelaksanaan",
+        "Malafungsi Penggunaan",
+        "Kurangnya Perawatan"
+      ],
+      "filename": "231834380-Essay-Tentang-Runtuhnya-Bangunan_1789888870297.docx",
+      "id": "01f581e8408a",
+      "key_topics": [
+        "Manajemen Risiko",
+        "Kegagalan Bangunan",
+        "Pemeliharaan",
+        "Structural Health Monitoring System"
+      ],
+      "legal_concepts": [
+        "Tanggung Jawab Hukum",
+        "Kelaikan Fungsi Bangunan",
+        "Force Majeure"
+      ],
+      "named_cases": [
+        "Rana Plaza",
+        "Gedung CTV",
+        "Jembatan Kutai Kartanegara",
+        "Proyek Hambalang"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Gunakan untuk memahami kerangka manajemen risiko bangunan dan kewajiban pemeliharaan gedung.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "UU No. 28 Tahun 2002",
+        "PP No. 29 Tahun 2000"
+      ],
+      "reliability_note": "Memberikan perspektif manajemen risiko yang baik namun analisis kasus sebaiknya didukung dengan investigasi teknis yang relevan.",
+      "source_quality": "sekunder_umum",
+      "summary": "Makalah ini mengevaluasi penyebab runtuhnya bangunan melalui lensa manajemen risiko dan tinjauan yuridis di Indonesia [L1-L15]. Dokumen menekankan pentingnya peran perencana, kontraktor, dan pengawas dalam memastikan kelaikan fungsi bangunan, serta kewajiban perawatan oleh pemilik sesuai undang-undang [L16-L30]. Selain itu, dibahas penerapan teknologi SHMS sebagai metode proaktif untuk pemantauan kesehatan struktur guna mencegah kegagalan bangunan dini [L31-L45].",
+      "tags": [
+        "Manajemen Risiko",
+        "Kegagalan Bangunan",
+        "Perawatan Bangunan",
+        "Kelaikan Fungsi"
+      ],
+      "title": "Manajemen Risiko Bangunan Runtuh"
+    },
+    {
+      "currency_warning": "Dokumen tahun 2014; aturan sengketa dan pengadaan mungkin telah diperbarui; selalu rujuk pada peraturan sengketa konstruksi terbaru [L1].",
+      "document_type": "Makalah Mahasiswa",
+      "failure_causes": [
+        "Perubahan lingkup pekerjaan",
+        "Kondisi eksternal",
+        "Ketidakjelasan gambar/spesifikasi"
+      ],
+      "filename": "252355021-Aspek-Hukum-Konstruksi_1789883561351.docx",
+      "id": "b8e66274c3b5",
+      "key_topics": [
+        "Sengketa Konstruksi",
+        "Penyelesaian Sengketa",
+        "Administrasi Kontrak",
+        "Urutan Prioritas Dokumen"
+      ],
+      "legal_concepts": [
+        "Kebebasan Berkontrak",
+        "Asas Hukum Perikatan",
+        "Hak Retensi",
+        "Vicarious Liability"
+      ],
+      "named_cases": [],
+      "primary_category": "klaim_sengketa",
+      "recommended_use": "Gunakan untuk memahami potensi penyebab sengketa dan hierarki dokumen saat terjadi konflik dalam kontrak.",
+      "regulations_mentioned": [
+        "KUH Perdata",
+        "UU No. 18/1999",
+        "Kepres No. 80/2003"
+      ],
+      "reliability_note": "Analisis mengenai prioritas dokumen kontrak sangat praktis namun harus dikonsultasikan dengan kontrak spesifik yang digunakan (misal: FIDIC atau standar lokal).",
+      "source_quality": "sekunder_umum",
+      "summary": "Makalah ini membahas sengketa dalam kontrak konstruksi, mengidentifikasi faktor penyebab (teknis, waktu, dan biaya) serta kecenderungan penyelesaian melalui negosiasi [L1-L20]. Dokumen menjelaskan urutan prioritas kekuatan hukum dokumen kontrak saat terjadi perbedaan instruksi atau isi dokumen yang bertentangan [L21-L25]. Sengketa seringkali dipicu oleh faktor eksternal dan perubahan lingkup pekerjaan di lapangan yang mempengaruhi kinerja kontraktor [L15-L20].",
+      "tags": [
+        "Sengketa",
+        "Klaim",
+        "Administrasi Kontrak",
+        "Hukum Konstruksi"
+      ],
+      "title": "TUGAS MAKALAH ASPEK HUKUM: SENGKETA DALAM PEMBANGUNAN KONSTRUKSI"
+    },
+    {
+      "currency_warning": "Konten merujuk pada regulasi tahun 1999 yang mungkin sudah tidak berlaku atau digantikan oleh peraturan terbaru.",
+      "document_type": "Studi Kasus/Laporan",
+      "failure_causes": [
+        "kesalahan desain",
+        "pengurangan material",
+        "kurangnya pengawasan",
+        "kegagalan sistem perancah",
+        "prosedur perawatan tidak memadai"
+      ],
+      "filename": "259901174-Kegagalan-Konstruksi-Di-Indonesia_1789888870293.docx",
+      "id": "55c76a41c3c0",
+      "key_topics": [
+        "kegagalan bangunan",
+        "investigasi kegagalan",
+        "pengawasan konstruksi",
+        "tanggung jawab hukum"
+      ],
+      "legal_concepts": [
+        "gagal konstruksi",
+        "wanprestasi",
+        "hukum jasa konstruksi"
+      ],
+      "named_cases": [
+        "Menara Saidah",
+        "Jembatan Siak III",
+        "Rukan Cendrawasih",
+        "Jembatan Mahakam II",
+        "Jembatan Penghubung Gedung Perpustakaan Daerah DKI"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Referensi untuk studi kasus kegagalan bangunan dan pembelajaran pencegahan kesalahan di lapangan.",
+      "regulations_mentioned": [
+        "UU Jasa Konstruksi No. 18 Tahun 1999",
+        "Keppres No. 80/2003",
+        "Keputusan Menteri Keuangan No. 470/KMK.01/1994"
+      ],
+      "reliability_note": "Dokumen bersifat informatif berdasarkan pengamatan praktisi namun perlu divalidasi dengan aturan hukum terbaru.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini membahas definisi dan penyebab kegagalan konstruksi yang dipicu oleh faktor manusia, alam, atau kombinasi keduanya. Analisis mendalam disajikan untuk beberapa kasus nyata di Indonesia, seperti Menara Saidah dan Jembatan Siak III, dengan menyoroti pentingnya kepatuhan terhadap standar, pengawasan berkala, dan penegakan hukum dalam mencegah kegagalan bangunan.",
+      "tags": [
+        "kegagalan bangunan",
+        "studi kasus",
+        "konstruksi"
+      ],
+      "title": "Kegagalan Konstruksi Di Indonesia"
+    },
+    {
+      "currency_warning": "Regulasi PP 54/2010 telah diperbarui; selalu cek aturan pengadaan terkini.",
+      "document_type": "Kajian Akademik",
+      "failure_causes": [
+        "ketidakpastian geologis",
+        "perubahan desain",
+        "kegagalan kinerja kontraktor"
+      ],
+      "filename": "283357791-Studi-Kasus-Kontrak-Epc-Pada-Proyek-Pembangunan-Tero_1789883561351.pdf",
+      "id": "9b71e8dd88f5",
+      "key_topics": [
+        "kontrak EPC",
+        "manajemen risiko",
+        "klaim kontrak",
+        "proyek terowongan"
+      ],
+      "legal_concepts": [
+        "risiko kontrak",
+        "fixed price",
+        "unit price",
+        "sengketa kontrak",
+        "VO/EOT"
+      ],
+      "named_cases": [
+        "Terowongan Bjorøy",
+        "Terowongan Godøy"
+      ],
+      "primary_category": "fidic",
+      "recommended_use": "Gunakan sebagai referensi untuk manajemen kontrak proyek kompleks dan alokasi risiko EPC.",
+      "regulations_mentioned": [
+        "KUH Perdata Pasal 1313",
+        "PP 54 Tahun 2010",
+        "FIDIC Silver Book"
+      ],
+      "reliability_note": "Analisis akademis yang baik untuk memahami distribusi risiko dalam kontrak besar.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Dokumen ini menyoroti kompleksitas kontrak Engineering, Procurement, and Construction (EPC) pada proyek bawah tanah yang memiliki ketidakpastian tinggi. Penulis membahas pentingnya alokasi risiko yang jelas, manajemen klaim yang cepat, serta tantangan dalam menentukan apakah suatu kondisi masuk dalam cakupan lump sum atau unit price.",
+      "tags": [
+        "EPC",
+        "kontrak",
+        "manajemen klaim"
+      ],
+      "title": "Studi Kasus Kontrak EPC Pada Proyek Pembangunan Terowongan Jalan"
+    },
+    {
+      "currency_warning": "Peraturan yang dirujuk (Perpres 54/2010 dan UU 18/1999) telah banyak mengalami perubahan atau digantikan, sehingga template ini harus disesuaikan dengan regulasi terbaru.",
+      "document_type": "Contoh Template",
+      "failure_causes": [],
+      "filename": "297471352-10-BAB-VIII-Bentuk-Rancangan-Kontrak-pdf_1789883561352.pdf",
+      "id": "6bef8a627533",
+      "key_topics": [
+        "draft kontrak",
+        "surat perjanjian",
+        "KSO",
+        "kewajiban PPK/Penyedia"
+      ],
+      "legal_concepts": [
+        "kontrak harga satuan",
+        "hak dan kewajiban",
+        "masa pemeliharaan"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Gunakan sebagai referensi dasar struktur dokumen kontrak, namun sesuaikan klausal spesifik dengan hukum yang berlaku.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "PP No. 29 Tahun 2000",
+        "Perpres No. 54 Tahun 2010",
+        "Permen PU 14/PRT/M/2013"
+      ],
+      "reliability_note": "Ini hanyalah draf template dan tidak boleh digunakan tanpa penyesuaian hukum oleh ahli hukum atau konsultan kontrak.",
+      "source_quality": "contoh_template",
+      "summary": "Dokumen ini menyediakan kerangka rancangan kontrak (surat perjanjian) untuk penyedia tunggal maupun penyedia bermitra/KSO dalam proyek konstruksi. Mencakup klausul penting mengenai ruang lingkup, hak dan kewajiban pihak, masa kontrak, serta hierarki dokumen kontrak.",
+      "tags": [
+        "template kontrak",
+        "dokumen hukum",
+        "kemitraan"
+      ],
+      "title": "BAB VIII Bentuk Rancangan Kontrak"
+    },
+    {
+      "currency_warning": "Merujuk pada UU Jasa Konstruksi lama; pastikan merujuk ke UU Jasa Konstruksi terbaru (UU No. 2 Tahun 2017).",
+      "document_type": "Kajian Akademik",
+      "failure_causes": [
+        "komunikasi buruk",
+        "administrasi tidak memadai",
+        "desain tidak sempurna",
+        "investigasi lokasi kurang"
+      ],
+      "filename": "300387986-Klaim-Pada-Kontrak-Kerja-Konstruksi-Di-Indonesia-Dan_1789883561352.pdf",
+      "id": "35c506073030",
+      "key_topics": [
+        "manajemen klaim",
+        "penyelesaian sengketa",
+        "arbitrase",
+        "wanprestasi"
+      ],
+      "legal_concepts": [
+        "klaim waktu",
+        "klaim biaya",
+        "overhead",
+        "mediasi",
+        "arbitrase"
+      ],
+      "named_cases": [],
+      "primary_category": "klaim_sengketa",
+      "recommended_use": "Panduan dalam mengidentifikasi jenis klaim dan metode penyelesaian sengketa konstruksi secara profesional.",
+      "regulations_mentioned": [
+        "UU No. 30 Tahun 1999 (Arbitrase)",
+        "UU No. 18 Tahun 1999 (Jasa Konstruksi)"
+      ],
+      "reliability_note": "Sangat informatif untuk memahami dinamika klaim dan proses penyelesaian sengketa konstruksi.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Makalah ini menganalisis penyebab klaim dalam industri konstruksi, mencakup aspek keterlambatan, pekerjaan tambah/kurang, dan sengketa akibat ketidakjelasan dokumen. Dokumen ini menekankan pentingnya manajemen klaim yang proaktif serta menyarankan mediasi atau arbitrase sebagai solusi utama sengketa konstruksi dibandingkan litigasi pengadilan.",
+      "tags": [
+        "klaim",
+        "sengketa",
+        "manajemen proyek"
+      ],
+      "title": "Klaim Pada Kontrak Kerja Konstruksi Di Indonesia Dan Cara Penyelesaiannya"
+    },
+    {
+      "currency_warning": "Regulasi yang dirujuk sudah usang; periksa pembaruan dalam UU Jasa Konstruksi terbaru.",
+      "document_type": "Materi Edukasi",
+      "failure_causes": [
+        "kesalahan memenuhi kontrak",
+        "kegagalan bangunan",
+        "pengurangan kualitas"
+      ],
+      "filename": "309018788-ADMINISTRASI-KONTRAK-KONSTRUKSI_1789883561353.docx",
+      "id": "1586a2a63c61",
+      "key_topics": [
+        "administrasi kontrak",
+        "pengelolaan klaim",
+        "FIDIC",
+        "pekerjaan tambah kurang",
+        "wanprestasi"
+      ],
+      "legal_concepts": [
+        "force majeure",
+        "eskalasi harga",
+        "retensi",
+        "wanprestasi",
+        "kontrak lump sum"
+      ],
+      "named_cases": [],
+      "primary_category": "administrasi_kontrak",
+      "recommended_use": "Panduan praktis untuk staf teknis dan manajer proyek dalam menjalankan administrasi harian proyek.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "PP No. 29 Tahun 2000"
+      ],
+      "reliability_note": "Materi edukasi yang komprehensif untuk praktisi namun perlu sinkronisasi dengan aturan hukum terkini.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini merangkum praktik terbaik dalam administrasi kontrak konstruksi, termasuk pengelolaan hak dan kewajiban, penanganan klaim, serta prosedur perubahan kontrak. Terdapat penjelasan mengenai penggunaan standar FIDIC sebagai referensi internasional dalam kontrak, serta langkah preventif menghadapi wanprestasi dan kegagalan bangunan.",
+      "tags": [
+        "administrasi kontrak",
+        "FIDIC",
+        "manajemen proyek"
+      ],
+      "title": "Administrasi Kontrak Konstruksi"
+    },
+    {
+      "currency_warning": "Dokumen ini merujuk pada regulasi lama (UU 18/1999) yang telah digantikan oleh UU No. 2 Tahun 2017 tentang Jasa Konstruksi.",
+      "document_type": "makalah_akademik",
+      "failure_causes": [
+        "lemahnya_manajemen_mutu",
+        "praktik_KKN",
+        "ketidaktaatan_prosedur"
+      ],
+      "filename": "321815758-Makalah-Aspek-Hukum-Dalam-Konstruksi_1789883561354.pdf",
+      "id": "cca2944e57c7",
+      "key_topics": [
+        "hukum_kontrak",
+        "pengadaan_barang_jasa",
+        "RMP",
+        "integritas_anti_korupsi"
+      ],
+      "legal_concepts": [
+        "kegagalan_bangunan",
+        "sanksi_administratif",
+        "gugatan_perwakilan",
+        "perikatan_kontrak"
+      ],
+      "named_cases": [],
+      "primary_category": "hukum_kontrak",
+      "recommended_use": "Studi awal mengenai prinsip dasar kontrak konstruksi dan manajemen mutu.",
+      "regulations_mentioned": [
+        "UU_No_18_Tahun_1999",
+        "PP_28_2000",
+        "PP_29_2000",
+        "PP_4_2010",
+        "PP_30_2000"
+      ],
+      "reliability_note": "Bersifat akademis/pembelajaran umum; tidak untuk acuan hukum terkini.",
+      "source_quality": "sekunder_umum",
+      "summary": "Makalah ini membahas aspek hukum dalam penyelenggaraan jasa konstruksi, termasuk proses tender, manajemen mutu melalui Rencana Mutu Proyek (RMP), dan sanksi terkait kegagalan bangunan. Penulis menekankan pentingnya kepatuhan prosedur untuk menghindari praktik KKN serta menjamin efisiensi dan mutu proyek.",
+      "tags": [
+        "pendidikan",
+        "hukum_konstruksi",
+        "manajemen_mutu"
+      ],
+      "title": "ASPEK HUKUM DAN INTEGRITAS ANTI KORUPSI DALAM PEMBANGUNAN"
+    },
+    {
+      "currency_warning": "Informasi kasus bersifat historis dan tidak dipengaruhi oleh pembaruan hukum.",
+      "document_type": "studi_kasus",
+      "failure_causes": [
+        "kegagalan_fondasi",
+        "kesalahan_desain_struktur",
+        "fenomena_aeroelastik",
+        "tanah_tidak_stabil"
+      ],
+      "filename": "324196482-Contoh-Kegagalan-Konstruksi-akibat-Struktur-Tanah-d_1789888870292.docx",
+      "id": "87f35ce50ee1",
+      "key_topics": [
+        "kegagalan_struktur",
+        "studi_kasus_internasional",
+        "risiko_konstruksi"
+      ],
+      "legal_concepts": [],
+      "named_cases": [
+        "Bendungan Teton",
+        "Lotus Riverside Complex",
+        "Hyatt Regency",
+        "Tacoma Narrows Bridge"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Sebagai referensi sejarah kegagalan konstruksi global untuk pencegahan sengketa di masa depan.",
+      "regulations_mentioned": [],
+      "reliability_note": "Ringkasan kasus umum; tidak mengandung analisis teknis mendalam atau implikasi hukum nasional.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini menyajikan ringkasan singkat dari empat kasus kegagalan konstruksi internasional yang terkenal, yaitu Bendungan Teton, Lotus Riverside Complex, Hyatt Regency, dan Tacoma Narrows Bridge. Analisis berfokus pada kegagalan struktur akibat masalah tanah, desain, dan beban yang menyebabkan keruntuhan fatal.",
+      "tags": [
+        "kegagalan_bangunan",
+        "pelajaran_kasus",
+        "risiko"
+      ],
+      "title": "Contoh Kegagalan Konstruksi akibat Struktur Tanah"
+    },
+    {
+      "currency_warning": "Dokumen menggunakan regulasi lama (UU 18/1999 dan Perpres 54/2010); periksa aturan terbaru terkait Jasa Konstruksi dan PBJ.",
+      "document_type": "materi_pelatihan",
+      "failure_causes": [
+        "kesalahan_volume",
+        "kesalahan_kualitas_material",
+        "ketidaksesuaian_SNI"
+      ],
+      "filename": "325661156-Materi-Konstruksi-Bangunan-Dan-Evaluasi-Pekerjaan-Ba_1789883561354.pdf",
+      "id": "28759c43c5c2",
+      "key_topics": [
+        "syarat_teknis_bangunan",
+        "evaluasi_beton",
+        "hukum_kontrak",
+        "pengawasan_lapangan"
+      ],
+      "legal_concepts": [
+        "kegagalan_bangunan",
+        "sanksi_pidana",
+        "tanggung_jawab_pihak"
+      ],
+      "named_cases": [],
+      "primary_category": "teknik_konstruksi",
+      "recommended_use": "Panduan teknis pengujian material beton dan pemahaman kewajiban per pihak.",
+      "regulations_mentioned": [
+        "UU_No_18_Tahun_1999",
+        "UU_No_28_Tahun_2002",
+        "PP_36_2005",
+        "Perpres_54_2010"
+      ],
+      "reliability_note": "Materi pelatihan teknis yang terstruktur namun referensi regulasi sudah kedaluwarsa.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Materi ini menguraikan persyaratan teknis dan administratif bangunan gedung, termasuk standar SNI untuk evaluasi beton serta tanggung jawab hukum para pihak. Dokumen ini bertujuan untuk mensinkronkan pemahaman antara pemilik, perencana, pengawas, dan pelaksana mengenai hukum kontrak dan teknis lapangan guna mencegah kegagalan konstruksi.",
+      "tags": [
+        "teknik_beton",
+        "SNI",
+        "kewajiban_kontraktual"
+      ],
+      "title": "KONSTRUKSI BANGUNAN GEDUNG"
+    },
+    {
+      "currency_warning": "Menggunakan rujukan UU 18/1999; pastikan klausul kontrak disesuaikan dengan UU No. 2 Tahun 2017 dan regulasi kontrak terbaru.",
+      "document_type": "makalah_akademik",
+      "failure_causes": [
+        "keterlambatan_pembayaran",
+        "penyerahan_lahan_terlambat",
+        "kesalahan_pelaksanaan"
+      ],
+      "filename": "340914969-MAKALAH-ADMINISTRASI-KONTRAK-KONSTRUKSI-docx_1789883561355.docx",
+      "id": "f2caf54b07a6",
+      "key_topics": [
+        "administrasi_kontrak",
+        "manajemen_klaim",
+        "penyelesaian_sengketa",
+        "wan_prestasi"
+      ],
+      "legal_concepts": [
+        "klaim_kontraktual",
+        "force_majeure",
+        "pekerjaan_tambah_kurang",
+        "arbitrase"
+      ],
+      "named_cases": [],
+      "primary_category": "administrasi_kontrak",
+      "recommended_use": "Referensi utama untuk prosedur administrasi klaim dan manajemen sengketa kontrak.",
+      "regulations_mentioned": [
+        "UU_No_18_Tahun_1999",
+        "PP_29_2000"
+      ],
+      "reliability_note": "Panduan administrasi kontrak yang komprehensif bagi praktisi, meski regulasi perlu pembaruan.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Makalah ini menyajikan panduan praktis mengenai administrasi kontrak konstruksi, termasuk definisi klaim, metode penyelesaian sengketa, dan pengelolaan risiko proyek. Dokumen memberikan petunjuk teknis mengenai prosedur pengajuan klaim (biaya, waktu, kompensasi) dan pentingnya dokumentasi tertulis sebagai bukti sah dalam kontrak.",
+      "tags": [
+        "administrasi_proyek",
+        "manajemen_klaim",
+        "penyelesaian_sengketa"
+      ],
+      "title": "ADMINISTRASI KONTRAK KONSTRUKSI"
+    },
+    {
+      "currency_warning": "Regulasi yang dikutip (UU 18/1999) sudah tidak berlaku; namun konsep teknis pencegahan kegagalan masih sangat relevan.",
+      "document_type": "makalah_akademik",
+      "failure_causes": [
+        "kesalahan_desain",
+        "kesalahan_pelaksanaan",
+        "korosi_tulangan",
+        "settlement_pondasi"
+      ],
+      "filename": "346419074-Makalah-Tugas-Cacat-Dan-Kegagalan-Konstruksi_1789888870291.docx",
+      "id": "c5707d4489d3",
+      "key_topics": [
+        "kegagalan_konstruksi",
+        "identifikasi_cacat",
+        "pencegahan_risiko",
+        "solusi_teknis"
+      ],
+      "legal_concepts": [
+        "kegagalan_bangunan",
+        "tanggung_jawab_hukum"
+      ],
+      "named_cases": [
+        "Rukan Cendrawasih",
+        "Skyline Plaza",
+        "David L. Lawrence Convention Center",
+        "Harbour Cay Condominium"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Referensi teknis untuk mengidentifikasi tanda-tanda kegagalan struktur dan langkah perbaikannya.",
+      "regulations_mentioned": [
+        "UU_No_18_Tahun_1999",
+        "PP_29_2000"
+      ],
+      "reliability_note": "Analisis teknis mendalam dan solutif; sangat berguna sebagai referensi pencegahan kegagalan bangunan.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Makalah ini mengulas secara mendalam mengenai identifikasi penyebab cacat dan kegagalan konstruksi, mulai dari tahap perencanaan hingga pelaksanaan dan pemeliharaan. Terdapat tabel matriks yang merinci deskripsi teknis, penyebab, dan solusi praktis untuk kegagalan struktur, beton, dan pondasi sebagai upaya pencegahan risiko proyek.",
+      "tags": [
+        "kegagalan_bangunan",
+        "pencegahan",
+        "perbaikan_struktur"
+      ],
+      "title": "PENDAHULUAN"
+    },
+    {
+      "currency_warning": "Dokumen merujuk pada regulasi tahun 2012 yang mungkin sudah tidak berlaku; periksa aturan pengadaan barang/jasa terbaru.",
+      "document_type": "panduan_teknis",
+      "failure_causes": [
+        "Keterlambatan penyedia jasa",
+        "Melewati batas tahun anggaran"
+      ],
+      "filename": "349482239-KONTRAK-KRITIS_1789883561355.pdf",
+      "id": "e726fe881471",
+      "key_topics": [
+        "Kontrak Kritis",
+        "SCM",
+        "Perpanjangan Waktu",
+        "Amandemen Kontrak"
+      ],
+      "legal_concepts": [
+        "Denda keterlambatan",
+        "Pemutusan kontrak",
+        "Peristiwa kompensasi"
+      ],
+      "named_cases": [],
+      "primary_category": "administrasi_kontrak",
+      "recommended_use": "Referensi alur kerja administratif saat menghadapi keterlambatan proyek.",
+      "regulations_mentioned": [
+        "Perpres RI No. 70/2012",
+        "Permenkeu No. 25/2012"
+      ],
+      "reliability_note": "Berfungsi sebagai pedoman prosedural umum namun harus divalidasi dengan regulasi terkini.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini menjelaskan prosedur penanganan kontrak kritis, termasuk penggunaan Show Cause Meeting (SCM) dan surat peringatan [L4-L5]. Juga mencakup aturan perpanjangan waktu dan amandemen kontrak saat melewati tahun anggaran berdasarkan regulasi lama [L6-L7]. Pengetahuan ini berguna untuk memahami manajemen keterlambatan, sanksi, dan mekanisme perubahan kontrak.",
+      "tags": [
+        "EOT",
+        "Klaim",
+        "Jadwal"
+      ],
+      "title": "Jadwal Pelaksanaan Kontrak"
+    },
+    {
+      "currency_warning": "Merujuk pada UU No. 18 Tahun 1999 yang telah dicabut dan digantikan oleh UU Jasa Konstruksi yang lebih baru.",
+      "document_type": "analisis_hukum",
+      "failure_causes": [
+        "Kesalahan perencanaan",
+        "Kesalahan pelaksanaan",
+        "Kelalaian pengguna",
+        "Faktor material"
+      ],
+      "filename": "349706365-Kegagalan-Bangunan-Dan-Kegagalan-Konstruksi_1789888870300.docx",
+      "id": "d936f002a0d1",
+      "key_topics": [
+        "Kegagalan Konstruksi",
+        "Kegagalan Bangunan",
+        "Tanggung Jawab Hukum"
+      ],
+      "legal_concepts": [
+        "Ganti rugi",
+        "Penilai ahli",
+        "Cidera janji"
+      ],
+      "named_cases": [],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Memahami konsep dan klasifikasi kegagalan konstruksi secara teoretis.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "PP No. 29 Tahun 2000",
+        "Permen PU No 45/PRT/M/2007"
+      ],
+      "reliability_note": "Memberikan kerangka teoretis yang baik, namun dasar hukum sudah usang.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Dokumen ini mendefinisikan perbedaan antara kegagalan konstruksi (terjadi saat masa kontrak) dan kegagalan bangunan (terjadi setelah FHO) berdasarkan regulasi [L1-L2]. Menyoroti penyebab teknis kegagalan pada tahap perencanaan, pelaksanaan, dan penggunaan [L3-L6]. Sangat berguna untuk memahami tanggung jawab hukum dan kewajiban ganti rugi para pihak.",
+      "tags": [
+        "Kegagalan Bangunan",
+        "NCR",
+        "Tanggung Jawab"
+      ],
+      "title": "Kegagalan Bangunan dan Kegagalan Konstruksi"
+    },
+    {
+      "currency_warning": "Menggunakan UU No. 18 Tahun 1999 yang sudah tidak berlaku lagi.",
+      "document_type": "makalah_akademik",
+      "failure_causes": [
+        "Kecerobohan",
+        "Ketidaktahuan",
+        "Kesalahan metode",
+        "Act of God"
+      ],
+      "filename": "349719498-makalah-kegagalan-bangunan_1789888870300.docx",
+      "id": "b7648603caa0",
+      "key_topics": [
+        "Penyebab kegagalan bangunan",
+        "Mitigasi risiko",
+        "Standar bangunan"
+      ],
+      "legal_concepts": [
+        "Tanggung jawab kontraktual",
+        "Ganti rugi",
+        "Hukum jasa konstruksi"
+      ],
+      "named_cases": [],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Materi pencegahan kegagalan dan sengketa melalui pengawasan yang tepat.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999"
+      ],
+      "reliability_note": "Isi teoretis masih relevan untuk pemahaman teknis dan administratif, namun kutipan hukum harus diperbarui.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Makalah ini membahas kompleksitas kegagalan bangunan, faktor penyebab manusia dan alam, serta tanggung jawab perencana, pengawas, dan kontraktor [L1-L3]. Menekankan pentingnya prosedur standar dan profesionalisme untuk memitigasi risiko kegagalan [L3-L4]. Berguna untuk pencegahan sengketa dan memahami kewajiban kontraktual.",
+      "tags": [
+        "Kegagalan Bangunan",
+        "Sengketa",
+        "Mitigasi"
+      ],
+      "title": "-PENDAHULUAN"
+    },
+    {
+      "currency_warning": "Beberapa referensi hukum mungkin telah diperbarui oleh regulasi terbaru (misalnya UU Jasa Konstruksi baru).",
+      "document_type": "artikel_ilmiah",
+      "failure_causes": [],
+      "filename": "352498488-Prinsip-Kontrak_1789883561356.pdf",
+      "id": "1fcc39ac1a0e",
+      "key_topics": [
+        "Prinsip kontrak",
+        "Konsensualisme",
+        "Itikad baik",
+        "Lelang"
+      ],
+      "legal_concepts": [
+        "Privity of contract",
+        "Duty of confidentiality",
+        "Culpa in contrahendo",
+        "Pacta sunt servanda"
+      ],
+      "named_cases": [
+        "Plas v Valburg",
+        "Bosch v Van Maren"
+      ],
+      "primary_category": "hukum_kontrak",
+      "recommended_use": "Referensi utama untuk memahami filosofi dan kekuatan mengikat kontrak.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "KUHPerdata (BW)"
+      ],
+      "reliability_note": "Sangat informatif untuk memahami prinsip dasar hukum kontrak secara mendalam.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Dokumen ini mengulas landasan filosofis dan prinsip hukum kontrak konstruksi di Indonesia, termasuk kebebasan berkontrak, konsensualisme, dan itikad baik [L2-L8]. Membahas detail teknis pembentukan kontrak, lelang, dan pelaksanaan kewajiban [L11-L15]. Sangat berguna untuk pemahaman hukum dalam penyelesaian sengketa dan negosiasi kontrak.",
+      "tags": [
+        "Hukum Kontrak",
+        "Sengketa",
+        "Negosiasi"
+      ],
+      "title": "Sugiarto Raharjo: Prinsip-Prinisip Kontrak 385"
+    },
+    {
+      "currency_warning": "Informasi bersifat opini umum tanpa rujukan regulasi spesifik yang mengikat.",
+      "document_type": "artikel_opini",
+      "failure_causes": [
+        "Kesalahan studi kelayakan",
+        "Kesalahan perencanaan",
+        "Kesalahan operasional",
+        "Kurangnya perawatan",
+        "Bencana"
+      ],
+      "filename": "360131194-Penyebab-Kegagalan-Proyek-Konstruksi_1789888870296.docx",
+      "id": "cb44f75991dd",
+      "key_topics": [
+        "Manajemen risiko",
+        "Pemeliharaan",
+        "Faktor kegagalan"
+      ],
+      "legal_concepts": [],
+      "named_cases": [],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Panduan praktis identifikasi risiko proyek untuk mencegah kegagalan bangunan.",
+      "regulations_mentioned": [],
+      "reliability_note": "Berguna sebagai checklist praktis untuk manajer proyek, bukan sebagai otoritas hukum.",
+      "source_quality": "tidak_jelas",
+      "summary": "Artikel ini menguraikan faktor penyebab kegagalan proyek konstruksi mulai dari studi kelayakan, perencanaan, pelaksanaan, hingga operasional [L1-L2]. Menekankan pentingnya manajemen risiko dan perawatan untuk menjaga integritas bangunan [L2]. Sangat berguna untuk pencegahan kegagalan fisik dan sengketa.",
+      "tags": [
+        "Kegagalan Bangunan",
+        "Pemeliharaan",
+        "Risiko"
+      ],
+      "title": "Penyebab Kegagalan Proyek Konstruksi"
+    },
+    {
+      "currency_warning": "Artikel tahun 2006; regulasi pengadaan barang/jasa mungkin sudah tidak berlaku atau diperbarui.",
+      "document_type": "artikel_ilmiah",
+      "failure_causes": [
+        "kesalahan desain",
+        "pelaksanaan tidak sesuai prosedur",
+        "beban berlebih",
+        "faktor alam"
+      ],
+      "filename": "363716381-Kegagalan-Bangunan-pdf_1789888829316.pdf",
+      "id": "de503ae31e75",
+      "key_topics": [
+        "kegagalan bangunan",
+        "tahapan proyek",
+        "pengelolaan risiko",
+        "pencegahan kegagalan"
+      ],
+      "legal_concepts": [
+        "tanggung jawab profesional",
+        "etika profesi",
+        "prosedur pelelangan"
+      ],
+      "named_cases": [],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Referensi untuk memahami alur proses industri konstruksi dan titik kritis pengawasan.",
+      "regulations_mentioned": [
+        "Keppres Nomor 80 Tahun 2003",
+        "KMK No. 470/KMK.01/1994"
+      ],
+      "reliability_note": "Analisis akademis yang berguna untuk memahami logika proses konstruksi, namun aturan hukum spesifik perlu diverifikasi dengan aturan terbaru.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini membahas faktor penyebab kegagalan bangunan yang mencakup perencanaan, desain, pelaksanaan, dan pemeliharaan. Artikel menekankan pentingnya profesionalisme pelaku proyek dan pengawasan ketat untuk mencegah kegagalan yang dapat merugikan pemilik serta pengguna.",
+      "tags": [
+        "industri konstruksi",
+        "manajemen proyek",
+        "pengawasan"
+      ],
+      "title": "Kegagalan Bangunan dari Sisi Industri Konstruksi"
+    },
+    {
+      "currency_warning": "Data studi kasus bersifat historis; definisi hukum mungkin memerlukan penyesuaian dengan UU Jasa Konstruksi terbaru.",
+      "document_type": "materi_kuliah",
+      "failure_causes": [
+        "kesalahan perencanaan",
+        "kesalahan pelaksanaan",
+        "pemakaian tidak sesuai fungsi",
+        "perawatan buruk",
+        "pemilihan material tidak tepat"
+      ],
+      "filename": "367368516-Kegagalan-Bangunan-Suatu-Konstruksi_1789888829318.pdf",
+      "id": "14619e8c6b6f",
+      "key_topics": [
+        "kegagalan konstruksi",
+        "manajemen kualitas",
+        "studi kasus",
+        "force majeure"
+      ],
+      "legal_concepts": [
+        "kriteria kegagalan bangunan",
+        "tanggung jawab penyedia jasa",
+        "keadaan kahar"
+      ],
+      "named_cases": [
+        "The Ruby Tower",
+        "Hotel New World",
+        "Jembatan Mahakam II",
+        "Proyek Hambalang",
+        "Lotus River Compound",
+        "Sampoong Departemen Store",
+        "Royal Place Hotel",
+        "Aula Versailles",
+        "Katowice Trade Hall",
+        "Highland Tower",
+        "Delhi Building",
+        "Jembatan Sarinah"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Belajar dari kesalahan historis dalam proyek konstruksi.",
+      "regulations_mentioned": [],
+      "reliability_note": "Ringkasan kasus yang baik untuk edukasi namun tidak mencantumkan sitasi hukum secara mendalam.",
+      "source_quality": "sekunder_umum",
+      "summary": "Materi presentasi ini mengkategorikan penyebab kegagalan bangunan menjadi faktor yang dapat diprediksi (human error) dan tidak dapat diprediksi (force majeure). Dokumen memberikan daftar berbagai studi kasus internasional dan domestik untuk mengilustrasikan dampak kesalahan pada tiap tahapan proyek.",
+      "tags": [
+        "studi kasus",
+        "kegagalan struktur",
+        "manajemen pemeliharaan"
+      ],
+      "title": "MATA KULIAH MANAJEMEN KUALITAS: KEGAGALAN BANGUNAN SUATU KONSTRUKSI"
+    },
+    {
+      "currency_warning": "Membandingkan dua UU, namun pembaca harus merujuk pada regulasi terbaru (UU No. 2 Tahun 2017 dan perubahannya dalam UU Cipta Kerja).",
+      "document_type": "tugas_mahasiswa",
+      "failure_causes": [
+        "kesalahan teknis pelaksanaan",
+        "kelalaian pengawasan",
+        "faktor alam"
+      ],
+      "filename": "400701718-Kasus-Kegagalan-Konstruksi-Indonesia_1789888870298.docx",
+      "id": "425ef0d6a69d",
+      "key_topics": [
+        "aspek hukum konstruksi",
+        "tanggung jawab kontraktual",
+        "gagal konstruksi",
+        "sanksi pidana"
+      ],
+      "legal_concepts": [
+        "kegagalan bangunan",
+        "masa pemeliharaan",
+        "PHO (Provisional Hand Over)",
+        "ganti rugi",
+        "sanksi administratif",
+        "penilai ahli"
+      ],
+      "named_cases": [
+        "Jembatan Air Baun",
+        "Jembatan Pakubaun",
+        "Jembatan Mahakam II",
+        "Jembatan di Kecamatan Mandastana"
+      ],
+      "primary_category": "klaim_sengketa",
+      "recommended_use": "Memahami perbedaan dasar tanggung jawab antara UUJK 1999 dan 2017.",
+      "regulations_mentioned": [
+        "Undang-Undang Nomor 18 Tahun 1999 tentang Jasa Konstruksi",
+        "Undang-Undang Nomor 2 Tahun 2017 tentang Jasa Konstruksi"
+      ],
+      "reliability_note": "Merupakan tugas mahasiswa; berisi analisis subjektif yang mengutip pasal-pasal undang-undang secara umum.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini membahas aspek hukum kegagalan bangunan berdasarkan UU No. 18 Tahun 1999 dan UU No. 2 Tahun 2017. Penulis menyoroti pentingnya bukti tertulis dalam kontrak, peran penilai ahli, dan tanggung jawab pihak-pihak terkait dalam kasus kegagalan jembatan di Indonesia.",
+      "tags": [
+        "aspek hukum",
+        "jasa konstruksi",
+        "tanggung jawab",
+        "sengketa"
+      ],
+      "title": "TUGAS ETIKA PROFESI DAN ASPEK HUKUM KONSTRUKSI"
+    },
+    {
+      "currency_warning": "Data observasi pribadi (2019) tanpa verifikasi legal formal.",
+      "document_type": "tugas_mahasiswa",
+      "failure_causes": [
+        "kegagalan pondasi",
+        "pengurangan dimensi/tulangan",
+        "metode perancah tidak tepat",
+        "ketiadaan konsultan",
+        "pengalihan pekerjaan tanpa pengawasan"
+      ],
+      "filename": "407447178-Kasus-Kegagalan-Konstruksi-Di-Indonesia_1789888870298.docx",
+      "id": "ea71115e0ca2",
+      "key_topics": [
+        "kegagalan pondasi",
+        "kegagalan perancah",
+        "kualitas struktur",
+        "organisasi proyek"
+      ],
+      "legal_concepts": [
+        "tanggung jawab engineer",
+        "pengawasan proyek"
+      ],
+      "named_cases": [
+        "Rukan Cendrawasih Samarinda",
+        "Jembatan Mahakam II Tenggarong",
+        "Jembatan Penghubung Gedung Perpustakaan Daerah DKI"
+      ],
+      "primary_category": "studi_kasus",
+      "recommended_use": "Belajar mengidentifikasi tanda-tanda kegagalan struktur di lapangan.",
+      "regulations_mentioned": [],
+      "reliability_note": "Informasi teknis berguna untuk identifikasi risiko lapangan, namun data detail kasus harus dikonfirmasi melalui laporan investigasi resmi.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini menyajikan observasi pribadi terhadap tiga kasus kegagalan konstruksi di Indonesia, yaitu Rukan Cendrawasih, Jembatan Mahakam II, dan jembatan perpustakaan DKI. Analisis berfokus pada kegagalan pondasi, struktur utama, sistem perancah, serta lemahnya organisasi proyek.",
+      "tags": [
+        "kegagalan struktur",
+        "studi kasus",
+        "praktik lapangan"
+      ],
+      "title": "KASUS KEGAGALAN KONSTRUKSI DI INDONESIA"
+    },
+    {
+      "currency_warning": "Materi mencantumkan undang-undang yang perlu divalidasi dengan status hukum terkini (perubahan pasca-UU Cipta Kerja).",
+      "document_type": "materi_kuliah",
+      "failure_causes": [
+        "kesalahan manusia",
+        "faktor alam",
+        "perencanaan tidak lengkap",
+        "beban tidak sesuai rencana"
+      ],
+      "filename": "408149945-KEGAGALAN-BANGUNAN_1789888829317.pdf",
+      "id": "82dbb9eb851a",
+      "key_topics": [
+        "definisi hukum kegagalan",
+        "sanksi pidana/administratif",
+        "penilai ahli",
+        "tinjauan komponen struktur"
+      ],
+      "legal_concepts": [
+        "kegagalan bangunan",
+        "cacat konstruksi",
+        "umur konstruksi",
+        "pertanggungjawaban",
+        "penilai ahli"
+      ],
+      "named_cases": [
+        "Apartemen Shanghai"
+      ],
+      "primary_category": "hukum_kontrak",
+      "recommended_use": "Referensi utama untuk memahami definisi hukum kegagalan bangunan dan cacat konstruksi.",
+      "regulations_mentioned": [
+        "UU No. 18 Tahun 1999",
+        "UU No. 2 Tahun 2017",
+        "PP No. 29 Tahun 2000"
+      ],
+      "reliability_note": "Sangat baik untuk memahami terminologi hukum terkait kegagalan bangunan secara sistematis.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Materi ini membedakan definisi kegagalan konstruksi, cacat konstruksi, dan kegagalan bangunan menurut berbagai regulasi (UU 18/1999 dan UU 2/2017). Dokumen memberikan kerangka kerja mengenai sanksi, tanggung jawab penilai ahli, dan tinjauan teknis per komponen bangunan.",
+      "tags": [
+        "hukum konstruksi",
+        "definisi",
+        "tanggung jawab",
+        "kegagalan bangunan"
+      ],
+      "title": "KEGAGALAN BANGUNAN (Adityawan Sigit)"
+    },
+    {
+      "currency_warning": "Dokumen mencantumkan regulasi yang mungkin sudah usang (misalnya Perpres 16/2018 dan UU 2/2017 perlu diverifikasi dengan aturan terbaru).",
+      "document_type": "Contoh Template",
+      "failure_causes": [],
+      "filename": "414070814-Surat-Perjanjian-Pekerjaan-Konstruksi_1789888979755.pdf",
+      "id": "a3418a94d880",
+      "key_topics": [
+        "kontrak gabungan",
+        "surat perjanjian",
+        "pengadaan pemerintah"
+      ],
+      "legal_concepts": [
+        "perikatan",
+        "kontrak kerja konstruksi",
+        "wanprestasi"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Digunakan sebagai referensi format draf kontrak konstruksi pemerintah.",
+      "regulations_mentioned": [
+        "UU No. 2 Tahun 2017",
+        "KUHPerdata",
+        "PP No. 29 Tahun 2000",
+        "Perpres No. 16 Tahun 2018",
+        "Permen PU No. 07/PRT/M/2019"
+      ],
+      "reliability_note": "Berfungsi sebagai template, bukan hukum positif yang mengikat secara langsung.",
+      "source_quality": "contoh_template",
+      "summary": "Dokumen ini merupakan draf Surat Perjanjian untuk kontrak gabungan lumsum dan harga satuan dalam pekerjaan konstruksi pemerintah [L1-L3]. Berisi struktur standar kontrak yang mencakup ruang lingkup, harga, dokumen pendukung, dan masa kontrak. Penting sebagai acuan format untuk pengaturan kewajiban dan hierarki dokumen [L6-L12].",
+      "tags": [
+        "template",
+        "kontrak",
+        "konstruksi"
+      ],
+      "title": "Masukan Nama Lembaga/Instansi Pemerintahan"
+    },
+    {
+      "currency_warning": "Materi ini banyak merujuk pada Perpres 54/2010 yang telah digantikan oleh Perpres pengadaan barang/jasa pemerintah terbaru.",
+      "document_type": "Tulisan Akademik/Sekunder",
+      "failure_causes": [
+        "kesalahan manusia",
+        "desain",
+        "material",
+        "perawatan"
+      ],
+      "filename": "438286737-Hukum-Kontrak-Konstruksi-01_1789888979756.pdf",
+      "id": "f6305410997a",
+      "key_topics": [
+        "prinsip hukum kontrak",
+        "kegagalan bangunan",
+        "penegakan hukum",
+        "manajemen kontrak"
+      ],
+      "legal_concepts": [
+        "pacta sunt servanda",
+        "wanprestasi",
+        "force majeure",
+        "privity of contract"
+      ],
+      "named_cases": [
+        "Lamongan-Tuban",
+        "Tribun Lapangan bola Arcamanik"
+      ],
+      "primary_category": "hukum_kontrak",
+      "recommended_use": "Referensi untuk memahami alur manajemen kontrak dan risiko hukum konstruksi.",
+      "regulations_mentioned": [
+        "UU No. 2 Tahun 2017",
+        "KUHPerdata",
+        "Perpres No. 54 Tahun 2010"
+      ],
+      "reliability_note": "Informasi bersifat edukatif dan umum, perlu diperiksa kembali dengan regulasi terbaru.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Materi presentasi ini memberikan penjelasan komprehensif mengenai aspek hukum kontrak konstruksi, termasuk prinsip hukum, keabsahan, manajemen pengelolaan, dan sanksi [L1-L62]. Fokus utamanya adalah pemahaman hak-kewajiban, keadaan kahar, kegagalan bangunan, dan penegakan hukum dalam proyek pemerintah [L10-L31].",
+      "tags": [
+        "akademik",
+        "hukum",
+        "manajemen proyek"
+      ],
+      "title": "HUKUM KONTRAK"
+    },
+    {
+      "currency_warning": "Format ini berbasis pada proyek spesifik masa lalu, perlu disesuaikan dengan aturan internal atau kontrak terbaru.",
+      "document_type": "Contoh Template",
+      "failure_causes": [],
+      "filename": "469973529-Usulan-Kronologi-Addendum-Kontrak_1789888979757.pdf",
+      "id": "753ac4017a76",
+      "key_topics": [
+        "addendum",
+        "kronologi kontrak",
+        "serah terima",
+        "tenaga ahli"
+      ],
+      "legal_concepts": [
+        "administrasi kontrak",
+        "negosiasi",
+        "serah terima pekerjaan"
+      ],
+      "named_cases": [],
+      "primary_category": "administrasi_kontrak",
+      "recommended_use": "Digunakan sebagai panduan administratif untuk menyusun alur kerja addendum dan serah terima.",
+      "regulations_mentioned": [
+        "SSUK",
+        "SSKK"
+      ],
+      "reliability_note": "Dokumen kerja praktis, bukan naskah hukum.",
+      "source_quality": "contoh_template",
+      "summary": "Dokumen ini berisi matriks kronologi untuk prosedur addendum kontrak, pergantian personel, dan serah terima aset [L1-L18]. Sangat berguna sebagai alat bantu administratif dalam melacak langkah-langkah formal untuk perubahan kontrak (VO) dan serah terima pekerjaan (PHO/FHO) [L1-L15].",
+      "tags": [
+        "administrasi",
+        "addendum",
+        "prosedur"
+      ],
+      "title": "Matrik Pergantian Tenaga Ahli NMC REKOMPAK-JRF"
+    },
+    {
+      "currency_warning": "Referensi mencakup UU 18/1999 yang sudah dicabut/diubah oleh UU 2/2017.",
+      "document_type": "Tulisan Akademik/Sekunder",
+      "failure_causes": [
+        "manusia",
+        "desain",
+        "material",
+        "perawatan"
+      ],
+      "filename": "543240161-Kegagalan-Bangunan_1789888829317.pdf",
+      "id": "b3678f398da4",
+      "key_topics": [
+        "kegagalan bangunan",
+        "kegagalan konstruksi",
+        "tanggung jawab hukum",
+        "pengawasan"
+      ],
+      "legal_concepts": [
+        "penilai ahli",
+        "tanggung jawab hukum",
+        "sanksi administratif",
+        "pidana"
+      ],
+      "named_cases": [
+        "LRT Palembang",
+        "Tol Becakayu",
+        "Jembatan Ciputrapinggan"
+      ],
+      "primary_category": "kegagalan_bangunan",
+      "recommended_use": "Referensi bagi profesional untuk memahami risiko kegagalan dan penanganan sengketa terkait kualitas bangunan.",
+      "regulations_mentioned": [
+        "UU No. 2 Tahun 2017",
+        "UU No. 18 Tahun 1999",
+        "PP No. 29 Tahun 2000"
+      ],
+      "reliability_note": "Menyajikan analisis teoritis dan praktik yang baik mengenai kegagalan bangunan.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Dokumen ini membahas definisi, penyebab, dan tanggung jawab hukum atas kegagalan konstruksi dan kegagalan bangunan [L1-L24]. Fokus mencakup pentingnya pengawasan, implikasi kerugian bagi pemilik dan kontraktor, serta langkah-langkah hukum yang harus ditempuh jika terjadi kegagalan [L1-L24].",
+      "tags": [
+        "kegagalan",
+        "hukum",
+        "risiko"
+      ],
+      "title": "Kegagalan Konstruksi dan Kegagalan Bangunan"
+    },
+    {
+      "currency_warning": "Analisis menggunakan rujukan PP 29/2000 dan standar FIDIC lama, perlu disesuaikan dengan konteks hukum terbaru.",
+      "document_type": "Tulisan Akademik/Sekunder",
+      "failure_causes": [],
+      "filename": "54438802-kontrak_1789883561348.pdf",
+      "id": "f7012b909aca",
+      "key_topics": [
+        "kontrak internasional",
+        "FIDIC",
+        "jenis kontrak",
+        "penyelesaian sengketa"
+      ],
+      "legal_concepts": [
+        "arbitrase",
+        "wanprestasi",
+        "provisional sums",
+        "tanggung jawab atas cacat"
+      ],
+      "named_cases": [],
+      "primary_category": "fidic",
+      "recommended_use": "Digunakan sebagai panduan komparatif untuk memahami berbagai bentuk kontrak konstruksi.",
+      "regulations_mentioned": [
+        "PP No. 29 Tahun 2000",
+        "FIDIC 1987",
+        "FIDIC 1995"
+      ],
+      "reliability_note": "Ringkasan akademis yang baik untuk memahami perbedaan kontrak tradisional dan kontrak internasional.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini menjelaskan manajemen kontrak dalam negeri dan internasional, termasuk standar FIDIC [L1-L31]. Memberikan detail mengenai jenis-jenis kontrak (Lump Sum, Unit Price, dsb), prosedur pembayaran, serta mekanisme penyelesaian sengketa (arbitrase) dan tanggung jawab para pihak [L2-L31].",
+      "tags": [
+        "FIDIC",
+        "kontrak",
+        "manajemen"
+      ],
+      "title": "MANAJEMEN KONTRAK DALAM DAN LUAR NEGERI"
+    },
+    {
+      "currency_warning": "Dokumen ini adalah draf contoh; pastikan klausul disesuaikan dengan peraturan perundang-undangan terbaru dan kebutuhan spesifik proyek.",
+      "document_type": "Contoh template kontrak",
+      "failure_causes": [],
+      "filename": "544890753-Draft-Kontrak-Kerja-Konstruksi-Fix_1789888979758.docx",
+      "id": "28ea4e2e0ade",
+      "key_topics": [
+        "Kontrak Konstruksi",
+        "Pekerjaan Tambah Kurang",
+        "Masa Pemeliharaan",
+        "Force Majeure",
+        "Pemutusan Kontrak"
+      ],
+      "legal_concepts": [
+        "Wanprestasi",
+        "Force Majeure",
+        "Perikatan",
+        "Subkontraktor"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Digunakan sebagai referensi struktur dasar dalam penyusunan kontrak kerja konstruksi.",
+      "regulations_mentioned": [],
+      "reliability_note": "Dokumen template; validitas hukum tergantung pada penyesuaian para pihak dan kepatuhan terhadap UU Jasa Konstruksi.",
+      "source_quality": "contoh_template",
+      "summary": "Dokumen ini merupakan draf perjanjian kerja konstruksi untuk proyek gedung perbelanjaan. Mencakup klausul mendasar seperti ruang lingkup pekerjaan, prosedur pembayaran bertahap, masa pemeliharaan, hingga prosedur pemutusan kontrak dan penyelesaian sengketa.",
+      "tags": [
+        "konstruksi",
+        "kontrak",
+        "template"
+      ],
+      "title": "SURAT PERJANJIAN KONTRAK KERJA KONSTRUKSI"
+    },
+    {
+      "currency_warning": "Dokumen ini merujuk pada regulasi 2022; pastikan referensi hukum diperbarui dengan regulasi terkini.",
+      "document_type": "Contoh template kontrak pemerintah",
+      "failure_causes": [],
+      "filename": "579798139-01-RANCANGAN-KONTRAK-Tender-Pascakualifikasi-Satu-Fi_1789888979759.pdf",
+      "id": "b91096d0f92c",
+      "key_topics": [
+        "Kontrak Pemerintah",
+        "Gabungan Lumsum dan Harga Satuan",
+        "Dokumen Kontrak",
+        "Masa Pelaksanaan",
+        "Masa Pemeliharaan"
+      ],
+      "legal_concepts": [
+        "Undang-Undang Jasa Konstruksi",
+        "Perikatan",
+        "Kontrak Kerja Konstruksi"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Referensi bagi PPK dalam menyusun dokumen kontrak pengadaan konstruksi pemerintah.",
+      "regulations_mentioned": [
+        "UU No. 2 Tahun 2017 tentang Jasa Konstruksi",
+        "PP No. 22 Tahun 2020",
+        "Perpres No. 16 Tahun 2018"
+      ],
+      "reliability_note": "Berfungsi sebagai template standar untuk pengadaan barang/jasa pemerintah.",
+      "source_quality": "contoh_template",
+      "summary": "Dokumen ini menyajikan rancangan kontrak untuk paket pekerjaan konstruksi pemerintah dengan model gabungan lumsum dan harga satuan. Berisi tata cara penetapan, lingkup pekerjaan, serta ketentuan kontrak bagi penyedia tunggal maupun KSO.",
+      "tags": [
+        "pengadaan",
+        "pemerintah",
+        "konstruksi"
+      ],
+      "title": "RANCANGAN KONTRAK"
+    },
+    {
+      "currency_warning": "Analisis hukum didasarkan pada regulasi tahun 2022; pastikan verifikasi dengan aturan terbaru (khususnya UU Cipta Kerja).",
+      "document_type": "Makalah akademik/sekunder",
+      "failure_causes": [
+        "Kesalahan desain",
+        "Kualitas bahan tidak sesuai",
+        "Kesalahan pelaksanaan",
+        "Kurangnya pengawasan"
+      ],
+      "filename": "606003236-PROYEK-KONTRUKSI-YANG-BERMASALAH-DENGAN-HUKUM_1789888979760.pdf",
+      "id": "843f31c97fa0",
+      "key_topics": [
+        "Kegagalan Bangunan",
+        "Hukum Konstruksi",
+        "Tanggung Jawab Kontraktor",
+        "Korupsi",
+        "Sengketa Konstruksi"
+      ],
+      "legal_concepts": [
+        "Syarat sah perjanjian",
+        "Wanprestasi",
+        "Kegagalan bangunan",
+        "Tanggung jawab hukum"
+      ],
+      "named_cases": [
+        "Jembatan Paringin",
+        "Proyek Hambalang",
+        "Runtuhnya Rukan Cendrawasih",
+        "Runtuhnya Jembatan Mahakam II"
+      ],
+      "primary_category": "studi_kasus",
+      "recommended_use": "Sebagai bahan studi pembelajaran untuk menghindari kesalahan serupa dalam manajemen proyek dan kontrak.",
+      "regulations_mentioned": [
+        "UU Jasa Konstruksi",
+        "KUHPerdata",
+        "UU Perlindungan Konsumen",
+        "UU Bangunan Gedung"
+      ],
+      "reliability_note": "Tugas kuliah yang mengutip berbagai sumber untuk tujuan edukasi.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Makalah ini membahas berbagai aspek hukum konstruksi di Indonesia melalui studi kasus proyek gagal atau bermasalah, termasuk Jembatan Paringin, Proyek Hambalang, dan keruntuhan bangunan lainnya. Analisis berfokus pada penyebab kegagalan bangunan, pelanggaran kontrak, dan konsekuensi hukum yang timbul.",
+      "tags": [
+        "studi kasus",
+        "kegagalan bangunan",
+        "aspek hukum"
+      ],
+      "title": "STUDI KASUS PROYEK YANG PERNAH BERMASALAH"
+    },
+    {
+      "currency_warning": "Buku diterbitkan pada 2022; pastikan semua referensi perundang-undangan dikonfirmasi dengan versi terbaru.",
+      "document_type": "Tulisan akademik/buku",
+      "failure_causes": [],
+      "filename": "636229660-Hukum-Kontrak-dan-Perancangan-Kontrak_1789888979761.pdf",
+      "id": "3e47c98f7667",
+      "key_topics": [
+        "Dasar Hukum Perjanjian",
+        "Teknik Perancangan Kontrak",
+        "Syarat Sah Kontrak",
+        "Asas-asas Kontrak",
+        "Hukum Ekonomi Syariah"
+      ],
+      "legal_concepts": [
+        "Konsensualisme",
+        "Itikad baik",
+        "Wanprestasi",
+        "Force Majeure",
+        "Pacta Sunt Servanda"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Panduan teoretis dan teknis untuk praktisi hukum dalam merancang kontrak yang valid dan protektif.",
+      "regulations_mentioned": [
+        "KUHPerdata (Buku III)",
+        "HIR",
+        "RBG"
+      ],
+      "reliability_note": "Buku teks hukum dengan referensi teoretis yang kuat.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Buku ini memberikan penjelasan komprehensif mengenai dasar hukum kontrak dalam hukum perdata dan hukum Islam, mencakup subjek, objek, syarat sahnya perjanjian, serta tahapan penyusunan kontrak. Fokus pada teknik perancangan kontrak bisnis yang dapat meminimalisir sengketa.",
+      "tags": [
+        "hukum kontrak",
+        "kontrak drafting",
+        "perdata",
+        "syariah"
+      ],
+      "title": "HUKUM KONTRAK DAN PERANCANGAN KONTRAK"
+    },
+    {
+      "currency_warning": "Referensi menggunakan Perpres 12/2021; pastikan kepatuhan dengan regulasi terbaru.",
+      "document_type": "Materi presentasi/panduan profesional",
+      "failure_causes": [
+        "Keterlambatan pelaksanaan",
+        "Deviasi target",
+        "Kegagalan kinerja"
+      ],
+      "filename": "716554262-Manajemen-Kontrak-Konstruksi-HM_1789888979761.pdf",
+      "id": "b46b70500b7a",
+      "key_topics": [
+        "Manajemen Kontrak",
+        "Pengendalian Waktu",
+        "Kontrak Kritis",
+        "Perubahan Kontrak",
+        "Pembayaran Prestasi"
+      ],
+      "legal_concepts": [
+        "Keadaan Kahar",
+        "Wanprestasi",
+        "Peristiwa Kompensasi",
+        "Sanksi Denda"
+      ],
+      "named_cases": [],
+      "primary_category": "administrasi_kontrak",
+      "recommended_use": "Panduan praktis bagi PPK dan praktisi lapangan untuk memitigasi risiko kontrak dan mengelola administrasi pekerjaan konstruksi.",
+      "regulations_mentioned": [
+        "Perpres No. 16 Tahun 2018",
+        "Perpres No. 12 Tahun 2021",
+        "UU No. 2 Tahun 2017"
+      ],
+      "reliability_note": "Materi profesional dari narasumber PBJ; sangat relevan untuk administrasi kontrak.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Materi ini membahas secara mendalam mengenai manajemen, pengawasan, dan pengendalian kontrak pekerjaan konstruksi. Mencakup detail tahapan pelaksanaan kontrak, mulai dari persiapan, pengendalian waktu, perubahan kontrak (addendum), hingga penanganan sengketa dan keadaan kahar.",
+      "tags": [
+        "manajemen kontrak",
+        "pengendalian",
+        "konstruksi"
+      ],
+      "title": "OPTIMALISASI PENGAWASAN DAN PENGENDALIAN KONTRAK PEKERJAAN KONSTRUKSI"
+    },
+    {
+      "currency_warning": "Materi presentasi mungkin tidak mencakup perubahan regulasi terbaru pasca-2023.",
+      "document_type": "Materi Pelatihan/Presentasi",
+      "failure_causes": [
+        "kegagalan konstruksi",
+        "kegagalan bangunan",
+        "kelalaian pengguna jasa"
+      ],
+      "filename": "727067776-Skema-Pelatihan-FIDIC_1789888979762.pdf",
+      "id": "539f1cc358c4",
+      "key_topics": [
+        "administrasi kontrak",
+        "fidic",
+        "perpanjangan waktu",
+        "keadaan kahar",
+        "kegagalan bangunan"
+      ],
+      "legal_concepts": [
+        "wanprestasi",
+        "peristiwa kompensasi",
+        "force majeure",
+        "daftar hitam"
+      ],
+      "named_cases": [],
+      "primary_category": "fidic",
+      "recommended_use": "Digunakan untuk memahami alur administratif proyek konstruksi pemerintah.",
+      "regulations_mentioned": [
+        "UU 2/2017",
+        "Perpres 16/2018",
+        "PP 22/2020",
+        "Per LKPP 12/2021"
+      ],
+      "reliability_note": "Berfungsi sebagai panduan operasional, namun bukan naskah hukum primer.",
+      "source_quality": "sekunder_umum",
+      "summary": "Dokumen ini menyajikan skema alur pelaksanaan kontrak konstruksi, mencakup siklus dari tender, penandatanganan kontrak, hingga masa pertanggungan kegagalan bangunan selama 10 tahun. Isinya menguraikan mekanisme administrasi seperti perpanjangan waktu (EOT), keadaan kahar, penyesuaian harga, dan tata cara pemutusan kontrak. Peringatan: Dokumen ini merupakan bahan presentasi dan bukan dokumen hukum mengikat; periksa kembali regulasi terkini (seperti UU Jasa Konstruksi) untuk implementasi proyek.",
+      "tags": [
+        "fidic",
+        "administrasi",
+        "kegagalan bangunan",
+        "prosedur kontrak"
+      ],
+      "title": "SKEMA PELAKSANAAN KONTRAK (FIDIC)"
+    },
+    {
+      "currency_warning": "Merujuk pada Perpres 70/2012 yang sudah tidak relevan; gunakan regulasi pengadaan terbaru.",
+      "document_type": "Materi Akademik",
+      "failure_causes": [
+        "dokumen tidak lengkap",
+        "interpretasi pasal ambigu"
+      ],
+      "filename": "871590110-Macam-Macam-Kontrak-Dalam-Penyelenggaraan-Proyek_1789888979762.pdf",
+      "id": "061faabfe164",
+      "key_topics": [
+        "jenis kontrak",
+        "risiko kontrak",
+        "jaminan",
+        "penyelesaian sengketa"
+      ],
+      "legal_concepts": [
+        "lump sum",
+        "harga satuan",
+        "wanprestasi",
+        "force majeure"
+      ],
+      "named_cases": [],
+      "primary_category": "jenis_kontrak",
+      "recommended_use": "Referensi untuk memahami perbedaan karakteristik jenis-jenis kontrak.",
+      "regulations_mentioned": [
+        "Pepres 70 Tahun 2012"
+      ],
+      "reliability_note": "Akademik; valid untuk konsep teori namun kedaluwarsa secara regulatif.",
+      "source_quality": "sekunder_kuat",
+      "summary": "Dokumen ini menjelaskan berbagai jenis kontrak konstruksi, termasuk Lump Sum, Harga Satuan, dan sistem pembayaran biaya ditambah jasa (cost plus fee). Pembahasan mencakup struktur isi dokumen kontrak, pengelolaan risiko, jaminan, serta mekanisme penyelesaian perselisihan. Peringatan: Materi bersifat teoretis/akademik; pastikan untuk merujuk pada peraturan pengadaan barang/jasa yang berlaku saat ini saat menyusun kontrak nyata.",
+      "tags": [
+        "kontrak",
+        "jenis pekerjaan",
+        "akademik",
+        "risiko"
+      ],
+      "title": "PROGRAM STUDI TEKNIK SIPIL"
+    },
+    {
+      "currency_warning": "Template ini perlu disesuaikan dengan regulasi terbaru (misal: Per LKPP 12/2021) karena referensi materai masih mencantumkan Rp 6.000.",
+      "document_type": "Contoh Template",
+      "failure_causes": [
+        "cacat mutu",
+        "kegagalan konstruksi",
+        "kegagalan bangunan"
+      ],
+      "filename": "872209475-Rancangan-Kontrak_1789888979763.pdf",
+      "id": "7406dc2f08c3",
+      "key_topics": [
+        "surat perjanjian",
+        "syarat umum kontrak",
+        "pembayaran prestasi",
+        "kegagalan bangunan"
+      ],
+      "legal_concepts": [
+        "wanprestasi",
+        "peristiwa kompensasi",
+        "denda",
+        "subkontrak",
+        "pemutusan kontrak"
+      ],
+      "named_cases": [],
+      "primary_category": "rancangan_kontrak",
+      "recommended_use": "Sebagai format dasar penyusunan surat perjanjian dan syarat kontrak.",
+      "regulations_mentioned": [
+        "Kitab Undang-Undang Hukum Perdata"
+      ],
+      "reliability_note": "Bukan dokumen final; harus direview oleh ahli hukum sebelum digunakan.",
+      "source_quality": "contoh_template",
+      "summary": "Dokumen ini merupakan draf atau template surat perjanjian kontrak konstruksi yang mencakup Syarat Umum Kontrak (SSUK) dan Syarat Khusus Kontrak (SSKK). Template ini merinci kewajiban para pihak, mekanisme pengawasan mutu, prosedur perubahan kontrak, serta penanganan kegagalan bangunan. Peringatan: Dokumen ini adalah contoh template; pengguna wajib menyesuaikan klausul dengan spesifikasi proyek dan hukum yang berlaku saat ini.",
+      "tags": [
+        "template",
+        "kontrak konstruksi",
+        "syarat umum",
+        "klausul"
+      ],
+      "title": "RANCANGAN KONTRAK"
+    }
+  ]
+}
