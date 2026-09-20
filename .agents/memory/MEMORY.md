@@ -1,0 +1,1 @@
+- [KontrakGuard product positioning](kontrakguard-product-positioning.md) — legal-defense system led by deadlines, obligations, evidence, and dispute-ready workflows; AI follows the data foundation.

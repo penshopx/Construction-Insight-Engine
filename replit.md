@@ -1,6 +1,6 @@
-# KontrakKonstruksi
+# KontrakGuard
 
-Aplikasi kerja hukum dan administrasi kontrak konstruksi berbasis referensi Indonesia dan orientasi kompetensi SKKNI 88 Tahun 2015.
+Sistem pendukung keputusan dan pertahanan hukum kontrak konstruksi untuk menjaga tenggat, kewajiban, bukti, dan paparan risiko tetap terlihat.
 
 ## Run & Operate
 
@@ -25,7 +25,9 @@ Aplikasi kerja hukum dan administrasi kontrak konstruksi berbasis referensi Indo
 ## Where things live
 
 - `artifacts/kontrak-konstruksi/` — React web application
-- `artifacts/kontrak-konstruksi/src/App.tsx` — routes, screens, and local prototype data
+- `artifacts/kontrak-konstruksi/src/App.tsx` — route registration
+- `artifacts/kontrak-konstruksi/src/pages/` — command center and product modules
+- `artifacts/kontrak-konstruksi/src/components/layout/` — persistent application shell
 - `artifacts/kontrak-konstruksi/src/index.css` — visual tokens and theme
 - `attached_assets/` — source reference documents supplied for the product
 - `artifacts/api-server/` — shared Express API, currently not required by the frontend prototype
@@ -33,15 +35,20 @@ Aplikasi kerja hukum dan administrasi kontrak konstruksi berbasis referensi Indo
 ## Architecture decisions
 
 - The first version is frontend-only and uses realistic local data so the product surface can be evaluated before persistence and user accounts are added.
+- Product positioning is a construction-contract legal-defense system, not a generic document repository or legal-reference portal.
+- MVP priority is preventing loss of contractual rights through deadline visibility, obligation tracking, and defensible evidence records; AI analysis follows the workflow and data foundation.
 - SKKNI content is presented as an orientation and evidence-tracking aid, not as formal certification.
-- Legal content includes an explicit disclaimer: it is reference support, not a substitute for professional legal advice.
+- Legal and forensic claims are qualified: the app is decision support, not legal advice, certification, or a guarantee that evidence will be admitted.
 
 ## Product
 
-- Dashboard for contract agenda, monitored risks, activity, and decisions.
+- Executive command center for exposure, urgent deadlines, and high-risk projects.
+- Project portfolio and contract-risk overview.
+- Legal deadline center for notices, responses, EOT, guarantees, retention, and DLP.
+- Evidence Vault prototype with provenance and chain-of-custody cues.
+- Case-management views for VO, EOT, claims, NCR, and disputes.
 - Searchable construction-contract legal reference library.
 - SKKNI 88-2015 competency map for Ahli Kontrak Kerja Konstruksi.
-- Contract administration workspace with status filters and completion tracking.
 
 ## User preferences
 
@@ -51,6 +58,7 @@ Aplikasi kerja hukum dan administrasi kontrak konstruksi berbasis referensi Indo
 ## Gotchas
 
 - Current interactions are local prototype state and reset after a page reload.
+- Evidence hashes, timestamps, risk scores, and chain-of-custody records are illustrative until backed by verified server-side controls.
 - Reference documents may contain older regulations; verify legal currency before presenting content as current law.
 
 ## Pointers
