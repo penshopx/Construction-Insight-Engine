@@ -1,10 +1,12 @@
-# [Project name]
+# KontrakKonstruksi
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Aplikasi kerja hukum dan administrasi kontrak konstruksi berbasis referensi Indonesia dan orientasi kompetensi SKKNI 88 Tahun 2015.
 
 ## Run & Operate
 
 - `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/kontrak-konstruksi run dev` — run the KontrakKonstruksi web app
+- `pnpm --filter @workspace/kontrak-konstruksi run typecheck` — check the web app
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -22,23 +24,34 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/kontrak-konstruksi/` — React web application
+- `artifacts/kontrak-konstruksi/src/App.tsx` — routes, screens, and local prototype data
+- `artifacts/kontrak-konstruksi/src/index.css` — visual tokens and theme
+- `attached_assets/` — source reference documents supplied for the product
+- `artifacts/api-server/` — shared Express API, currently not required by the frontend prototype
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first version is frontend-only and uses realistic local data so the product surface can be evaluated before persistence and user accounts are added.
+- SKKNI content is presented as an orientation and evidence-tracking aid, not as formal certification.
+- Legal content includes an explicit disclaimer: it is reference support, not a substitute for professional legal advice.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Dashboard for contract agenda, monitored risks, activity, and decisions.
+- Searchable construction-contract legal reference library.
+- SKKNI 88-2015 competency map for Ahli Kontrak Kerja Konstruksi.
+- Contract administration workspace with status filters and completion tracking.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Use Indonesian for the product and communication.
+- Favor a high-contrast dark/black and light-blue visual pairing with bright, legible text.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Current interactions are local prototype state and reset after a page reload.
+- Reference documents may contain older regulations; verify legal currency before presenting content as current law.
 
 ## Pointers
 
