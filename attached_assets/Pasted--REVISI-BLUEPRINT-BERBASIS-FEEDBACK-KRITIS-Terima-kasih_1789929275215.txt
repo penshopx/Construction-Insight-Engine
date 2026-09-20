@@ -1,0 +1,1563 @@
+# REVISI BLUEPRINT — BERBASIS FEEDBACK KRITIS
+
+Terima kasih atas koreksi dan catatan kritisnya. Feedback Anda sangat tepat — ada beberapa klaim di blueprint sebelumnya yang bersifat *aspirational* dan belum siap dijadikan ketentuan produk. Mari kita luruskan dengan pendekatan yang lebih hati-hati dan realistis.
+
+---
+
+## BAGIAN 1: KOREKSI & PRINSIP YANG DILURUSKAN
+
+### Koreksi Penomoran Task
+
+| Blueprint Lama (Salah) | Nomor Sebenarnya | Status |
+|---|---|---|
+| Task #18 — Resilience ekstraksi | **Task #19** | ✅ Selesai |
+| Task #19 — Skema DB sinkron | **Task #20** | ✅ Selesai |
+| Task #20 — Access control bukti rahasia | **Task #21** | ✅ Selesai |
+| Task baru — Granular RBAC peserta | **Task #22** | 🔄 Sedang dikerjakan |
+
+### Prinsip yang Direvisi
+
+| Klaim Lama (Blueprint Sebelumnya) | Revisi Berdasarkan Feedback |
+|---|---|
+| "Log immutable, data tidak mungkin hilang" | Log di-*append-only* dengan hash chain untuk **deteksi manipulasi**, bukan jaminan absolut. Backup & disaster recovery tetap diperlukan. |
+| "Notifikasi pasti dalam 1 jam" | Target SLA, bukan janji produk. SLA baru bisa di-commit setelah monitoring & on-call tersedia. |
+| "PRIVILEGED = kesimpulan hukum otomatis" | `PRIVILEGED` adalah **klasifikasi akses internal** yang ditandai oleh uploader. Status hukum privilege ditentukan oleh penasihat, bukan sistem. |
+| "E2E encryption dengan user-held keys" | Ditolak untuk fase ini. Search, preview, ekstraksi, recovery, dan legal hold tidak bisa bekerja. Perlu desain manajemen kunci terlebih dahulu. |
+| "Geofencing & auto-suspend mutlak" | Berbasis **sinyal risiko** dengan proses pemulihan manual. Blocking mutlak berisiko mengganggu operasi sah. |
+| Klausul kerahasiaan mediasi & privilege lawyer-client | **Perlu validasi penasihat hukum Indonesia** sebelum dijadikan ToS. Tidak boleh diklaim sepihak oleh produk. |
+| Penyimpanan IP, user agent, KYC, email, phone | Perlu **dasar pemrosesan** (UU PDP Pasal 20-24), pembatasan akses, dan kebijakan retensi spesifik per kategori data. |
+
+---
+
+## BAGIAN 2: BLUEPRINT TASK #22 — GRANULAR RBAC PESERTA MEDIASI
+
+Dengan koreksi di atas, berikut blueprint yang lebih hati-hati untuk Task #22.
+
+### 2.1 Prinsip Desain yang Disepakati
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PRINSIP DESAIN TASK #22                                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ✅ FAIL CLOSED                                             │
+│     Default: tolak akses. Hanya beri jika eksplisit cocok.  │
+│                                                             │
+│  ✅ STEALTH DENIAL                                          │
+│     Akses ditolak → respons 404, bukan 403.                 │
+│     Alasan: keberadaan dokumen itu sendiri bisa bocor.      │
+│                                                             │
+│  ✅ AUDIT EVERY ATTEMPT                                     │
+│     Setiap percobaan (berhasil/ditolak) dicatat.            │
+│     Catatan: data audit tunduk pada kebijakan retensi       │
+│     tersendiri (lihat Task retensi nanti).                  │
+│                                                             │
+│  ✅ IMMEDIATE REVOCATION                                    │
+│     Peserta keluar → akses dicabut pada request berikutnya. │
+│     Catatan: cache token JWT perlu TTL pendek (≤5 menit)    │
+│     atau mekanisme revokasi eksplisit.                      │
+│                                                             │
+│  ✅ PRIVILEGED = KLASIFIKASI AKSES, BUKAN KESIMPULAN HUKUM  │
+│     Sistem tidak mengklaim privilege hukum.                 │
+│     Label "PRIVILEGED" hanya membatasi akses teknis.        │
+│     Status hukum privilege ditentukan penasihat.            │
+│                                                             │
+│  ✅ SCOPE-BASED EXPERT WITNESS                              │
+│     Expert witness hanya melihat dokumen yang di-scope.     │
+│     Scope didefinisikan eksplisit oleh mediator.            │
+│                                                             │
+│  ❌ TIDAK ADA KLAIM:                                        │
+│     - "Immutable" (append-only dengan deteksi manipulasi)   │
+│     - "Tidak mungkin bocor" (defense in depth, bukan        │
+│       jaminan absolut)                                      │
+│     - "Privilege hukum otomatis"                            │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Model Data (Revisi)
+
+```sql
+-- Peserta mediasi dengan peran eksplisit
+CREATE TABLE mediation_participants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id) NOT NULL,
+    user_id UUID REFERENCES users(id) NOT NULL,
+    
+    -- Peran dalam mediasi
+    role VARCHAR(30) NOT NULL,
+    -- 'CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER',
+    -- 'CLAIMANT_COUNSEL', 'RESPONDENT_COUNSEL', 'EXPERT_WITNESS'
+    
+    -- Afiliasi organisasi
+    organization_id UUID REFERENCES organizations(id),
+    
+    -- Status
+    status VARCHAR(20) DEFAULT 'ACTIVE',
+    -- 'ACTIVE', 'WITHDRAWN', 'REMOVED'
+    joined_at TIMESTAMPTZ DEFAULT NOW(),
+    left_at TIMESTAMPTZ,
+    removal_reason TEXT,
+    
+    -- Metadata minimal (sesuai UU PDP - data minimal yang diperlukan)
+    display_name VARCHAR(100),
+    contact_email VARCHAR(255),  -- dasar pemrosesan: performa kontrak
+    
+    -- Verifikasi identitas (opsional, sesuai kebutuhan matter)
+    identity_verified BOOLEAN DEFAULT false,
+    identity_verified_at TIMESTAMPTZ,
+    identity_verified_by UUID REFERENCES users(id),
+    
+    UNIQUE(matter_id, user_id)
+);
+
+-- Dokumen dengan klasifikasi akses
+CREATE TABLE documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id) NOT NULL,
+    
+    -- Klasifikasi akses (bukan kesimpulan hukum)
+    access_class VARCHAR(20) NOT NULL DEFAULT 'MATTER_INTERNAL',
+    -- 'MATTER_PUBLIC'    : semua peserta matter
+    -- 'MATTER_INTERNAL'  : peserta dari organisasi yang sama
+    -- 'RESTRICTED'       : peserta yang dieksplisitkan
+    -- 'MEDIATOR_EYES'    : hanya mediator
+    -- 'COUNSEL_ONLY'     : hanya counsel dari pihak peng-upload
+    -- (catatan: PRIVILEGED di-rename jadi COUNSEL_ONLY untuk
+    --  menghindari kesan kesimpulan hukum otomatis)
+    
+    -- Untuk RESTRICTED: daftar participant_id yang boleh akses
+    restricted_to UUID[] DEFAULT '{}',
+    
+    -- Untuk COUNSEL_ONLY: pihak yang meng-upload
+    counsel_party VARCHAR(20),  -- 'CLAIMANT' atau 'RESPONDENT'
+    
+    -- Organisasi pemilik (untuk filter MATTER_INTERNAL)
+    owner_organization_id UUID REFERENCES organizations(id),
+    
+    -- Metadata
+    uploaded_by UUID REFERENCES users(id),
+    uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+    title TEXT,
+    file_checksum VARCHAR(64) NOT NULL
+);
+
+-- View: akses user ke dokumen
+-- Catatan: ini logika akses, bukan klaim hukum
+CREATE VIEW user_document_access AS
+SELECT 
+    d.id AS document_id,
+    d.matter_id,
+    mp.user_id,
+    mp.role,
+    mp.organization_id AS participant_org_id,
+    CASE 
+        WHEN d.access_class = 'MATTER_PUBLIC' THEN true
+        
+        WHEN d.access_class = 'MATTER_INTERNAL' 
+             AND d.owner_organization_id = mp.organization_id 
+             THEN true
+        
+        WHEN d.access_class = 'RESTRICTED' 
+             AND mp.id = ANY(d.restricted_to) 
+             THEN true
+        
+        WHEN d.access_class = 'MEDIATOR_EYES' 
+             AND mp.role = 'MEDIATOR' 
+             THEN true
+        
+        WHEN d.access_class = 'COUNSEL_ONLY' 
+             AND mp.role IN ('CLAIMANT_COUNSEL', 'RESPONDENT_COUNSEL')
+             AND (
+                 (d.counsel_party = 'CLAIMANT' AND mp.role = 'CLAIMANT_COUNSEL')
+                 OR
+                 (d.counsel_party = 'RESPONDENT' AND mp.role = 'RESPONDENT_COUNSEL')
+             )
+             THEN true
+        
+        ELSE false
+    END AS can_access
+FROM documents d
+JOIN mediation_participants mp ON mp.matter_id = d.matter_id
+WHERE mp.status = 'ACTIVE';
+
+-- Row-level security (defense in depth)
+-- Catatan: ini lapisan tambahan, bukan pengganti access check di app layer
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY documents_select_policy ON documents
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM user_document_access uda
+            WHERE uda.document_id = documents.id
+              AND uda.user_id = current_setting('app.current_user_id')::uuid
+              AND uda.can_access = true
+        )
+    );
+```
+
+### 2.3 Service Layer dengan Audit Trail
+
+```python
+# services/access/participant_access_service.py
+
+class ParticipantAccessService:
+    """
+    Access check dengan audit trail.
+    Catatan: kelas ini TIDAK membuat klaim hukum tentang privilege.
+    Ia hanya menerapkan klasifikasi akses yang ditentukan uploader.
+    """
+    
+    async def can_access(
+        self, user_id: str, document_id: str, matter_id: str
+    ) -> AccessDecision:
+        
+        # 1. Verifikasi user adalah peserta aktif
+        participant = await self.repo.get_active_participant(matter_id, user_id)
+        if not participant:
+            await self.audit.log(
+                user_id=user_id,
+                resource_id=document_id,
+                outcome="DENIED",
+                reason="NOT_ACTIVE_PARTICIPANT"
+            )
+            return AccessDecision(granted=False)
+        
+        # 2. Ambil dokumen
+        doc = await self.repo.get_document(document_id)
+        if not doc or doc.matter_id != matter_id:
+            # 404 - jangan konfirmasi keberadaan dokumen
+            await self.audit.log(
+                user_id=user_id,
+                resource_id=document_id,
+                outcome="DENIED",
+                reason="DOCUMENT_NOT_FOUND_OR_NOT_IN_MATTER"
+            )
+            return AccessDecision(granted=False)
+        
+        # 3. Evaluasi klasifikasi akses
+        granted = self._evaluate_access_class(doc, participant)
+        
+        await self.audit.log(
+            user_id=user_id,
+            resource_id=document_id,
+            outcome="GRANTED" if granted else "DENIED",
+            reason=self._last_eval_reason,
+            access_class=doc.access_class,
+            participant_role=participant.role,
+            participant_org_id=str(participant.organization_id)
+        )
+        
+        return AccessDecision(granted=granted)
+    
+    def _evaluate_access_class(self, doc, participant) -> bool:
+        """Evaluasi berdasarkan klasifikasi akses."""
+        
+        if doc.access_class == "MATTER_PUBLIC":
+            self._last_eval_reason = "MATTER_PUBLIC"
+            return True
+        
+        if doc.access_class == "MATTER_INTERNAL":
+            if doc.owner_organization_id == participant.organization_id:
+                self._last_eval_reason = "SAME_ORGANIZATION"
+                return True
+            self._last_eval_reason = "CROSS_ORGANIZATION"
+            return False
+        
+        if doc.access_class == "RESTRICTED":
+            if participant.id in (doc.restricted_to or []):
+                self._last_eval_reason = "EXPLICITLY_IN_RESTRICTED_LIST"
+                return True
+            self._last_eval_reason = "NOT_IN_RESTRICTED_LIST"
+            return False
+        
+        if doc.access_class == "MEDIATOR_EYES":
+            if participant.role == "MEDIATOR":
+                self._last_eval_reason = "MEDIATOR_ROLE"
+                return True
+            self._last_eval_reason = "NOT_MEDIATOR_ROLE"
+            return False
+        
+        if doc.access_class == "COUNSEL_ONLY":
+            is_matching_counsel = (
+                (doc.counsel_party == "CLAIMANT" and participant.role == "CLAIMANT_COUNSEL")
+                or
+                (doc.counsel_party == "RESPONDENT" and participant.role == "RESPONDENT_COUNSEL")
+            )
+            if is_matching_counsel:
+                self._last_eval_reason = "MATCHING_COUNSEL_ROLE"
+                return True
+            self._last_eval_reason = "NOT_MATCHING_COUNSEL"
+            return False
+        
+        # Unknown class → fail closed
+        self._last_eval_reason = "UNKNOWN_ACCESS_CLASS"
+        return False
+```
+
+### 2.4 Test Plan — Fokus pada Lintas Organisasi/Perkara
+
+```python
+# tests/access/test_task_22_cross_boundary.py
+
+class TestTask22CrossBoundary:
+    """
+    Test spesifik untuk Task #22:
+    - Lintas organisasi
+    - Lintas perkara (matter)
+    - Perubahan status peserta
+    """
+    
+    # ===== LINTAS ORGANISASI =====
+    
+    async def test_internal_doc_not_visible_to_other_org(self):
+        """Dokumen MATTER_INTERNAL tidak terlihat lintas organisasi"""
+        matter = await create_matter()
+        org_a = await create_org("PT_A")
+        org_b = await create_org("PT_B")
+        
+        user_a = await add_participant(matter.id, org_a, role="CLAIMANT")
+        user_b = await add_participant(matter.id, org_b, role="RESPONDENT")
+        
+        doc = await create_document(
+            matter.id, 
+            access_class="MATTER_INTERNAL",
+            owner_org=org_a.id,
+            uploaded_by=user_a.id
+        )
+        
+        assert (await service.can_access(user_a.id, doc.id, matter.id)).granted
+        assert not (await service.can_access(user_b.id, doc.id, matter.id)).granted
+    
+    async def test_internal_doc_404_for_other_org(self):
+        """Respons 404, bukan 403, untuk lintas organisasi"""
+        # Setup sama seperti di atas
+        response = await client.get(
+            f"/documents/{doc.id}",
+            headers=auth_header(user_b)
+        )
+        assert response.status_code == 404  # Bukan 403
+    
+    # ===== LINTAS PERKARA =====
+    
+    async def test_document_isolated_between_matters(self):
+        """Dokumen di matter A tidak bisa diakses dari matter B"""
+        matter_a = await create_matter()
+        matter_b = await create_matter()
+        user = await add_participant(matter_a.id, role="CLAIMANT")
+        await add_participant(matter_b.id, user_id=user.id, role="CLAIMANT")
+        
+        doc_a = await create_document(matter_a.id, access_class="MATTER_PUBLIC")
+        
+        # User coba akses doc_a dengan konteks matter_b
+        decision = await service.can_access(user.id, doc_a.id, matter_b.id)
+        assert not decision.granted
+    
+    async def test_same_user_different_roles_per_matter(self):
+        """User yang sama bisa punya peran berbeda di matter berbeda"""
+        user = await create_user()
+        
+        matter_a = await create_matter()
+        matter_b = await create_matter()
+        
+        await add_participant(matter_a.id, user.id, role="MEDIATOR")
+        await add_participant(matter_b.id, user.id, role="OBSERVER")
+        
+        mediator_doc = await create_document(matter_a.id, access_class="MEDIATOR_EYES")
+        observer_doc = await create_document(matter_b.id, access_class="MATTER_PUBLIC")
+        
+        # Di matter A: bisa akses mediator-only doc
+        assert (await service.can_access(user.id, mediator_doc.id, matter_a.id)).granted
+        
+        # Di matter B: tidak bisa akses mediator-only doc (karena role OBSERVER)
+        # Tapi bisa akses public doc
+        assert not (await service.can_access(user.id, mediator_doc.id, matter_b.id)).granted
+        assert (await service.can_access(user.id, observer_doc.id, matter_b.id)).granted
+    
+    # ===== PERUBAHAN STATUS =====
+    
+    async def test_withdrawn_participant_loses_access(self):
+        """Peserta yang withdraw langsung kehilangan akses"""
+        matter = await create_matter()
+        participant = await add_participant(matter.id, role="CLAIMANT")
+        doc = await create_document(matter.id, access_class="MATTER_PUBLIC")
+        
+        # Sebelum withdraw
+        assert (await service.can_access(participant.user_id, doc.id, matter.id)).granted
+        
+        # Withdraw
+        await withdraw_participant(matter.id, participant.id)
+        
+        # Setelah withdraw
+        assert not (await service.can_access(participant.user_id, doc.id, matter.id)).granted
+    
+    async def test_revocation_works_with_cached_token(self):
+        """Revokasi bekerja bahkan jika token JWT masih valid"""
+        # Catatan: ini membutuhkan mekanisme revokasi token
+        # Opsi: short TTL (≤5 menit) + refresh token dengan revocation list
+        # atau Redis-based token blacklist
+        
+        matter = await create_matter()
+        participant = await add_participant(matter.id, role="CLAIMANT")
+        token = await issue_token(participant.user_id)
+        doc = await create_document(matter.id, access_class="MATTER_PUBLIC")
+        
+        # Akses dengan token valid
+        response = await client.get(
+            f"/documents/{doc.id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert response.status_code == 200
+        
+        # Withdraw participant
+        await withdraw_participant(matter.id, participant.id)
+        
+        # Akses dengan token yang SAMA harus ditolak
+        response = await client.get(
+            f"/documents/{doc.id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert response.status_code == 404
+    
+    # ===== EXPERT WITNESS =====
+    
+    async def test_expert_witness_only_scoped_docs(self):
+        """Expert witness hanya lihat dokumen yang di-scope"""
+        matter = await create_matter()
+        expert = await add_participant(matter.id, role="EXPERT_WITNESS")
+        
+        scoped_doc = await create_document(
+            matter.id,
+            access_class="RESTRICTED",
+            restricted_to=[expert.id]
+        )
+        other_doc = await create_document(
+            matter.id,
+            access_class="RESTRICTED",
+            restricted_to=[]  # hanya parties utama
+        )
+        
+        assert (await service.can_access(expert.user_id, scoped_doc.id, matter.id)).granted
+        assert not (await service.can_access(expert.user_id, other_doc.id, matter.id)).granted
+    
+    # ===== AUDIT TRAIL =====
+    
+    async def test_all_attempts_logged(self):
+        """Setiap percobaan akses tercatat di audit log"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="OBSERVER")
+        restricted_doc = await create_document(
+            matter.id, 
+            access_class="RESTRICTED",
+            restricted_to=[]  # tidak termasuk observer
+        )
+        
+        # Coba akses (akan ditolak)
+        await service.can_access(user.id, restricted_doc.id, matter.id)
+        
+        logs = await audit.get_logs(resource_id=restricted_doc.id)
+        assert len(logs) == 1
+        assert logs[0].outcome == "DENIED"
+        assert logs[0].user_id == user.id
+        # Catatan: IP address dan user agent dicatat sesuai kebijakan retensi
+        # yang akan ditentukan di task retensi data
+```
+
+### 2.5 Catatan tentang Data Pribadi di Audit Log
+
+Sesuai feedback Anda, audit log yang menyimpan IP address, user agent, dll perlu perlakuan khusus:
+
+```python
+# policies/audit_data_policy.py
+
+class AuditDataPolicy:
+    """
+    Kebijakan data audit sesuai UU PDP.
+    Catatan: kebijakan ini perlu validasi penasihat hukum.
+    """
+    
+    # Kategori data di audit log
+    DATA_CATEGORIES = {
+        "user_id": {
+            "purpose": "identifikasi pelaku akses",
+            "legal_basis": "performa kontrak + kewajiban hukum",
+            "retention": "selama matter aktif + 5 tahun",
+            "access_scope": "compliance team, mediator (per matter)"
+        },
+        "ip_address": {
+            "purpose": "deteksi anomali akses",
+            "legal_basis": "kepentingan legitim operator",
+            "retention": "90 hari (kecuali ada insiden)",
+            "access_scope": "security team only",
+            "anonymization_after_retention": True
+        },
+        "user_agent": {
+            "purpose": "deteksi anomali akses",
+            "legal_basis": "kepentingan legitim operator",
+            "retention": "90 hari",
+            "access_scope": "security team only",
+            "anonymization_after_retention": True
+        },
+        "access_outcome": {
+            "purpose": "audit kepatuhan",
+            "legal_basis": "kepentingan legitim operator",
+            "retention": "selama matter aktif + 5 tahun",
+            "access_scope": "compliance team"
+        }
+    }
+    
+    @classmethod
+    async def apply_retention(cls):
+        """Jalankan retensi sesuai kebijakan"""
+        # Anonimisasi IP & user agent setelah 90 hari
+        await cls.anonymize_old_entries(days=90, fields=["ip_address", "user_agent"])
+        
+        # Hapus log dari matter yang sudah ditutup + 5 tahun
+        await cls.delete_closed_matter_logs(retention_years=5)
+```
+
+---
+
+## BAGIAN 3: CATATAN TENTANG TASK #35 — PERLINDUNGAN JALUR NON-API
+
+Task #35 yang Anda sebutkan adalah **kritikal** dan belum saya bahas di blueprint sebelumnya. Ini tentang jalur akses yang tidak melalui API standar, yang sering menjadi blind spot keamanan.
+
+### 3.1 Jalur Non-API yang Perlu Dilindungi
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  JALUR NON-API YANG PERLU DILINDUNGI                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. BACKGROUND JOBS / WORKERS                               │
+│     ├── Ekstraksi dokumen                                   │
+│     ├── Indexing pencarian                                  │
+│     ├── Notifikasi email/WhatsApp                           │
+│     └── Risiko: job bisa bypass access check jika tidak     │
+│         dirancang dengan benar                              │
+│                                                             │
+│  2. DIRECT DATABASE ACCESS                                  │
+│     ├── Script maintenance                                  │
+│     ├── Data migration                                      │
+│     ├── Debugging production                                │
+│     └── Risiko: developer bisa baca data sensitif           │
+│                                                             │
+│  3. BULK OPERATIONS                                         │
+│     ├── Export massal (ZIP download)                        │
+│     ├── Search & replace                                    │
+│     ├── Batch update                                        │
+│     └── Risiko: bypass per-document access check            │
+│                                                             │
+│  4. WEBHOOKS & INTEGRATIONS                                 │
+│     ├── Callback dari sistem eksternal                      │
+│     ├── Sync dengan LPSE/SIKa                               │
+│     └── Risiko: webhook endpoint tidak ada auth             │
+│                                                             │
+│  5. FILE SYSTEM / OBJECT STORAGE                            │
+│     ├── Akses langsung ke S3/MinIO                          │
+│     ├── Backup restoration                                  │
+│     └── Risiko: file bisa dibaca tanpa access check         │
+│                                                             │
+│  6. LOGS & MONITORING                                       │
+│     ├── Log yang mengandung data sensitif                   │
+│     ├── Error stack trace                                   │
+│     ├── Monitoring dashboard                                │
+│     └── Risiko: data sensitif bocor via log                 │
+│                                                             │
+│  7. CACHES                                                  │
+│     ├── Redis cache                                         │
+│     ├── CDN cache                                           │
+│     └── Risiko: cached response tidak honor revocation      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 Blueprint Task #35
+
+```python
+# services/security/non_api_protection.py
+
+class NonApiProtectionService:
+    """
+    Perlindungan untuk jalur non-API.
+    Prinsip: access check TIDAK BOLEH di-bypass oleh jalur apapun.
+    """
+    
+    # ===== 1. BACKGROUND JOBS =====
+    
+    async def process_document_extraction(self, job_id: str):
+        """
+        Job ekstraksi TIDAK BOLEH membaca dokumen tanpa access check.
+        Gunakan service account dengan scope terbatas.
+        """
+        job = await self.repo.get_job(job_id)
+        
+        # Service account khusus untuk ekstraksi
+        # Scope: hanya dokumen yang statusnya "PENDING_EXTRACTION"
+        # TIDAK bisa akses dokumen lain
+        service_account = ServiceAccount(
+            id="extraction-worker",
+            scope=["document:read_pending_extraction"]
+        )
+        
+        # Access check tetap berlaku
+        doc = await self.access_service.get_document(
+            job.document_id, 
+            requester=service_account
+        )
+        
+        # Ekstrak konten
+        content = await self.extractor.extract(doc.file_path)
+        
+        # Index ke search — dengan access metadata
+        await self.search_index.index(
+            document_id=doc.id,
+            content=content,
+            access_metadata={
+                "matter_id": doc.matter_id,
+                "access_class": doc.access_class,
+                "owner_organization_id": doc.owner_organization_id,
+                "restricted_to": doc.restricted_to
+            }
+        )
+    
+    # ===== 2. DIRECT DATABASE ACCESS =====
+    
+    # Kebijakan: TIDAK ADA direct DB access di production
+    # Semua operasi via API atau approved scripts dengan audit
+    
+    @classmethod
+    async def run_approved_script(cls, script_name: str, params: dict):
+        """
+        Script maintenance harus melalui approval workflow.
+        Semua aksi dicatat di audit log terpisah.
+        """
+        # 1. Verifikasi script ada di approved list
+        if script_name not in APPROVED_SCRIPTS:
+            raise SecurityError("Script not approved")
+        
+        # 2. Minta approval dari security officer
+        approval = await cls.request_approval(
+            script_name=script_name,
+            params=params,
+            approver="security_officer"
+        )
+        
+        # 3. Jalankan dengan audit trail lengkap
+        async with AuditContext(
+            actor="script_runner",
+            action=f"script:{script_name}",
+            reason=approval.reason
+        ):
+            result = await APPROVED_SCRIPTS[script_name](params)
+        
+        return result
+    
+    # ===== 3. BULK OPERATIONS =====
+    
+    async def bulk_export(self, matter_id: str, requester_id: str):
+        """
+        Bulk export TETAP harus honor per-document access check.
+        Tidak ada "bulk bypass".
+        """
+        # 1. Verifikasi requester adalah peserta matter
+        participant = await self.repo.get_active_participant(matter_id, requester_id)
+        if not participant:
+            raise AccessDenied()
+        
+        # 2. Ambil SEMUA dokumen di matter
+        all_docs = await self.repo.list_documents(matter_id)
+        
+        # 3. Filter berdasarkan access check PER DOKUMEN
+        accessible_docs = []
+        for doc in all_docs:
+            decision = await self.access_service.can_access(
+                requester_id, doc.id, matter_id
+            )
+            if decision.granted:
+                accessible_docs.append(doc)
+            # Catatan: dokumen yang tidak bisa diakses TIDAK masuk export,
+            # dan TIDAK ada indikasi bahwa dokumen itu ada
+        
+        # 4. Rate limit bulk export
+        await self.rate_limiter.check_bulk_export(requester_id)
+        
+        # 5. Generate ZIP
+        return await self.generate_zip(accessible_docs)
+    
+    # ===== 4. WEBHOOKS =====
+    
+    async def handle_webhook(self, webhook_type: str, payload: dict):
+        """
+        Webhook harus divalidasi signature-nya.
+        Webhook TIDAK BOLEH langsung menulis data sensitif.
+        """
+        # 1. Verifikasi signature
+        if not self.verify_webhook_signature(webhook_type, payload):
+            raise SecurityError("Invalid webhook signature")
+        
+        # 2. Validasi payload schema
+        self.validate_payload_schema(webhook_type, payload)
+        
+        # 3. Proses via queue (bukan langsung)
+        # Ini mencegah webhook jadi vektor serangan synchronous
+        await self.queue.enqueue(
+            f"webhook:{webhook_type}",
+            payload=payload,
+            priority="low"
+        )
+    
+    # ===== 5. OBJECT STORAGE =====
+    
+    async def get_presigned_url(self, document_id: str, requester_id: str):
+        """
+        Presigned URL untuk S3/MinIO TIDAK BOLEH di-generate
+        tanpa access check di application layer.
+        """
+        # 1. Access check di app layer
+        doc = await self.repo.get_document(document_id)
+        decision = await self.access_service.can_access(
+            requester_id, document_id, doc.matter_id
+        )
+        if not decision.granted:
+            raise AccessDenied()
+        
+        # 2. Generate presigned URL dengan expiry pendek
+        # Catatan: URL ini bisa di-share, jadi expiry harus pendek
+        url = await self.storage.generate_presigned_url(
+            document_id,
+            expiry_minutes=5  # Pendek untuk memitigasi risiko share
+        )
+        
+        # 3. Audit log
+        await self.audit.log(
+            user_id=requester_id,
+            action="presigned_url_generated",
+            resource_id=document_id,
+            metadata={"expiry_minutes": 5}
+        )
+        
+        return url
+    
+    # ===== 6. LOGS =====
+    
+    @classmethod
+    def sanitize_log(cls, log_data: dict) -> dict:
+        """
+        Sanitasi log sebelum ditulis.
+        Hapus/mask data sensitif.
+        """
+        sensitive_fields = [
+            "password", "token", "secret", "api_key",
+            "document_content", "full_text"
+        ]
+        
+        sanitized = log_data.copy()
+        for field in sensitive_fields:
+            if field in sanitized:
+                sanitized[field] = "***REDACTED***"
+        
+        return sanitized
+    
+    # ===== 7. CACHES =====
+    
+    async def get_cached_response(self, cache_key: str, requester_id: str):
+        """
+        Cached response harus honor revocation.
+        Cache TIDAK BOLEH menyimpan data yang sudah di-revoke.
+        """
+        cached = await self.cache.get(cache_key)
+        
+        if not cached:
+            return None
+        
+        # Verifikasi cache masih valid
+        # (tidak ada revocation sejak cache dibuat)
+        if await self.revocation.is_revoked_since(
+            requester_id, 
+            cached.cached_at
+        ):
+            await self.cache.delete(cache_key)
+            return None
+        
+        return cached.value
+```
+
+### 3.3 Test Plan untuk Task #35
+
+```python
+# tests/security/test_task_35_non_api_protection.py
+
+class TestTask35NonApiProtection:
+    
+    async def test_extraction_worker_cannot_access_other_docs(self):
+        """Worker ekstraksi hanya bisa akses dokumen yang di-scope"""
+        service_account = ServiceAccount(
+            id="extraction-worker",
+            scope=["document:read_pending_extraction"]
+        )
+        
+        pending_doc = await create_document(status="PENDING_EXTRACTION")
+        other_doc = await create_document(status="READY")
+        
+        # Bisa akses pending doc
+        result = await access_service.get_document(pending_doc.id, service_account)
+        assert result is not None
+        
+        # Tidak bisa akses doc lain
+        with pytest.raises(AccessDenied):
+            await access_service.get_document(other_doc.id, service_account)
+    
+    async def test_bulk_export_honors_per_doc_access(self):
+        """Bulk export tidak bypass per-document access check"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="OBSERVER")
+        
+        public_doc = await create_document(matter.id, access_class="MATTER_PUBLIC")
+        restricted_doc = await create_document(
+            matter.id, 
+            access_class="RESTRICTED",
+            restricted_to=[]  # tidak termasuk observer
+        )
+        
+        export = await bulk_export_service.export(matter.id, user.id)
+        
+        assert public_doc.id in [d.id for d in export.documents]
+        assert restricted_doc.id not in [d.id for d in export.documents]
+    
+    async def test_presigned_url_requires_access_check(self):
+        """Presigned URL tidak bisa di-generate tanpa access check"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="OBSERVER")
+        restricted_doc = await create_document(
+            matter.id,
+            access_class="RESTRICTED",
+            restricted_to=[]
+        )
+        
+        with pytest.raises(AccessDenied):
+            await storage_service.get_presigned_url(restricted_doc.id, user.id)
+    
+    async def test_cache_honors_revocation(self):
+        """Cached response tidak berlaku setelah revocation"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="CLAIMANT")
+        doc = await create_document(matter.id, access_class="MATTER_PUBLIC")
+        
+        # Akses pertama → masuk cache
+        response1 = await get_document_cached(doc.id, user.id)
+        assert response1 is not None
+        
+        # Withdraw participant
+        await withdraw_participant(matter.id, user.id)
+        
+        # Akses kedua → cache harus invalidated
+        response2 = await get_document_cached(doc.id, user.id)
+        assert response2 is None
+    
+    async def test_logs_are_sanitized(self):
+        """Log tidak mengandung data sensitif"""
+        raw_log = {
+            "user_id": "user-123",
+            "action": "login",
+            "password": "secret123",  # harus di-redact
+            "token": "jwt-token"      # harus di-redact
+        }
+        
+        sanitized = NonApiProtectionService.sanitize_log(raw_log)
+        
+        assert sanitized["password"] == "***REDACTED***"
+        assert sanitized["token"] == "***REDACTED***"
+        assert sanitized["user_id"] == "user-123"  # tidak di-redact
+```
+
+---
+
+## BAGIAN 4: KERANGKA RATE LIMITING BERBASIS SINYAL RISIKO
+
+Sesuai feedback Anda, rate limiting tidak boleh blocking mutlak. Berikut pendekatan berbasis sinyal risiko.
+
+### 4.1 Multi-Layer Rate Limiting
+
+```python
+# services/rate_limiting/rate_limiter.py
+
+class RiskBasedRateLimiter:
+    """
+    Rate limiting berbasis sinyal risiko.
+    Bukan blocking mutlak, tapi eskalasi bertahap.
+    """
+    
+    # Layer 1: Hard limits (untuk mencegah abuse jelas)
+    HARD_LIMITS = {
+        "document_download_per_hour": 100,
+        "bulk_export_per_day": 5,
+        "api_calls_per_minute": 300,
+        "login_attempts_per_hour": 10,
+    }
+    
+    # Layer 2: Risk signals (untuk deteksi anomali)
+    RISK_SIGNALS = {
+        "unusual_download_volume": {
+            "threshold": "3x rata-rata harian user",
+            "action": "flag_for_review"
+        },
+        "new_device_access": {
+            "threshold": "perangkat belum pernah dipakai",
+            "action": "require_additional_verification"
+        },
+        "geographic_anomaly": {
+            "threshold": "lokasi >500km dari pola biasa",
+            "action": "flag_for_review"
+        },
+        "off_hours_bulk_access": {
+            "threshold": "bulk download di luar jam kerja",
+            "action": "flag_for_review"
+        },
+        "rapid_sequential_access": {
+            "threshold": ">50 dokumen dalam 5 menit",
+            "action": "temporary_throttle"
+        }
+    }
+    
+    async def check_download(self, user_id: str, document_id: str):
+        """Check download dengan multi-layer"""
+        
+        # Layer 1: Hard limit
+        count = await self.get_count(f"download:{user_id}:hour")
+        if count >= self.HARD_LIMITS["document_download_per_hour"]:
+            await self.audit.log(
+                user_id=user_id,
+                action="download_blocked_hard_limit",
+                metadata={"count": count}
+            )
+            raise RateLimitExceeded("Download limit tercapai. Coba lagi nanti.")
+        
+        # Layer 2: Risk signals
+        risk_score = await self.calculate_risk_score(user_id, "download")
+        
+        if risk_score > 0.8:  # High risk
+            await self.audit.log(
+                user_id=user_id,
+                action="download_flagged_high_risk",
+                metadata={"risk_score": risk_score}
+            )
+            # Jangan block, tapi:
+            # 1. Perlambat response (throttle)
+            # 2. Notifikasi ke security team
+            # 3. Minta verifikasi tambahan untuk download berikutnya
+            await self.notify_security_team(user_id, risk_score)
+            await self.require_additional_verification(user_id)
+            return DownloadDecision(
+                allowed=True,
+                throttled=True,
+                requires_verification=True
+            )
+        
+        elif risk_score > 0.5:  # Medium risk
+            await self.audit.log(
+                user_id=user_id,
+                action="download_flagged_medium_risk",
+                metadata={"risk_score": risk_score}
+            )
+            return DownloadDecision(
+                allowed=True,
+                throttled=False,
+                requires_verification=False
+            )
+        
+        # Low risk
+        return DownloadDecision(
+            allowed=True,
+            throttled=False,
+            requires_verification=False
+        )
+    
+    async def calculate_risk_score(self, user_id: str, action: str) -> float:
+        """
+        Hitung risk score berdasarkan sinyal.
+        Return: 0.0 (low risk) - 1.0 (high risk)
+        """
+        signals = []
+        
+        # Sinyal 1: Volume tidak biasa
+        avg_daily = await self.get_average_daily(user_id, action)
+        current = await self.get_current_count(user_id, action, "day")
+        if current > avg_daily * 3:
+            signals.append(0.4)
+        
+        # Sinyal 2: Perangkat baru
+        if await self.is_new_device(user_id):
+            signals.append(0.3)
+        
+        # Sinyal 3: Lokasi tidak biasa
+        if await self.is_geographic_anomaly(user_id):
+            signals.append(0.3)
+        
+        # Sinyal 4: Di luar jam kerja
+        if await self.is_off_hours(user_id):
+            signals.append(0.2)
+        
+        # Sinyal 5: Akses cepat berturut-turut
+        if await self.is_rapid_sequential(user_id, action):
+            signals.append(0.3)
+        
+        # Combine signals (bobot bisa di-tune)
+        if not signals:
+            return 0.0
+        
+        # Weighted average dengan cap di 1.0
+        combined = sum(signals) / len(signals) * 1.5
+        return min(combined, 1.0)
+    
+    async def recovery_process(self, user_id: str):
+        """
+        Proses pemulihan untuk user yang di-flag.
+        Bukan blocking permanen, tapi verifikasi.
+        """
+        # 1. Notifikasi ke user
+        await self.notify_user(
+            user_id,
+            message="Akun Anda terdeteksi aktivitas tidak biasa. "
+                   "Silakan verifikasi identitas untuk melanjutkan."
+        )
+        
+        # 2. Minta verifikasi tambahan
+        # Opsi: email confirmation, SMS OTP, atau contact support
+        
+        # 3. Setelah verifikasi, reset risk score
+        await self.reset_risk_score(user_id)
+        
+        # 4. Audit log
+        await self.audit.log(
+            user_id=user_id,
+            action="risk_recovery_completed"
+        )
+```
+
+---
+
+## BAGIAN 5: KERANGKA KEBIJAKAN RETENSI & LEGAL HOLD
+
+Ini perlu validasi penasihat hukum sebelum diimplementasi penuh. Berikut kerangka awal.
+
+### 5.1 Kategori Data & Retensi
+
+```python
+# policies/data_retention_policy.py
+
+class DataRetentionPolicy:
+    """
+    Kerangka kebijakan retensi data.
+    CATATAN: Perlu validasi penasihat hukum Indonesia.
+    """
+    
+    CATEGORIES = {
+        # ===== Data Kontrak & Dokumen =====
+        "contract_documents": {
+            "description": "Kontrak, amandemen, VO, EOT, dll",
+            "retention": "selama matter aktif + 10 tahun",
+            "legal_basis": "kewajiban hukum (UU 2/2017 Ps 39-40)",
+            "legal_hold_override": True,
+            "disposition": "archive → delete"
+        },
+        
+        "evidence_documents": {
+            "description": "Foto lapangan, laporan harian, hasil uji lab",
+            "retention": "selama matter aktif + 10 tahun",
+            "legal_basis": "kewajiban hukum (UU 2/2017 Ps 39-40)",
+            "legal_hold_override": True,
+            "disposition": "archive → delete"
+        },
+        
+        # ===== Data Mediasi =====
+        "mediation_records": {
+            "description": "MoM, rekaman sesi, settlement draft",
+            "retention": "selama matter aktif + 5 tahun",
+            "legal_basis": "performa kontrak + kewajiban hukum",
+            "legal_hold_override": True,
+            "disposition": "archive → delete",
+            "note": "Perlu validasi: apakah mediasi confidentiality "
+                   "memerlukan retensi lebih pendek?"
+        },
+        
+        # ===== Data Pribadi Peserta =====
+        "participant_pii": {
+            "description": "Nama, email, nomor telepon, KYC",
+            "retention": {
+                "active_participant": "selama matter aktif",
+                "inactive_participant": "2 tahun setelah keluar",
+                "kyc_data": "5 tahun (sesuai regulasi KYC)"
+            },
+            "legal_basis": "UU PDP Pasal 20-24",
+            "legal_hold_override": False,  # PII tidak di-hold
+            "disposition": "anonymize → delete"
+        },
+        
+        # ===== Data Audit =====
+        "audit_logs": {
+            "description": "Log akses, perubahan, aksi sistem",
+            "retention": {
+                "full_data": "1 tahun",
+                "anonymized": "5 tahun"
+            },
+            "legal_basis": "kepentingan legitim operator",
+            "legal_hold_override": True,
+            "disposition": "anonymize → delete"
+        },
+        
+        # ===== Data Teknis =====
+        "system_logs": {
+            "description": "Log aplikasi, error, performance",
+            "retention": "90 hari",
+            "legal_basis": "operasional",
+            "legal_hold_override": False,
+            "disposition": "delete"
+        },
+        
+        "backup_data": {
+            "description": "Backup database & file",
+            "retention": "30 hari rolling",
+            "legal_basis": "operasional",
+            "legal_hold_override": True,
+            "disposition": "rotate"
+        }
+    }
+    
+    @classmethod
+    async def apply_retention(cls):
+        """Jalankan retensi periodik"""
+        for category, policy in cls.CATEGORIES.items():
+            if policy["legal_hold_override"]:
+                # Skip kategori yang bisa di-legal hold
+                # (akan diproses oleh legal hold engine)
+                continue
+            
+            await cls._apply_category_retention(category, policy)
+    
+    @classmethod
+    async def _apply_category_retention(cls, category: str, policy: dict):
+        """Terapkan retensi per kategori"""
+        retention = policy["retention"]
+        
+        if isinstance(retention, str):
+            # Retensi tunggal
+            await cls._delete_old_records(category, retention)
+        elif isinstance(retention, dict):
+            # Retensi berdasarkan status
+            for status, period in retention.items():
+                await cls._delete_old_records(
+                    category, period, 
+                    filter_by_status=status
+                )
+```
+
+### 5.2 Legal Hold Engine
+
+```python
+# services/legal/legal_hold_service.py
+
+class LegalHoldService:
+    """
+    Mengelola legal hold untuk matter yang terlibat sengketa.
+    Legal hold OVERRIDE retensi normal.
+    """
+    
+    async def place_hold(self, matter_id: str, reason: str, placed_by: str):
+        """
+        Tempatkan legal hold pada matter.
+        Semua data terkait matter tidak boleh dihapus/dimodifikasi.
+        """
+        hold = LegalHold(
+            matter_id=matter_id,
+            reason=reason,
+            placed_by=placed_by,
+            placed_at=datetime.now(),
+            status="ACTIVE"
+        )
+        
+        await self.repo.save_hold(hold)
+        
+        # Notifikasi ke tim legal & compliance
+        await self.notify_legal_team(hold)
+        
+        # Update retention policy untuk matter ini
+        await self.retention_policy.suspend_for_matter(matter_id)
+        
+        # Audit log
+        await self.audit.log(
+            action="legal_hold_placed",
+            matter_id=matter_id,
+            metadata={"reason": reason, "placed_by": placed_by}
+        )
+        
+        return hold
+    
+    async def release_hold(self, hold_id: str, reason: str, released_by: str):
+        """Lepaskan legal hold"""
+        hold = await self.repo.get_hold(hold_id)
+        
+        hold.status = "RELEASED"
+        hold.released_at = datetime.now()
+        hold.release_reason = reason
+        hold.released_by = released_by
+        
+        await self.repo.update_hold(hold)
+        
+        # Resume retensi normal
+        await self.retention_policy.resume_for_matter(hold.matter_id)
+        
+        # Audit log
+        await self.audit.log(
+            action="legal_hold_released",
+            hold_id=hold_id,
+            metadata={"reason": reason, "released_by": released_by}
+        )
+    
+    async def is_on_hold(self, matter_id: str) -> bool:
+        """Check apakah matter sedang di-hold"""
+        hold = await self.repo.get_active_hold(matter_id)
+        return hold is not None
+    
+    async def list_holds(self) -> list[LegalHold]:
+        """List semua legal hold aktif"""
+        return await self.repo.list_active_holds()
+```
+
+---
+
+## BAGIAN 6: EVALUASI ENKRIPSI TERBATAS
+
+Sesuai feedback Anda, E2E encryption dengan user-held keys tidak realistis untuk fase ini. Berikut pendekatan yang lebih pragmatis.
+
+### 6.1 Pendekatan Bertahap
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ENKRIPSI DOKUMEN — PENDEKATAN BERTAHAP                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  FASE 1 (SEKARANG): Enkripsi at-rest standar                │
+│  ├── AES-256 untuk semua dokumen di storage                │
+│  ├── Kunci dikelola oleh platform (KMS)                     │
+│  ├── Search, preview, ekstraksi bekerja normal              │
+│  ├── Recovery akun bekerja normal                           │
+│  └── Legal hold bekerja normal                              │
+│                                                             │
+│  FASE 2 (NANTI): Enkripsi terbatas untuk COUNSEL_ONLY       │
+│  ├── Dokumen COUNSEL_ONLY di-encrypt dengan kunci terpisah  │
+│  ├── Kunci di-encrypt dengan public key counsel + client    │
+│  ├── Platform TIDAK bisa decrypt tanpa persetujuan         │
+│  ├── Search: hanya metadata, bukan konten                   │
+│  ├── Preview: perlu approval dari counsel/client            │
+│  ├── Recovery: perlu verifikasi identitas ketat             │
+│  └── Legal hold: tetap bekerja (kunci escrow untuk court    │
+│      order, dengan audit trail ketat)                       │
+│                                                             │
+│  FASE 3 (MASA DEPAN): E2E encryption penuh                  │
+│  ├── Hanya jika requirements search/recovery/legal hold     │
+│  │   sudah punya solusi (misal: searchable encryption)      │
+│  ├── Perlu desain manajemen kunci yang matang               │
+│  └── Perlu validasi hukum tentang implikasi privilege       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Blueprint FASE 2 (Enkripsi Terbatas)
+
+```python
+# services/encryption/counsel_only_encryption.py
+
+class CounselOnlyEncryptionService:
+    """
+    Enkripsi terbatas untuk dokumen COUNSEL_ONLY.
+    Platform tidak bisa decrypt tanpa persetujuan.
+    """
+    
+    async def encrypt_document(self, document: Document, counsel_key: PublicKey, client_key: PublicKey):
+        """
+        Encrypt dokumen dengan public key counsel + client.
+        Dokumen hanya bisa di-decrypt dengan private key salah satu.
+        """
+        # Generate symmetric key untuk dokumen
+        doc_key = generate_symmetric_key()
+        
+        # Encrypt dokumen dengan symmetric key
+        encrypted_content = encrypt_aes(document.content, doc_key)
+        
+        # Encrypt symmetric key dengan public key counsel
+        encrypted_key_for_counsel = encrypt_rsa(doc_key, counsel_key)
+        
+        # Encrypt symmetric key dengan public key client
+        encrypted_key_for_client = encrypt_rsa(doc_key, client_key)
+        
+        # Simpan
+        await self.storage.save(
+            document_id=document.id,
+            encrypted_content=encrypted_content,
+            encrypted_keys={
+                "counsel": encrypted_key_for_counsel,
+                "client": encrypted_key_for_client
+            }
+        )
+        
+        # Metadata (tidak di-encrypt, untuk search)
+        await self.metadata.save(
+            document_id=document.id,
+            title=document.title,
+            access_class=document.access_class,
+            matter_id=document.matter_id,
+            # Catatan: konten TIDAK di-index untuk search
+        )
+    
+    async def decrypt_document(self, document_id: str, requester_private_key: PrivateKey):
+        """
+        Decrypt dokumen dengan private key requester.
+        Requester harus counsel atau client.
+        """
+        # Ambil encrypted data
+        encrypted = await self.storage.load(document_id)
+        
+        # Tentukan encrypted key mana yang dipakai
+        requester_role = await self.get_requester_role(document_id)
+        
+        if requester_role == "COUNSEL":
+            encrypted_key = encrypted.encrypted_keys["counsel"]
+        elif requester_role == "CLIENT":
+            encrypted_key = encrypted.encrypted_keys["client"]
+        else:
+            raise AccessDenied("Bukan counsel atau client")
+        
+        # Decrypt symmetric key
+        doc_key = decrypt_rsa(encrypted_key, requester_private_key)
+        
+        # Decrypt konten
+        content = decrypt_aes(encrypted.encrypted_content, doc_key)
+        
+        # Audit log
+        await self.audit.log(
+            action="counsel_only_document_decrypted",
+            document_id=document_id,
+            metadata={"requester_role": requester_role}
+        )
+        
+        return content
+    
+    async def search(self, query: str, user_id: str):
+        """
+        Search untuk COUNSEL_ONLY documents.
+        Hanya metadata, bukan konten.
+        """
+        # Search hanya di metadata (title, description)
+        # Konten TIDAK bisa di-search (karena encrypted)
+        results = await self.metadata.search(query)
+        
+        # Filter berdasarkan access
+        filtered = []
+        for doc in results:
+            if await self.access_service.can_access(user_id, doc.id, doc.matter_id):
+                filtered.append(doc)
+        
+        return filtered
+    
+    async def court_order_decrypt(self, document_id: str, court_order: CourtOrder):
+        """
+        Decrypt untuk court order.
+        Perlu escrow key + audit trail ketat.
+        """
+        # 1. Verifikasi court order
+        if not self.verify_court_order(court_order):
+            raise InvalidCourtOrder()
+        
+        # 2. Gunakan escrow key (hanya untuk court order)
+        escrow_key = await self.get_escrow_key()
+        
+        # 3. Decrypt
+        content = await self._decrypt_with_key(document_id, escrow_key)
+        
+        # 4. Audit log ketat
+        await self.audit.log(
+            action="court_order_decrypt",
+            document_id=document_id,
+            metadata={
+                "court_order_id": court_order.id,
+                "court": court_order.court,
+                "case_number": court_order.case_number,
+                "verified_by": court_order.verified_by
+            },
+            severity="CRITICAL"
+        )
+        
+        # 5. Notifikasi ke counsel + client
+        await self.notify_parties(document_id, "court_order_executed")
+        
+        return content
+```
+
+---
+
+## BAGIAN 7: CHECKLIST LEGAL GUARDRAILS UNTUK RUNTIME
+
+Berdasarkan update Anda bahwa legal guardrails lulus untuk 10 route operasional, berikut checklist untuk memastikan runtime tetap compliant.
+
+### 7.1 Checklist Pre-Launch
+
+```markdown
+## Legal Guardrails Checklist — Pre-Launch
+
+### Regulasi yang Harus Dipatuhi
+- [ ] UU No. 2/2017 (Jasa Konstruksi)
+- [ ] UU PDP (Perlindungan Data Pribadi)
+- [ ] UU ITE (transaksi elektronik)
+- [ ] PP 22/2020 (Peraturan Pelaksanaan UU 2/2017)
+- [ ] Permen PUPR 14/2020 (Standar kontrak konstruksi)
+- [ ] Permen PUPR 7/2019 (Penilaian kegagalan bangunan)
+
+### Persyaratan Dokumen
+- [ ] Terms of Service — divalidasi penasihat hukum
+- [ ] Privacy Policy — sesuai UU PDP
+- [ ] Consent forms — untuk pengolahan data pribadi
+- [ ] Data Processing Agreement — untuk sub-processor
+- [ ] SLA — target realistis, bukan janji absolut
+
+### Persyaratan Teknis
+- [ ] Enkripsi at-rest (AES-256)
+- [ ] Enkripsi in-transit (TLS 1.3)
+- [ ] Access control — fail closed
+- [ ] Audit trail — semua aksi kritis tercatat
+- [ ] Backup & disaster recovery
+- [ ] Rate limiting — berbasis sinyal risiko
+- [ ] Retensi data — sesuai kebijakan
+
+### Persyaratan Operasional
+- [ ] On-call rotation — untuk insiden
+- [ ] Incident response plan
+- [ ] Data breach notification procedure (72 jam per UU PDP)
+- [ ] User support — untuk request hak data (akses, koreksi, hapus)
+- [ ] Legal hold procedure
+- [ ] Court order response procedure
+
+### Monitoring & Alerting
+- [ ] Access anomaly detection
+- [ ] Rate limit violation alerts
+- [ ] Data retention compliance monitoring
+- [ ] Legal hold compliance monitoring
+- [ ] System health monitoring
+
+### Review Berkala
+- [ ] Review kebijakan retensi — setiap 6 bulan
+- [ ] Review access control matrix — setiap 3 bulan
+- [ ] Audit keamanan — setiap tahun
+- [ ] Validasi hukum klausul ToS — setiap tahun atau saat regulasi berubah
+```
+
+### 7.2 Monitoring untuk Runtime
+
+```yaml
+# monitoring/runtime_compliance.yml
+
+alerts:
+  # ===== Access Control =====
+  - name: AccessDeniedSpike
+    query: |
+      SELECT COUNT(*) as denied_count
+      FROM access_audit_log
+      WHERE outcome = 'DENIED'
+        AND timestamp > NOW() - INTERVAL '1 hour'
+    threshold: denied_count > 100
+    severity: HIGH
+    action: Investigasi — bisa indikasi abuse atau bug
+    
+  # ===== Data Retention =====
+  - name: RetentionPolicyViolation
+    query: |
+      SELECT COUNT(*) as violation_count
+      FROM documents
+      WHERE should_be_deleted = true
+        AND deleted_at IS NULL
+        AND legal_hold_id IS NULL
+    threshold: violation_count > 0
+    severity: CRITICAL
+    action: Segera jalankan retention job
+    
+  # ===== Legal Hold =====
+  - name: LegalHoldBreach
+    query: |
+      SELECT COUNT(*) as breach_count
+      FROM audit_log
+      WHERE action IN ('document_deleted', 'document_modified')
+        AND matter_id IN (SELECT matter_id FROM legal_holds WHERE status = 'ACTIVE')
+        AND timestamp > NOW() - INTERVAL '1 hour'
+    threshold: breach_count > 0
+    severity: CRITICAL
+    action: Investigasi segera — potensi pelanggaran legal hold
+    
+  # ===== Rate Limiting =====
+  - name: HighRiskUserDetected
+    query: |
+      SELECT user_id, risk_score
+      FROM user_risk_scores
+      WHERE risk_score > 0.8
+        AND timestamp > NOW() - INTERVAL '1 hour'
+    threshold: ada hasil
+    severity: HIGH
+    action: Notifikasi security team, monitor user
+    
+  # ===== Data Pribadi =====
+  - name: PIIAccessOutsideScope
+    query: |
+      SELECT COUNT(*) as violation_count
+      FROM access_audit_log
+      WHERE resource_type = 'participant_pii'
+        AND accessor_role NOT IN ('compliance_officer', 'data_protection_officer')
+        AND timestamp > NOW() - INTERVAL '1 hour'
+    threshold: violation_count > 0
+    severity: CRITICAL
+    action: Investigasi — akses PII di luar scope
+```
+
+---
+
+## RINGKASAN
+
+### Progress Anda Sangat Solid
+
+| Task | Status | Capaian |
+|---|---|---|
+| **#19** Resilience ekstraksi | ✅ Selesai | Job recovery dari checkpoint |
+| **#20** Schema DB sinkron | ✅ Selesai | CI selalu pakai skema terbaru |
+| **#21** Access control bukti rahasia | ✅ Selesai | Regression test untuk privacy |
+| **#22** Granular RBAC peserta | 🔄 Berjalan | Cross-org/cross-matter test |
+| **#35** Perlindungan jalur non-API | 📋 Berikutnya | Background jobs, bulk ops, webhook, cache |
+
+### Prinsip yang Dipertahankan
+
+1. **Fail closed** — default tolak akses
+2. **Stealth denial** — 404 bukan 403
+3. **Audit everything** — setiap percobaan tercatat
+4. **Risk-based, bukan blocking mutlak** — untuk rate limiting
+5. **Klasifikasi akses ≠ kesimpulan hukum** — `COUNSEL_ONLY` bukan `PRIVILEGED`
+6. **Enkripsi bertahap** — FASE 1 (at-rest) → FASE 2 (terbatas) → FASE 3 (E2E jika memungkinkan)
+
+### Urutan yang Disepakati
+
+1. ✅ Selesaikan **Task #22** + uji lintas organisasi/perkara
+2. 📋 **Task #35** — perlindungan jalur non-API
+3. 📋 Rate limiting + deteksi unduhan massal (risk-based)
+4. 📋 Kebijakan retensi + legal hold (divalidasi penasihat)
+5. 📋 Evaluasi enkripsi terbatas (setelah kebutuhan jelas)
+
+### Catatan Penting
+
+- **Klausul kerahasiaan mediasi & privilege lawyer-client** — perlu validasi penasihat hukum Indonesia sebelum dijadikan ToS
+- **Data pribadi di audit log** — perlu dasar pemrosesan, pembatasan akses, kebijakan retensi spesifik
+- **SLA & janji produk** — tidak over-promise, target realistis
+- **Legal guardrails runtime** — monitoring untuk access anomaly, retention violation, legal hold breach
+
+Apakah ada aspek spesifik yang ingin Anda dalami lebih lanjut? Misalnya:
+1. **Detail implementasi Task #35** — skema service account, approved scripts list?
+2. **Blueprint risk scoring algorithm** — bobot sinyal, threshold tuning?
+3. **Template kebijakan retensi** — untuk validasi penasihat hukum?
+4. **Arsitektur escrow key** — untuk court order decrypt di FASE 2?
+5. **Checklist validasi hukum** — untuk klausul ToS mediasi & privilege?
