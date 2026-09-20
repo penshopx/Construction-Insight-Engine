@@ -1,9 +1,10 @@
-import { boolean, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, index, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const workItemsTable = pgTable("work_items", {
   id: serial("id").primaryKey(),
+  organizationId: integer("organization_id").notNull().default(0),
   category: text("category").notNull(),
   title: text("title").notNull(),
   description: text("description"),
@@ -16,10 +17,13 @@ export const workItemsTable = pgTable("work_items", {
   completed: boolean("completed").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => [
+  index("work_items_organization_id_idx").on(table.organizationId),
+]);
 
 export const insertWorkItemSchema = createInsertSchema(workItemsTable).omit({
   id: true,
+  organizationId: true,
   createdAt: true,
   updatedAt: true,
 });

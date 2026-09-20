@@ -14,6 +14,8 @@ tags:
     description: Persistent contract work items
   - name: references
     description: Searchable contract reference documents
+  - name: workspace
+    description: Current organization workspace and membership
 paths:
   /healthz:
     get:
@@ -90,6 +92,83 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+  /workspace:
+    get:
+      operationId: getWorkspace
+      tags: [workspace]
+      summary: Get the authenticated user's workspace
+      responses:
+        "200":
+          description: Active workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+    patch:
+      operationId: updateWorkspace
+      tags: [workspace]
+      summary: Rename the active workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceUpdate"
+      responses:
+        "200":
+          description: Updated workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /workspace/members:
+    get:
+      operationId: listWorkspaceMembers
+      tags: [workspace]
+      summary: List members of the active workspace
+      responses:
+        "200":
+          description: Workspace members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkspaceMember"
+  /workspace/invitations:
+    post:
+      operationId: createWorkspaceInvitation
+      tags: [workspace]
+      summary: Create a one-time member invitation
+      responses:
+        "201":
+          description: Invitation token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkspaceInvitation"
+  /workspace/invitations/accept:
+    post:
+      operationId: acceptWorkspaceInvitation
+      tags: [workspace]
+      summary: Join a workspace with an invitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkspaceInvitationAccept"
+      responses:
+        "200":
+          description: Joined workspace
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workspace"
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /references:
     get:
       operationId: listReferences
@@ -164,6 +243,53 @@ components:
       properties:
         error:
           type: string
+    WorkspaceRole:
+      type: string
+      enum: [manager, member]
+    Workspace:
+      type: object
+      required: [id, name, role]
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+    WorkspaceUpdate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+    WorkspaceMember:
+      type: object
+      required: [id, displayName, role]
+      properties:
+        id:
+          type: number
+        displayName:
+          type: ["string", "null"]
+        role:
+          $ref: "#/components/schemas/WorkspaceRole"
+    WorkspaceInvitation:
+      type: object
+      required: [token, expiresAt]
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+    WorkspaceInvitationAccept:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 20
     WorkItemCategory:
       type: string
       enum: [administration, decision, evidence, risk]

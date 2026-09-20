@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 40" role="img" aria-label="KontrakGuard">
+  <path d="M20 2 35 8v10c0 10-6 16-15 20C11 34 5 28 5 18V8L20 2Z" fill="#22d3ee" fill-opacity=".15" stroke="#22d3ee" stroke-width="2"/>
+  <path d="m13 20 5 5 10-12" fill="none" stroke="#22d3ee" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="44" y="25" fill="#f8fafc" font-family="Arial, sans-serif" font-size="17" font-weight="700">KontrakGuard</text>
+</svg>

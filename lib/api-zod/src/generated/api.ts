@@ -120,6 +120,73 @@ export const UpdateWorkItemResponse = zod.object({
 
 
 /**
+ * @summary Get the authenticated user's workspace
+ */
+export const GetWorkspaceResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.enum(['manager', 'member'])
+})
+
+
+/**
+ * @summary Rename the active workspace
+ */
+export const updateWorkspaceBodyNameMin = 2;
+export const updateWorkspaceBodyNameMax = 120;
+
+
+
+export const UpdateWorkspaceBody = zod.object({
+  "name": zod.string().min(updateWorkspaceBodyNameMin).max(updateWorkspaceBodyNameMax)
+})
+
+export const UpdateWorkspaceResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.enum(['manager', 'member'])
+})
+
+
+/**
+ * @summary List members of the active workspace
+ */
+export const ListWorkspaceMembersResponseItem = zod.object({
+  "id": zod.number(),
+  "displayName": zod.string().nullable(),
+  "role": zod.enum(['manager', 'member'])
+})
+export const ListWorkspaceMembersResponse = zod.array(ListWorkspaceMembersResponseItem)
+
+
+/**
+ * @summary Create a one-time member invitation
+ */
+export const CreateWorkspaceInvitationResponse = zod.object({
+  "token": zod.string(),
+  "expiresAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Join a workspace with an invitation
+ */
+export const acceptWorkspaceInvitationBodyTokenMin = 20;
+
+
+
+export const AcceptWorkspaceInvitationBody = zod.object({
+  "token": zod.string().min(acceptWorkspaceInvitationBodyTokenMin)
+})
+
+export const AcceptWorkspaceInvitationResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "role": zod.enum(['manager', 'member'])
+})
+
+
+/**
  * @summary List indexed reference documents
  */
 export const ListReferencesResponseItem = zod.object({

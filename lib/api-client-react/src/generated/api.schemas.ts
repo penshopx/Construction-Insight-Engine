@@ -13,6 +13,45 @@ export interface Error {
   error: string;
 }
 
+export type WorkspaceRole = typeof WorkspaceRole[keyof typeof WorkspaceRole];
+
+
+export const WorkspaceRole = {
+  manager: 'manager',
+  member: 'member',
+} as const;
+
+export interface Workspace {
+  id: number;
+  name: string;
+  role: WorkspaceRole;
+}
+
+export interface WorkspaceUpdate {
+  /**
+     * @minLength 2
+     * @maxLength 120
+     */
+  name: string;
+}
+
+export interface WorkspaceMember {
+  id: number;
+  /** @nullable */
+  displayName: string | null;
+  role: WorkspaceRole;
+}
+
+export interface WorkspaceInvitation {
+  token: string;
+  expiresAt: string;
+}
+
+export interface WorkspaceInvitationAccept {
+  /** @minLength 20 */
+  token: string;
+}
+
 export type WorkItemCategory = typeof WorkItemCategory[keyof typeof WorkItemCategory];
 
 

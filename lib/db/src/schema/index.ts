@@ -19,3 +19,4 @@
 
 export * from "./work-items";
 export * from "./reference-documents";
+export * from "./organizations";

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db, workItemsTable } from "@workspace/db";
 import {
   CreateWorkItemBody,
@@ -10,10 +10,13 @@ import {
   UpdateWorkItemParams,
   UpdateWorkItemResponse,
 } from "@workspace/api-zod";
+import { requireWorkspace } from "../lib/workspace";
 
 const router: IRouter = Router();
 
 router.get("/work-items", async (req, res): Promise<void> => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
   const query = ListWorkItemsQueryParams.safeParse(req.query);
   if (!query.success) {
     res.status(400).json({ error: query.error.message });
@@ -21,13 +24,18 @@ router.get("/work-items", async (req, res): Promise<void> => {
   }
 
   const items = query.data.category
-    ? await db.select().from(workItemsTable).where(eq(workItemsTable.category, query.data.category)).orderBy(desc(workItemsTable.createdAt))
-    : await db.select().from(workItemsTable).orderBy(desc(workItemsTable.createdAt));
+    ? await db.select().from(workItemsTable).where(and(
+        eq(workItemsTable.organizationId, workspace.organizationId),
+        eq(workItemsTable.category, query.data.category),
+      )).orderBy(desc(workItemsTable.createdAt))
+    : await db.select().from(workItemsTable).where(eq(workItemsTable.organizationId, workspace.organizationId)).orderBy(desc(workItemsTable.createdAt));
 
   res.json(ListWorkItemsResponse.parse(items));
 });
 
 router.post("/work-items", async (req, res): Promise<void> => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
   const body = CreateWorkItemBody.safeParse(req.body);
   if (!body.success) {
     req.log.warn({ errors: body.error.message }, "Invalid work item");
@@ -35,11 +43,16 @@ router.post("/work-items", async (req, res): Promise<void> => {
     return;
   }
 
-  const [item] = await db.insert(workItemsTable).values(body.data).returning();
+  const [item] = await db.insert(workItemsTable).values({
+    ...body.data,
+    organizationId: workspace.organizationId,
+  }).returning();
   res.status(201).json(CreateWorkItemResponse.parse(item));
 });
 
 router.patch("/work-items/:id", async (req, res): Promise<void> => {
+  const workspace = await requireWorkspace(req, res);
+  if (!workspace) return;
   const params = UpdateWorkItemParams.safeParse(req.params);
   const body = UpdateWorkItemBody.safeParse(req.body);
   if (!params.success) {
@@ -54,7 +67,10 @@ router.patch("/work-items/:id", async (req, res): Promise<void> => {
   const [item] = await db
     .update(workItemsTable)
     .set(body.data)
-    .where(eq(workItemsTable.id, params.data.id))
+    .where(and(
+      eq(workItemsTable.id, params.data.id),
+      eq(workItemsTable.organizationId, workspace.organizationId),
+    ))
     .returning();
 
   if (!item) {
