@@ -1,0 +1,1096 @@
+# PERBAIKAN INKONSISTENSI & BLUEPRINT TASK #35 FINAL
+
+Terima kasih atas review yang sangat tajam. Semua inkonsistensi yang Anda identifikasi valid dan harus diperbaiki sebelum implementasi. Berikut perbaikannya.
+
+---
+
+## BAGIAN 1: PERBAIKAN 8 INKONSISTENSI
+
+### 1. COUNSEL_ONLY — Definisi yang Jelas
+
+**Masalah:** Matriks hanya mengizinkan counsel, tapi nama mengimplikasikan "penasihat saja". Jika klien juga harus akses, matriks salah.
+
+**Perbaikan:** Definisikan dengan eksplisit.
+
+```python
+# Klasifikasi akses yang diperbaiki
+ACCESS_CLASSES = {
+    "MATTER_PUBLIC": "Semua peserta matter",
+    "MATTER_INTERNAL": "Peserta dari organisasi yang sama",
+    "RESTRICTED": "Peserta yang dieksplisitkan di restricted_to",
+    "MEDIATOR_EYES": "Hanya mediator",
+    "COUNSEL_ONLY": "Hanya counsel dari pihak yang meng-upload (klien TIDAK termasuk)",
+    "COUNSEL_AND_CLIENT": "Counsel + klien dari pihak yang meng-upload"
+}
+
+# Matriks izin yang diperbaiki
+def evaluate_access(doc, participant):
+    if doc.access_class == "COUNSEL_ONLY":
+        # Hanya counsel, klien TIDAK bisa akses
+        return participant.role in [
+            "CLAIMANT_COUNSEL" if doc.counsel_party == "CLAIMANT" else None,
+            "RESPONDENT_COUNSEL" if doc.counsel_party == "RESPONDENT" else None
+        ] and participant.role is not None
+    
+    if doc.access_class == "COUNSEL_AND_CLIENT":
+        # Counsel + klien
+        is_matching_counsel = (
+            (doc.counsel_party == "CLAIMANT" and participant.role == "CLAIMANT_COUNSEL") or
+            (doc.counsel_party == "RESPONDENT" and participant.role == "RESPONDENT_COUNSEL")
+        )
+        is_matching_client = (
+            (doc.counsel_party == "CLAIMANT" and participant.role == "CLAIMANT") or
+            (doc.counsel_party == "RESPONDENT" and participant.role == "RESPONDENT")
+        )
+        return is_matching_counsel or is_matching_client
+```
+
+**Dokumentasi untuk user:**
+```
+COUNSEL_ONLY: Dokumen khusus penasihat hukum. Klien tidak bisa mengakses.
+COUNSEL_AND_CLIENT: Dokumen untuk penasihat dan klien. Pihak lawan tidak bisa mengakses.
+```
+
+---
+
+### 2. RLS Rekursif — Solusi yang Aman
+
+**Masalah:** Policy membaca view yang membaca table → rekursi.
+
+**Perbaikan:** ACL table terpisah, bukan view.
+
+```sql
+-- Tabel ACL eksplisit (bukan view)
+CREATE TABLE document_acl (
+    document_id UUID REFERENCES documents(id),
+    participant_id UUID REFERENCES mediation_participants(id),
+    can_access BOOLEAN NOT NULL,
+    granted_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (document_id, participant_id)
+);
+
+-- Fungsi yang menghitung ACL (bukan recursive view)
+CREATE OR REPLACE FUNCTION check_document_access(
+    p_document_id UUID,
+    p_user_id UUID
+) RETURNS BOOLEAN AS $$
+DECLARE
+    v_can_access BOOLEAN;
+BEGIN
+    -- Langsung query ACL table, tidak lewat view
+    SELECT can_access INTO v_can_access
+    FROM document_acl
+    WHERE document_id = p_document_id
+      AND participant_id IN (
+          SELECT id FROM mediation_participants 
+          WHERE user_id = p_user_id AND status = 'ACTIVE'
+      );
+    
+    RETURN COALESCE(v_can_access, false);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- RLS menggunakan fungsi, bukan view
+CREATE POLICY documents_select_policy ON documents
+    FOR SELECT
+    USING (
+        check_document_access(
+            id, 
+            current_setting('app.current_user_id')::uuid
+        )
+    );
+```
+
+**Keuntungan:**
+- Tidak ada rekursi
+- ACL bisa di-cache untuk performa
+- Audit trail untuk perubahan ACL
+
+---
+
+### 3. Konteks User Database — Middleware Wajib
+
+**Masalah:** `current_setting('app.current_user_id')` bisa bocor di connection pool.
+
+**Perbaikan:** Middleware yang selalu set dan reset.
+
+```python
+# middleware/database_context.py
+
+class DatabaseContextMiddleware:
+    """
+    Middleware yang memastikan setiap request memiliki konteks user yang benar.
+    Mencegah kebocoran identitas di connection pool.
+    """
+    
+    async def __call__(self, request, call_next):
+        # 1. Extract user dari token
+        user = await extract_user_from_token(request)
+        
+        # 2. Get connection dari pool
+        conn = await self.pool.acquire()
+        
+        try:
+            # 3. Set user context
+            await conn.execute(
+                "SELECT set_config('app.current_user_id', $1, true)",
+                str(user.id)
+            )
+            
+            # 4. Set organization context (untuk filter MATTER_INTERNAL)
+            await conn.execute(
+                "SELECT set_config('app.current_org_id', $1, true)",
+                str(user.organization_id)
+            )
+            
+            # 5. Attach connection ke request
+            request.state.db = conn
+            
+            # 6. Process request
+            response = await call_next(request)
+            
+            return response
+        
+        finally:
+            # 7. Reset context SEBELUM release connection
+            await conn.execute("SELECT set_config('app.current_user_id', '', true)")
+            await conn.execute("SELECT set_config('app.current_org_id', '', true)")
+            
+            # 8. Release connection
+            await self.pool.release(conn)
+
+
+# Test untuk memastikan tidak ada kebocoran
+async def test_no_context_leakage():
+    """Konteks user tidak bocor ke request berikutnya"""
+    
+    # Request 1: User A
+    response1 = await client.get(
+        "/documents/doc-1",
+        headers=auth_header(user_a)
+    )
+    assert response1.status_code == 200
+    
+    # Request 2: User B (harus tidak bisa akses doc-1)
+    response2 = await client.get(
+        "/documents/doc-1",
+        headers=auth_header(user_b)
+    )
+    assert response2.status_code == 404  # Bukan 200
+    
+    # Verifikasi: context di-reset
+    conn = await pool.acquire()
+    try:
+        user_id = await conn.fetchval("SELECT current_setting('app.current_user_id')")
+        assert user_id == ""  # Harus kosong setelah reset
+    finally:
+        await pool.release(conn)
+```
+
+---
+
+### 4. Legal Hold — Versi Koreksi dengan Audit Trail
+
+**Masalah:** Legal hold tidak selalu berarti data tidak boleh diperbaiki. Koreksi metadata mungkin perlu.
+
+**Perbaikan:** Versioning, bukan freeze total.
+
+```python
+# services/legal/legal_hold_service.py
+
+class LegalHoldService:
+    
+    async def update_document(self, document_id: str, updates: dict, user_id: str):
+        """
+        Update dokumen yang di-hold.
+        Tidak boleh delete atau destructive overwrite.
+        Boleh koreksi metadata dengan versi baru.
+        """
+        # 1. Check legal hold
+        hold = await self.get_active_hold_for_document(document_id)
+        
+        if hold:
+            # 2. Validasi update bukan destructive
+            if self._is_destructive_update(updates):
+                raise LegalHoldViolation(
+                    "Dokumen sedang di-hold. Destructive update tidak diizinkan."
+                )
+            
+            # 3. Buat versi baru (bukan overwrite)
+            new_version = await self.create_version(
+                document_id=document_id,
+                updates=updates,
+                previous_version=document.current_version,
+                reason="correction_under_legal_hold",
+                updated_by=user_id
+            )
+            
+            # 4. Audit trail ketat
+            await self.audit.log(
+                action="document_updated_under_legal_hold",
+                document_id=document_id,
+                version=new_version.version_number,
+                metadata={
+                    "hold_id": hold.id,
+                    "updates": updates,
+                    "updated_by": user_id,
+                    "reason": "correction_under_legal_hold"
+                },
+                severity="HIGH"
+            )
+            
+            return new_version
+        
+        else:
+            # Tidak ada hold, update normal
+            return await self.normal_update(document_id, updates, user_id)
+    
+    def _is_destructive_update(self, updates: dict) -> bool:
+        """Check apakah update bersifat destructive"""
+        destructive_fields = [
+            "file_content",  # Tidak boleh ganti file
+            "file_checksum",  # Tidak boleh ganti checksum
+            "deleted_at"  # Tidak boleh soft-delete
+        ]
+        
+        return any(field in updates for field in destructive_fields)
+```
+
+**Prinsip:**
+- Legal hold mencegah **penghapusan** dan **destructive overwrite**
+- Legal hold mengizinkan **koreksi metadata** dengan versi baru
+- Semua update di bawah hold tercatat di audit trail dengan severity HIGH
+
+---
+
+### 5. Enkripsi Fase 2 — Threat Model yang Jelas
+
+**Masalah:** Escrow key berarti platform bisa decrypt → bukan zero-knowledge.
+
+**Perbaikan:** Definisikan threat model dengan eksplisit.
+
+```markdown
+## Threat Model — Enkripsi Dokumen COUNSEL_AND_CLIENT
+
+### Pihak yang Terlibat
+1. **Platform (KontrakGuard)** — Menyimpan dokumen, menyediakan akses
+2. **Counsel** — Penasihat hukum, pemegang private key
+3. **Client** — Klien counsel, pemegang private key
+4. **Court** — Pengadilan, bisa meminta decrypt via court order
+5. **Attacker** — Pihak yang ingin mengakses dokumen tanpa izin
+
+### Apa yang Dilindungi
+- Dokumen COUNSEL_AND_CLIENT dari akses pihak lawan
+- Dokumen dari akses platform operator (kecuali court order)
+- Dokumen dari attacker eksternal
+
+### Apa yang TIDAK Dilindungi
+- Dokumen dari court order yang valid (escrow key)
+- Dokumen dari platform jika platform collude dengan court
+
+### Escrow Key — Siapa yang Memegang?
+**Opsi A: Platform memegang escrow key**
+- Keuntungan: Court order bisa langsung dieksekusi
+- Kerugian: Platform bisa decrypt tanpa court order (jika operator rogue)
+- Threat model: Platform dipercaya, tapi perlu audit ketat
+
+**Opsi B: Pihak ketiga memegang escrow key (notaris/k court)**
+- Keuntungan: Platform tidak bisa decrypt tanpa persetujuan pihak ketiga
+- Kerugian: Proses court order lebih lambat
+- Threat model: Zero-knowledge dari platform
+
+**Rekomendasi: Opsi A untuk fase 2, Opsi B untuk fase 3**
+
+### Escrow Key Usage — Audit Ketat
+```python
+async def court_order_decrypt(self, document_id: str, court_order: CourtOrder):
+    """Decrypt dengan escrow key untuk court order"""
+    
+    # 1. Verifikasi court order (signature, authority, dll)
+    if not self.verify_court_order(court_order):
+        raise InvalidCourtOrder()
+    
+    # 2. Escrow key hanya bisa diakses dengan multi-party approval
+    # Minimal 2 orang: CTO + Legal Counsel
+    approval = await self.request_multi_party_approval(
+        action="escrow_decrypt",
+        approvers=["cto", "legal_counsel"],
+        reason=f"Court order {court_order.case_number}"
+    )
+    
+    if not approval.granted:
+        raise EscrowAccessDenied("Multi-party approval tidak diberikan")
+    
+    # 3. Decrypt dengan escrow key
+    content = await self._decrypt_with_escrow_key(document_id)
+    
+    # 4. Audit trail CRITICAL
+    await self.audit.log(
+        action="escrow_decrypt",
+        document_id=document_id,
+        metadata={
+            "court_order_id": court_order.id,
+            "case_number": court_order.case_number,
+            "court": court_order.court,
+            "approvers": approval.approvers,
+            "approved_at": approval.granted_at
+        },
+        severity="CRITICAL"
+    )
+    
+    # 5. Notifikasi ke counsel + client
+    await self.notify_parties(
+        document_id, 
+        "escrow_decrypt_executed",
+        court_order_info=court_order
+    )
+    
+    return content
+```
+
+### Transisi ke Fase 3 (Zero-Knowledge)
+- Escrow key dipindah ke pihak ketiga (notaris/k court)
+- Platform tidak bisa decrypt sama sekali
+- Court order perlu approval dari pihak ketiga
+- Trade-off: Proses lebih lambat, tapi zero-knowledge
+```
+
+---
+
+### 6. Retensi — Konfigurasi, Bukan Hardcode
+
+**Masalah:** Periode retensi di-hardcode sebagai constant.
+
+**Perbaikan:** Database config table.
+
+```sql
+-- Tabel konfigurasi retensi
+CREATE TABLE retention_config (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    category VARCHAR(50) NOT NULL UNIQUE,
+    retention_period_years INTEGER NOT NULL,
+    legal_basis TEXT NOT NULL,
+    disposition VARCHAR(20) NOT NULL,  -- 'archive', 'anonymize', 'delete'
+    last_updated_by UUID REFERENCES users(id),
+    last_updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Validasi
+    CONSTRAINT valid_disposition CHECK (disposition IN ('archive', 'anonymize', 'delete'))
+);
+
+-- Data awal (bisa diubah tanpa deploy)
+INSERT INTO retention_config (category, retention_period_years, legal_basis, disposition) VALUES
+('contract_documents', 10, 'UU 2/2017 Ps 39-40', 'archive'),
+('mediation_records', 5, 'Performa kontrak', 'archive'),
+('participant_pii', 2, 'UU PDP Pasal 20-24', 'anonymize'),
+('audit_logs', 5, 'Kepentingan legitim operator', 'anonymize'),
+('system_logs', 0.25, 'Operasional', 'delete');  -- 0.25 tahun = 90 hari
+
+-- Service yang membaca konfigurasi
+class RetentionService:
+    async def get_retention_period(self, category: str) -> int:
+        """Ambil periode retensi dari database, bukan hardcode"""
+        config = await self.db.fetch_one(
+            "SELECT retention_period_years FROM retention_config WHERE category = $1",
+            category
+        )
+        if not config:
+            raise ConfigNotFound(f"Retensi untuk {category} tidak ditemukan")
+        return config.retention_period_years
+    
+    async def apply_retention(self):
+        """Terapkan retensi berdasarkan konfigurasi"""
+        categories = await self.db.fetch_all("SELECT * FROM retention_config")
+        
+        for config in categories:
+            cutoff_date = datetime.now() - timedelta(days=config.retention_period_years * 365)
+            
+            if config.disposition == "delete":
+                await self.delete_old_records(config.category, cutoff_date)
+            elif config.disposition == "anonymize":
+                await self.anonymize_old_records(config.category, cutoff_date)
+            elif config.disposition == "archive":
+                await self.archive_old_records(config.category, cutoff_date)
+
+# Admin UI untuk mengubah konfigurasi
+@router.put("/admin/retention/{category}")
+async def update_retention_config(
+    category: str,
+    payload: RetentionConfigUpdate,
+    user: User = Depends(get_admin_user)
+):
+    """Update konfigurasi retensi (hanya admin)"""
+    
+    # Audit log
+    await audit.log(
+        action="retention_config_updated",
+        metadata={
+            "category": category,
+            "old_config": await get_config(category),
+            "new_config": payload.dict(),
+            "updated_by": user.id
+        },
+        severity="HIGH"
+    )
+    
+    # Update config
+    await db.execute(
+        """
+        UPDATE retention_config
+        SET retention_period_years = $1,
+            legal_basis = $2,
+            disposition = $3,
+            last_updated_by = $4,
+            last_updated_at = NOW()
+        WHERE category = $5
+        """,
+        payload.retention_period_years,
+        payload.legal_basis,
+        payload.disposition,
+        user.id,
+        category
+    )
+    
+    return {"status": "updated"}
+```
+
+---
+
+### 7. Risk Score — Metodologi yang Lebih Baik
+
+**Masalah:** Average bisa menurunkan skor, geografi 500km bisa false positive.
+
+**Perbaikan:** Weighted scoring dengan threshold per sinyal.
+
+```python
+# services/rate_limiting/risk_scorer.py
+
+class RiskScorer:
+    """
+    Risk scoring dengan metodologi yang lebih baik.
+    Bukan average, tapi weighted sum dengan threshold per sinyal.
+    """
+    
+    # Sinyal dengan bobot dan threshold
+    SIGNALS = {
+        "volume_anomaly": {
+            "weight": 0.4,
+            "threshold": lambda user: get_user_avg_daily(user) * 3,
+            "scoring": "binary"  # 0 atau 1
+        },
+        "new_device": {
+            "weight": 0.3,
+            "threshold": None,  # Selalu trigger jika perangkat baru
+            "scoring": "binary"
+        },
+        "geographic_anomaly": {
+            "weight": 0.3,
+            "threshold": None,
+            "scoring": "distance",  # Skor berdasarkan jarak
+            "params": {
+                "base_distance_km": 100,  # Normal
+                "max_distance_km": 1000,  # Maksimum skor
+                "vpn_penalty": 0.5  # Kurangi skor jika terdeteksi VPN
+            }
+        },
+        "off_hours": {
+            "weight": 0.2,
+            "threshold": None,
+            "scoring": "time_based",  # Skor berdasarkan jam
+            "params": {
+                "work_hours": (8, 18),  # 08:00 - 18:00
+                "weekend_penalty": 0.3
+            }
+        },
+        "rapid_sequential": {
+            "weight": 0.3,
+            "threshold": 50,  # 50 dokumen dalam 5 menit
+            "scoring": "binary"
+        }
+    }
+    
+    async def calculate_risk_score(self, user_id: str, action: str) -> float:
+        """Hitung risk score dengan weighted sum"""
+        
+        total_score = 0.0
+        triggered_signals = []
+        
+        for signal_name, signal_config in self.SIGNALS.items():
+            signal_value = await self._evaluate_signal(user_id, signal_name, signal_config)
+            
+            if signal_value > 0:
+                weighted_score = signal_value * signal_config["weight"]
+                total_score += weighted_score
+                triggered_signals.append({
+                    "signal": signal_name,
+                    "value": signal_value,
+                    "weighted_score": weighted_score
+                })
+        
+        # Cap di 1.0
+        final_score = min(total_score, 1.0)
+        
+        # Log sinyal yang trigger
+        await self.audit.log(
+            user_id=user_id,
+            action="risk_score_calculated",
+            metadata={
+                "final_score": final_score,
+                "triggered_signals": triggered_signals
+            }
+        )
+        
+        return final_score
+    
+    async def _evaluate_signal(self, user_id: str, signal_name: str, config: dict) -> float:
+        """Evaluasi satu sinyal"""
+        
+        if signal_name == "volume_anomaly":
+            threshold = config["threshold"](user_id)
+            current = await self.get_current_count(user_id, "day")
+            return 1.0 if current > threshold else 0.0
+        
+        elif signal_name == "new_device":
+            is_new = await self.is_new_device(user_id)
+            return 1.0 if is_new else 0.0
+        
+        elif signal_name == "geographic_anomaly":
+            distance_km = await self.get_distance_from_baseline(user_id)
+            
+            # Skor berdasarkan jarak
+            base = config["params"]["base_distance_km"]
+            max_dist = config["params"]["max_distance_km"]
+            
+            if distance_km <= base:
+                score = 0.0
+            elif distance_km >= max_dist:
+                score = 1.0
+            else:
+                score = (distance_km - base) / (max_dist - base)
+            
+            # Kurangi skor jika terdeteksi VPN
+            if await self.is_vpn_detected(user_id):
+                score *= config["params"]["vpn_penalty"]
+            
+            return score
+        
+        elif signal_name == "off_hours":
+            current_hour = datetime.now().hour
+            work_start, work_end = config["params"]["work_hours"]
+            
+            if work_start <= current_hour < work_end:
+                return 0.0  # Jam kerja
+            else:
+                score = 1.0
+                if datetime.now().weekday() >= 5:  # Weekend
+                    score += config["params"]["weekend_penalty"]
+                return min(score, 1.0)
+        
+        elif signal_name == "rapid_sequential":
+            count = await self.get_rapid_count(user_id, minutes=5)
+            return 1.0 if count > config["threshold"] else 0.0
+        
+        return 0.0
+```
+
+**Keuntungan:**
+- Tidak ada sinyal yang "menurunkan" skor
+- Geografi menggunakan skor gradual, bukan binary
+- VPN terdeteksi → skor dikurangi (mengurangi false positive)
+- Setiap sinyal bisa di-tune secara independen
+
+---
+
+### 8. AES-256 dan TLS 1.3 — Verifikasi Aktual
+
+**Masalah:** Checklist tidak boleh hanya berdasarkan desain.
+
+**Perbaikan:** Audit script yang memverifikasi konfigurasi aktual.
+
+```bash
+#!/bin/bash
+# scripts/verify_encryption.sh
+
+echo "=== Verifikasi Enkripsi ==="
+
+# 1. Verifikasi enkripsi at-rest di database
+echo "1. Database encryption at-rest..."
+PG_ENCRYPTION=$(psql -t -c "SHOW data_encryption;" 2>/dev/null || echo "not_supported")
+if [ "$PG_ENCRYPTION" = "on" ]; then
+    echo "   ✅ Database encryption at-rest: ON"
+else
+    echo "   ⚠️  Database encryption at-rest: $PG_ENCRYPTION"
+    echo "   Catatan: PostgreSQL native encryption terbatas. "
+    echo "   Verifikasi enkripsi di level filesystem atau storage."
+fi
+
+# 2. Verifikasi enkripsi at-rest di object storage
+echo "2. Object storage encryption at-rest..."
+# Untuk MinIO
+MINIO_ENCRYPTION=$(curl -s http://minio:9000/minio/health/live && \
+    mc admin config get minio/ | grep -i encrypt || echo "not_configured")
+if [ -n "$MINIO_ENCRYPTION" ]; then
+    echo "   ✅ Object storage encryption: CONFIGURED"
+else
+    echo "   ❌ Object storage encryption: NOT CONFIGURED"
+fi
+
+# 3. Verifikasi TLS 1.3 di reverse proxy
+echo "3. TLS version di reverse proxy..."
+TLS_VERSION=$(echo | openssl s_client -connect localhost:443 -tls1_3 2>/dev/null | \
+    grep "Protocol" | awk '{print $3}')
+if [ "$TLS_VERSION" = "TLSv1.3" ]; then
+    echo "   ✅ TLS 1.3: ENABLED"
+else
+    echo "   ❌ TLS 1.3: NOT ENABLED (current: $TLS_VERSION)"
+fi
+
+# 4. Verifikasi enkripsi di backup
+echo "4. Backup encryption..."
+BACKUP_ENCRYPTION=$(restic snapshots --json | jq '.[0].encryption' || echo "not_encrypted")
+if [ "$BACKUP_ENCRYPTION" != "null" ] && [ -n "$BACKUP_ENCRYPTION" ]; then
+    echo "   ✅ Backup encryption: ENABLED"
+else
+    echo "   ❌ Backup encryption: NOT ENABLED"
+fi
+
+# 5. Verifikasi enkripsi internal service-to-service
+echo "5. Internal service-to-service encryption..."
+# Check apakah service berkomunikasi via HTTPS atau HTTP
+INTERNAL_TLS=$(curl -s -k https://api-server:8000/health || echo "not_https")
+if [ "$INTERNAL_TLS" != "not_https" ]; then
+    echo "   ✅ Internal TLS: ENABLED"
+else
+    echo "   ⚠️  Internal TLS: NOT ENABLED (HTTP only)"
+    echo "   Catatan: Internal traffic mungkin tidak perlu TLS jika di private network"
+fi
+
+echo ""
+echo "=== Verifikasi Selesai ==="
+echo "Catatan: Script ini hanya memeriksa konfigurasi. "
+echo "Untuk audit lengkap, gunakan tools seperti sslscan, testssl.sh, atau nmap."
+```
+
+**CI integration:**
+```yaml
+# .github/workflows/security-audit.yml
+name: Security Audit
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Setiap minggu
+  workflow_dispatch:
+
+jobs:
+  encryption-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Run encryption verification
+        run: |
+          chmod +x scripts/verify_encryption.sh
+          ./scripts/verify_encryption.sh > audit_report.txt
+      
+      - name: Check for failures
+        run: |
+          if grep -q "❌" audit_report.txt; then
+            echo "Encryption audit failed!"
+            cat audit_report.txt
+            exit 1
+          fi
+      
+      - name: Upload audit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: encryption-audit-report
+          path: audit_report.txt
+```
+
+---
+
+## BAGIAN 2: BLUEPRINT TASK #35 FINAL
+
+Dengan semua koreksi di atas, berikut blueprint Task #35 yang sudah diperbaiki.
+
+### 2.1 Scope Task #35
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TASK #35: PERLINDUNGAN JALUR NON-API                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Jalur yang Dilindungi:                                     │
+│  1. Background jobs / workers                               │
+│  2. Direct database access (script maintenance)             │
+│  3. Bulk operations (export massal)                         │
+│  4. Webhooks & integrations                                 │
+│  5. Object storage (S3/MinIO)                               │
+│  6. Logs & monitoring                                       │
+│  7. Caches                                                  │
+│                                                             │
+│  Prinsip:                                                   │
+│  - Access check TIDAK BOLEH di-bypass                       │
+│  - Service account dengan scope terbatas                    │
+│  - Audit trail untuk semua aksi                             │
+│  - Konteks user database aman (middleware)                  │
+│  - Legal hold menghormati versi koreksi                     │
+│  - Risk scoring dengan metodologi yang benar                │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Implementasi Inti
+
+```python
+# services/security/non_api_protection_service.py
+
+class NonApiProtectionService:
+    """
+    Perlindungan untuk jalur non-API.
+    Semua koreksi dari review sudah diterapkan.
+    """
+    
+    def __init__(self, db, access_service, audit, risk_scorer):
+        self.db = db
+        self.access_service = access_service
+        self.audit = audit
+        self.risk_scorer = risk_scorer
+    
+    # ===== 1. BACKGROUND JOBS =====
+    
+    async def process_extraction_job(self, job_id: str):
+        """Job ekstraksi dengan service account terbatas"""
+        
+        # Service account dengan scope terbatas
+        service_account = ServiceAccount(
+            id="extraction-worker",
+            scope=["document:read_pending_extraction"]
+        )
+        
+        job = await self.db.get_job(job_id)
+        
+        # Access check dengan service account
+        doc = await self.access_service.get_document(
+            job.document_id,
+            requester=service_account
+        )
+        
+        # Ekstrak
+        content = await self.extract(doc.file_path)
+        
+        # Index dengan access metadata
+        await self.search_index.index(
+            document_id=doc.id,
+            content=content,
+            access_metadata={
+                "matter_id": doc.matter_id,
+                "access_class": doc.access_class,
+                "owner_organization_id": doc.owner_organization_id,
+                "restricted_to": doc.restricted_to
+            }
+        )
+        
+        # Audit
+        await self.audit.log(
+            actor="extraction-worker",
+            action="document_extracted",
+            resource_id=doc.id
+        )
+    
+    # ===== 2. DIRECT DATABASE ACCESS =====
+    
+    async def run_approved_script(self, script_name: str, params: dict, operator_id: str):
+        """Script maintenance dengan approval workflow"""
+        
+        # 1. Verifikasi script ada di approved list
+        if script_name not in APPROVED_SCRIPTS:
+            raise SecurityError(f"Script {script_name} tidak di-approve")
+        
+        # 2. Minta approval
+        approval = await self.request_approval(
+            script_name=script_name,
+            params=params,
+            operator_id=operator_id,
+            approver_role="security_officer"
+        )
+        
+        if not approval.granted:
+            raise ApprovalDenied("Approval tidak diberikan")
+        
+        # 3. Jalankan dengan audit trail
+        async with AuditContext(
+            actor=operator_id,
+            action=f"script:{script_name}",
+            reason=approval.reason
+        ):
+            result = await APPROVED_SCRIPTS[script_name](params)
+        
+        return result
+    
+    # ===== 3. BULK OPERATIONS =====
+    
+    async def bulk_export(self, matter_id: str, requester_id: str):
+        """Bulk export dengan per-document access check"""
+        
+        # 1. Verifikasi requester adalah peserta
+        participant = await self.db.get_active_participant(matter_id, requester_id)
+        if not participant:
+            raise AccessDenied()
+        
+        # 2. Ambil semua dokumen
+        all_docs = await self.db.list_documents(matter_id)
+        
+        # 3. Filter per dokumen (TIDAK ada bulk bypass)
+        accessible_docs = []
+        for doc in all_docs:
+            decision = await self.access_service.can_access(
+                requester_id, doc.id, matter_id
+            )
+            if decision.granted:
+                accessible_docs.append(doc)
+        
+        # 4. Risk scoring
+        risk_score = await self.risk_scorer.calculate_risk_score(
+            requester_id, "bulk_export"
+        )
+        
+        if risk_score > 0.7:
+            await self.audit.log(
+                user_id=requester_id,
+                action="bulk_export_high_risk",
+                metadata={"risk_score": risk_score, "doc_count": len(accessible_docs)}
+            )
+            # Throttle, jangan block
+            await asyncio.sleep(5)  # Perlambat
+        
+        # 5. Generate ZIP
+        return await self.generate_zip(accessible_docs)
+    
+    # ===== 4. WEBHOOKS =====
+    
+    async def handle_webhook(self, webhook_type: str, payload: dict, signature: str):
+        """Webhook dengan signature verification"""
+        
+        # 1. Verifikasi signature
+        if not self.verify_signature(webhook_type, payload, signature):
+            raise SecurityError("Invalid webhook signature")
+        
+        # 2. Validasi schema
+        self.validate_schema(webhook_type, payload)
+        
+        # 3. Process via queue (async, bukan sync)
+        await self.queue.enqueue(
+            f"webhook:{webhook_type}",
+            payload=payload,
+            priority="low"
+        )
+        
+        # 4. Audit
+        await self.audit.log(
+            action="webhook_received",
+            metadata={"type": webhook_type}
+        )
+    
+    # ===== 5. OBJECT STORAGE =====
+    
+    async def get_presigned_url(self, document_id: str, requester_id: str):
+        """Presigned URL dengan access check di app layer"""
+        
+        # 1. Access check
+        doc = await self.db.get_document(document_id)
+        decision = await self.access_service.can_access(
+            requester_id, document_id, doc.matter_id
+        )
+        if not decision.granted:
+            raise AccessDenied()
+        
+        # 2. Generate presigned URL dengan expiry pendek
+        url = await self.storage.generate_presigned_url(
+            document_id,
+            expiry_minutes=5
+        )
+        
+        # 3. Audit
+        await self.audit.log(
+            user_id=requester_id,
+            action="presigned_url_generated",
+            resource_id=document_id,
+            metadata={"expiry_minutes": 5}
+        )
+        
+        return url
+    
+    # ===== 6. LOGS =====
+    
+    @staticmethod
+    def sanitize_log(log_data: dict) -> dict:
+        """Sanitasi log sebelum ditulis"""
+        sensitive_fields = [
+            "password", "token", "secret", "api_key",
+            "document_content", "full_text", "private_key"
+        ]
+        
+        sanitized = log_data.copy()
+        for field in sensitive_fields:
+            if field in sanitized:
+                sanitized[field] = "***REDACTED***"
+        
+        return sanitized
+    
+    # ===== 7. CACHES =====
+    
+    async def get_cached_response(self, cache_key: str, requester_id: str):
+        """Cache yang menghormati revocation"""
+        
+        cached = await self.cache.get(cache_key)
+        if not cached:
+            return None
+        
+        # Check revocation
+        if await self.revocation.is_revoked_since(
+            requester_id,
+            cached.cached_at
+        ):
+            await self.cache.delete(cache_key)
+            return None
+        
+        return cached.value
+```
+
+### 2.3 Test Plan
+
+```python
+# tests/security/test_task_35_final.py
+
+class TestTask35Final:
+    
+    async def test_extraction_worker_scope_limited(self):
+        """Worker ekstraksi hanya bisa akses dokumen yang di-scope"""
+        service_account = ServiceAccount(
+            id="extraction-worker",
+            scope=["document:read_pending_extraction"]
+        )
+        
+        pending_doc = await create_document(status="PENDING_EXTRACTION")
+        other_doc = await create_document(status="READY")
+        
+        # Bisa akses pending
+        result = await access_service.get_document(pending_doc.id, service_account)
+        assert result is not None
+        
+        # Tidak bisa akses lain
+        with pytest.raises(AccessDenied):
+            await access_service.get_document(other_doc.id, service_account)
+    
+    async def test_bulk_export_no_bypass(self):
+        """Bulk export tidak bypass per-document access check"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="OBSERVER")
+        
+        public_doc = await create_document(matter.id, access_class="MATTER_PUBLIC")
+        restricted_doc = await create_document(
+            matter.id,
+            access_class="RESTRICTED",
+            restricted_to=[]
+        )
+        
+        export = await bulk_export_service.export(matter.id, user.id)
+        
+        assert public_doc.id in [d.id for d in export.documents]
+        assert restricted_doc.id not in [d.id for d in export.documents]
+    
+    async def test_presigned_url_requires_access_check(self):
+        """Presigned URL tidak bisa di-generate tanpa access check"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="OBSERVER")
+        restricted_doc = await create_document(
+            matter.id,
+            access_class="RESTRICTED",
+            restricted_to=[]
+        )
+        
+        with pytest.raises(AccessDenied):
+            await storage_service.get_presigned_url(restricted_doc.id, user.id)
+    
+    async def test_cache_honors_revocation(self):
+        """Cache tidak berlaku setelah revocation"""
+        matter = await create_matter()
+        user = await add_participant(matter.id, role="CLAIMANT")
+        doc = await create_document(matter.id, access_class="MATTER_PUBLIC")
+        
+        # Akses pertama → cache
+        response1 = await get_document_cached(doc.id, user.id)
+        assert response1 is not None
+        
+        # Withdraw
+        await withdraw_participant(matter.id, user.id)
+        
+        # Akses kedua → cache invalidated
+        response2 = await get_document_cached(doc.id, user.id)
+        assert response2 is None
+    
+    async def test_logs_sanitized(self):
+        """Log tidak mengandung data sensitif"""
+        raw_log = {
+            "user_id": "user-123",
+            "password": "secret",
+            "token": "jwt-token"
+        }
+        
+        sanitized = NonApiProtectionService.sanitize_log(raw_log)
+        
+        assert sanitized["password"] == "***REDACTED***"
+        assert sanitized["token"] == "***REDACTED***"
+        assert sanitized["user_id"] == "user-123"
+    
+    async def test_database_context_no_leakage(self):
+        """Konteks user database tidak bocor"""
+        # Request 1: User A
+        await client.get("/documents/doc-1", headers=auth_header(user_a))
+        
+        # Request 2: User B
+        response = await client.get("/documents/doc-1", headers=auth_header(user_b))
+        assert response.status_code == 404
+        
+        # Verifikasi context reset
+        conn = await pool.acquire()
+        try:
+            user_id = await conn.fetchval("SELECT current_setting('app.current_user_id')")
+            assert user_id == ""
+        finally:
+            await pool.release(conn)
+```
+
+---
+
+## RINGKASAN
+
+### 8 Inkonsistensi — Semua Diperbaiki
+
+| No | Inkonsistensi | Perbaikan |
+|---|---|---|
+| 1 | COUNSEL_ONLY tidak memberi akses ke klien | Definisikan eksplisit: COUNSEL_ONLY vs COUNSEL_AND_CLIENT |
+| 2 | RLS rekursif | ACL table terpisah, bukan view |
+| 3 | Konteks user database bocor | Middleware set/reset per transaksi |
+| 4 | Legal hold = freeze total | Versioning untuk koreksi metadata |
+| 5 | Enkripsi fase 2 kontradiktif | Threat model jelas, escrow key dengan multi-party approval |
+| 6 | Retensi di-hardcode | Database config table |
+| 7 | Risk score average | Weighted sum dengan threshold per sinyal |
+| 8 | AES-256/TLS 1.3 tidak diverifikasi | Audit script + CI integration |
+
+### Task #35 — Blueprint Final
+
+- **Scope:** 7 jalur non-API (worker, DB access, bulk ops, webhook, storage, logs, cache)
+- **Prinsip:** Access check tidak bisa di-bypass, service account terbatas, audit trail
+- **Test plan:** 6 test kritis untuk memastikan tidak ada bypass
+
+### Status
+
+- ✅ Task #22 selesai
+- 📋 Task #35 — blueprint final siap implementasi
+- 📋 Rate limiting — risk-based, bukan blocking mutlak
+- 📋 Retensi & legal hold — konfigurasi, bukan hardcode
+- 📋 Enkripsi terbatas — threat model jelas
+
+Apakah ada aspek spesifik yang ingin Anda dalami lebih lanjut sebelum implementasi Task #35?
