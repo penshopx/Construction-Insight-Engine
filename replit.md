@@ -1,6 +1,6 @@
 # KontrakGuard
 
-Sistem pendukung keputusan dan pertahanan hukum kontrak konstruksi untuk menjaga tenggat, kewajiban, bukti, dan paparan risiko tetap terlihat.
+Platform kolaboratif untuk hukum dan administrasi kontrak, kegagalan bangunan/konstruksi, serta penyelesaian sengketa konstruktif bersama Penilai Ahli.
 
 ## Run & Operate
 
@@ -27,16 +27,17 @@ Sistem pendukung keputusan dan pertahanan hukum kontrak konstruksi untuk menjaga
 - `artifacts/kontrak-konstruksi/` — React web application
 - `artifacts/kontrak-konstruksi/src/App.tsx` — route registration
 - `artifacts/kontrak-konstruksi/src/pages/` — command center and product modules
-- `artifacts/kontrak-konstruksi/src/components/layout/` — persistent application shell
+- `artifacts/kontrak-konstruksi/src/components/layout.tsx` — persistent application shell and three-pillar navigation
 - `artifacts/kontrak-konstruksi/src/index.css` — visual tokens and theme
 - `attached_assets/` — source reference documents supplied for the product
-- `artifacts/api-server/` — shared Express API, currently not required by the frontend prototype
+- `artifacts/api-server/` — shared Express API used by persisted work items and reference search
 
 ## Architecture decisions
 
-- The first version is frontend-only and uses realistic local data so the product surface can be evaluated before persistence and user accounts are added.
-- Product positioning is a construction-contract legal-defense system, not a generic document repository or legal-reference portal.
-- MVP priority is preventing loss of contractual rights through deadline visibility, obligation tracking, and defensible evidence records; AI analysis follows the workflow and data foundation.
+- Product positioning uses three connected pillars: law and contract administration; building/construction failure; and expert assessment with consultation, assistance/advocacy, and mediation.
+- The product favors constructive resolution: detect issues early, preserve evidence, assess technical and contractual questions, and create a shared path to resolution before escalation.
+- Persisted work items and reference search use the API; new failure, expert, and mediation surfaces remain clearly labeled demonstration data until backend workflows are built.
+- MVP priority remains reliable workflow, deadline visibility, evidence continuity, and accountable collaboration; AI analysis follows the workflow and data foundation.
 - SKKNI content is presented as an orientation and evidence-tracking aid, not as formal certification.
 - Legal and forensic claims are qualified: the app is decision support, not legal advice, certification, or a guarantee that evidence will be admitted.
 
@@ -47,6 +48,9 @@ Sistem pendukung keputusan dan pertahanan hukum kontrak konstruksi untuk menjaga
 - Legal deadline center for notices, responses, EOT, guarantees, retention, and DLP.
 - Evidence Vault prototype with provenance and chain-of-custody cues.
 - Case-management views for VO, EOT, claims, NCR, and disputes.
+- Building and construction failure workspace for initial documentation, investigation, cause analysis, impact, and expert opinion.
+- Penilai Ahli directory for consultation, assistance/advocacy, and mediation use cases.
+- Collaborative mediation workspace for issues, sessions, evidence access, and draft outcomes.
 - Searchable construction-contract legal reference library.
 - SKKNI 88-2015 competency map for Ahli Kontrak Kerja Konstruksi.
 
@@ -57,7 +61,9 @@ Sistem pendukung keputusan dan pertahanan hukum kontrak konstruksi untuk menjaga
 
 ## Gotchas
 
-- Current interactions are local prototype state and reset after a page reload.
+- Failure, Penilai Ahli, and mediation data are local demonstrations and reset after a page reload.
+- Expert profiles, qualifications, ratings, availability, conflict checks, and institutional verification shown in demonstrations are not real.
+- Independent expert assessment is distinct from party advocacy; do not imply every Penilai Ahli is a licensed advocate, certified mediator, or authorized legal representative.
 - Evidence hashes, timestamps, risk scores, and chain-of-custody records are illustrative until backed by verified server-side controls.
 - Reference documents may contain older regulations; verify legal currency before presenting content as current law.
 

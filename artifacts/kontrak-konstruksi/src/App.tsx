@@ -8,6 +8,9 @@ import Proyek from '@/pages/proyek';
 import Tenggat from '@/pages/tenggat';
 import Bukti from '@/pages/bukti';
 import Kasus from '@/pages/kasus';
+import Kegagalan from '@/pages/kegagalan';
+import PenilaiAhli from '@/pages/penilai-ahli';
+import Mediasi from '@/pages/mediasi';
 import Referensi from '@/pages/referensi';
 import Kompetensi from '@/pages/kompetensi';
 
@@ -37,6 +40,9 @@ export default function App() {
           <Route path="/tenggat" component={Tenggat} />
           <Route path="/bukti" component={Bukti} />
           <Route path="/kasus" component={Kasus} />
+          <Route path="/kegagalan" component={Kegagalan} />
+          <Route path="/penilai-ahli" component={PenilaiAhli} />
+          <Route path="/mediasi" component={Mediasi} />
           <Route path="/referensi" component={Referensi} />
           <Route path="/kompetensi" component={Kompetensi} />
           <Route component={NotFound} />
