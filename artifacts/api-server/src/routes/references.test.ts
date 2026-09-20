@@ -1,12 +1,24 @@
 import { createServer, type Server } from "node:http";
 import express from "express";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { eq, inArray } from "drizzle-orm";
+import {
+  appUsersTable,
+  db,
+  organizationMembershipsTable,
+  organizationsTable,
+  referenceDocumentsTable,
+} from "@workspace/db";
 
+const { getAuthMock } = vi.hoisted(() => ({
+  getAuthMock: vi.fn(() => ({ userId: null as string | null })),
+}));
 vi.mock("@clerk/express", () => ({
-  getAuth: vi.fn(() => ({ userId: null })),
+  getAuth: getAuthMock,
 }));
 
 import referencesRouter from "./references";
+import { provisionWorkspaceForUser } from "../lib/workspace";
 
 type SearchHit = {
   id: string;
@@ -101,5 +113,85 @@ describe("GET /references/search", () => {
     expect(payload.total).toBe(0);
     expect(payload.results).toEqual([]);
     expectValidityDisclaimer(payload);
+  });
+});
+
+describe("POST /references/imports/:id/archive", () => {
+  const organizationIds: number[] = [];
+  const userIds: number[] = [];
+  let server: Server;
+  let baseUrl: string;
+
+  beforeAll(async () => {
+    const app = express();
+    app.use(referencesRouter);
+    server = createServer(app);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("Test server failed to bind");
+    baseUrl = `http://127.0.0.1:${address.port}`;
+  });
+
+  afterAll(async () => {
+    getAuthMock.mockReturnValue({ userId: null });
+    if (organizationIds.length) {
+      await db.delete(organizationsTable).where(inArray(organizationsTable.id, organizationIds));
+    }
+    if (userIds.length) await db.delete(appUsersTable).where(inArray(appUsersTable.id, userIds));
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  });
+
+  async function createReadyReference(organizationId: number, label: string) {
+    const [row] = await db.insert(referenceDocumentsTable).values({
+      organizationId,
+      slug: `archive_test_${label}_${crypto.randomUUID()}`,
+      title: `Referensi ${label}`,
+      category: "Dasar & Prinsip",
+      sourceFilename: `${label}.pdf`,
+      sourceChecksum: `checksum_${label}_${crypto.randomUUID()}`,
+      fileType: "PDF",
+    }).returning();
+    return row;
+  }
+
+  it("allows managers to archive only references in their active organization", async () => {
+    const managerAId = `archive_manager_a_${crypto.randomUUID()}`;
+    const managerBId = `archive_manager_b_${crypto.randomUUID()}`;
+    const managerA = await provisionWorkspaceForUser(managerAId);
+    const managerB = await provisionWorkspaceForUser(managerBId);
+    organizationIds.push(managerA.organizationId, managerB.organizationId);
+    userIds.push(managerA.userId, managerB.userId);
+    const ownReference = await createReadyReference(managerA.organizationId, "milik_a");
+    const otherReference = await createReadyReference(managerB.organizationId, "milik_b");
+
+    getAuthMock.mockReturnValue({ userId: managerAId });
+    const crossOrganization = await fetch(`${baseUrl}/references/imports/${otherReference.id}/archive`, { method: "POST" });
+    expect(crossOrganization.status).toBe(404);
+    const own = await fetch(`${baseUrl}/references/imports/${ownReference.id}/archive`, { method: "POST" });
+    expect(own.status).toBe(200);
+
+    const [archivedOwn] = await db.select().from(referenceDocumentsTable)
+      .where(eq(referenceDocumentsTable.id, ownReference.id));
+    const [untouchedOther] = await db.select().from(referenceDocumentsTable)
+      .where(eq(referenceDocumentsTable.id, otherReference.id));
+    expect(archivedOwn.archivedAt).toBeInstanceOf(Date);
+    expect(untouchedOther.archivedAt).toBeNull();
+  });
+
+  it("rejects archive attempts from non-manager members", async () => {
+    const memberClerkId = `archive_member_${crypto.randomUUID()}`;
+    const member = await provisionWorkspaceForUser(memberClerkId);
+    organizationIds.push(member.organizationId);
+    userIds.push(member.userId);
+    await db.update(organizationMembershipsTable).set({ role: "member" })
+      .where(eq(organizationMembershipsTable.userId, member.userId));
+    const reference = await createReadyReference(member.organizationId, "member");
+
+    getAuthMock.mockReturnValue({ userId: memberClerkId });
+    const response = await fetch(`${baseUrl}/references/imports/${reference.id}/archive`, { method: "POST" });
+    expect(response.status).toBe(403);
+    const [untouched] = await db.select().from(referenceDocumentsTable)
+      .where(eq(referenceDocumentsTable.id, reference.id));
+    expect(untouched.archivedAt).toBeNull();
   });
 });

@@ -21,4 +21,6 @@ export interface ReferenceImportInput {
      * @maxLength 100
      */
   category?: string;
+  /** @minimum 1 */
+  replacesDocumentId?: number;
 }

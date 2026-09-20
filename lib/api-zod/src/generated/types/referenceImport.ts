@@ -20,4 +20,10 @@ export interface ReferenceImport {
   createdAt: Date;
   /** @nullable */
   processedAt?: Date | null;
+  /** @nullable */
+  archivedAt?: Date | null;
+  /** @nullable */
+  replacesDocumentId?: number | null;
+  /** @nullable */
+  replacedByDocumentId?: number | null;
 }

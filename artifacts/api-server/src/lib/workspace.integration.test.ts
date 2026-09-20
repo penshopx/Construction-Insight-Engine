@@ -11,7 +11,7 @@ import {
   workItemsTable,
 } from "@workspace/db";
 import { acceptWorkspaceInvitation, provisionWorkspaceForUser } from "./workspace";
-import { dynamicDocuments } from "../routes/references";
+import { dynamicDocuments, failReferenceImport, finalizeReferenceImport } from "../routes/references";
 import { downloadReferenceObject } from "./reference-storage";
 
 const workItemIds: number[] = [];
@@ -139,6 +139,16 @@ describe("organization workspace invariants", () => {
         sourceChecksum: uniqueId("checksum_b"),
         fileType: "PDF",
       },
+      {
+        organizationId: first.organizationId,
+        slug: uniqueId("reference_archived"),
+        title: "Dokumen lama ruang A",
+        category: "Dasar & Prinsip",
+        sourceFilename: "lama.pdf",
+        sourceChecksum: uniqueId("checksum_archived"),
+        fileType: "PDF",
+        archivedAt: new Date(),
+      },
     ]).returning();
     await db.insert(referenceSectionsTable).values(documents.map((document) => ({
       documentId: document.id,
@@ -151,6 +161,65 @@ describe("organization workspace invariants", () => {
     const firstDocuments = await dynamicDocuments(first.organizationId);
     expect(firstDocuments.map((document) => document.title)).toEqual(["Dokumen ruang A"]);
     expect(await dynamicDocuments()).toEqual([]);
+  });
+
+  it("archives the old version only after its replacement succeeds", async () => {
+    const workspace = await provisionWorkspaceForUser(uniqueId("reference_replacement"));
+    organizationIds.push(workspace.organizationId);
+    userIds.push(workspace.userId);
+
+    const [original] = await db.insert(referenceDocumentsTable).values({
+      organizationId: workspace.organizationId,
+      slug: uniqueId("original"),
+      title: "Referensi awal",
+      category: "Dasar & Prinsip",
+      sourceFilename: "awal.pdf",
+      sourceChecksum: uniqueId("checksum_original"),
+      fileType: "PDF",
+    }).returning();
+    const [failedReplacement] = await db.insert(referenceDocumentsTable).values({
+      organizationId: workspace.organizationId,
+      slug: uniqueId("failed_replacement"),
+      title: "Referensi pengganti gagal",
+      category: "Dasar & Prinsip",
+      sourceFilename: "gagal.pdf",
+      sourceChecksum: "pending",
+      fileType: "PDF",
+      processingStatus: "processing",
+      replacesDocumentId: original.id,
+    }).returning();
+
+    await failReferenceImport(failedReplacement.id, workspace.organizationId, "Ekstraksi gagal");
+    let [originalAfterFailure] = await db.select().from(referenceDocumentsTable)
+      .where(eq(referenceDocumentsTable.id, original.id));
+    expect(originalAfterFailure.archivedAt).toBeNull();
+
+    const [successfulReplacement] = await db.insert(referenceDocumentsTable).values({
+      organizationId: workspace.organizationId,
+      slug: uniqueId("successful_replacement"),
+      title: "Referensi pengganti",
+      category: "Dasar & Prinsip",
+      sourceFilename: "baru.pdf",
+      sourceChecksum: "pending",
+      fileType: "PDF",
+      processingStatus: "processing",
+      replacesDocumentId: original.id,
+    }).returning();
+    await finalizeReferenceImport(successfulReplacement.id, workspace.organizationId, {
+      checksum: uniqueId("checksum_replacement"),
+      sections: [{
+        sectionNumber: 1,
+        heading: "Bagian 1",
+        content: "Isi referensi pengganti yang berhasil diproses dan masuk ke katalog.",
+        topics: [],
+      }],
+    });
+
+    [originalAfterFailure] = await db.select().from(referenceDocumentsTable)
+      .where(eq(referenceDocumentsTable.id, original.id));
+    expect(originalAfterFailure.archivedAt).toBeInstanceOf(Date);
+    expect((await dynamicDocuments(workspace.organizationId)).map((document) => document.title))
+      .toEqual(["Referensi pengganti"]);
   });
 
   it("stops downloading when actual object bytes exceed the hard limit", async () => {

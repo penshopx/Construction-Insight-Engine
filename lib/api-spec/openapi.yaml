@@ -313,6 +313,28 @@ paths:
                 $ref: "#/components/schemas/ReferenceImport"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /references/imports/{id}/archive:
+    post:
+      operationId: archiveReferenceImport
+      tags: [references]
+      summary: Archive a manager-owned reference without deleting its history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Archived reference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferenceImport"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /references/search:
     get:
       operationId: searchReferences
@@ -1180,6 +1202,9 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+        replacesDocumentId:
+          type: number
+          minimum: 1
     ReferenceImport:
       type: object
       required: [id, title, category, fileType, sourceFilename, status, createdAt]
@@ -1206,6 +1231,13 @@ components:
         processedAt:
           type: ["string", "null"]
           format: date-time
+        archivedAt:
+          type: ["string", "null"]
+          format: date-time
+        replacesDocumentId:
+          type: ["number", "null"]
+        replacedByDocumentId:
+          type: ["number", "null"]
     ReferenceSearchHit:
       type: object
       required: [id, documentId, title, category, fileType, sourceFilename, sourceChecksum, sectionNumber, heading, excerpt, topics]

@@ -3,6 +3,7 @@ import {
   getListReferencesQueryKey,
   getListReferenceImportsQueryKey,
   getSearchReferencesQueryKey,
+  useArchiveReferenceImport,
   useCreateReferenceImport,
   useGetWorkspace,
   useListReferenceImports,
@@ -14,6 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader, Shell } from '@/components/layout';
 import {
   AlertTriangle,
+  Archive,
   BookOpen,
   CheckCircle2,
   Database,
@@ -21,6 +23,7 @@ import {
   FileText,
   Fingerprint,
   LoaderCircle,
+  RefreshCw,
   Search,
   ShieldAlert,
   Upload,
@@ -32,6 +35,7 @@ export default function Referensi() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Semua');
   const [uploadError, setUploadError] = useState('');
+  const [replacementTargetId, setReplacementTargetId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const deferredQuery = useDeferredValue(query.trim());
@@ -50,6 +54,7 @@ export default function Referensi() {
   });
   const uploadUrlMutation = useRequestReferenceUploadUrl();
   const createImportMutation = useCreateReferenceImport();
+  const archiveImportMutation = useArchiveReferenceImport();
   const searchParams = { q: deferredQuery || '--', category: category === 'Semua' ? undefined : category };
   const searchQuery = useSearchReferences(searchParams, {
     query: { enabled: canSearch, queryKey: getSearchReferencesQueryKey(searchParams) },
@@ -92,11 +97,50 @@ export default function Referensi() {
         body: file,
       });
       if (!upload.ok) throw new Error('Berkas gagal dikirim ke penyimpanan.');
-      await createImportMutation.mutateAsync({ data: { objectPath: target.objectPath, sourceFilename: file.name } });
+      await createImportMutation.mutateAsync({
+        data: {
+          objectPath: target.objectPath,
+          sourceFilename: file.name,
+          ...(replacementTargetId ? { replacesDocumentId: replacementTargetId } : {}),
+        },
+      });
       await importsQuery.refetch();
+      setReplacementTargetId(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : 'Unggahan tidak dapat diproses.');
+    }
+  }
+
+  function beginReplacement(id: number, title: string) {
+    const confirmed = window.confirm(
+      `Ganti “${title}” dengan versi baru?\n\nVersi lama tetap tersimpan dalam riwayat dan baru diarsipkan setelah versi pengganti selesai diproses.`,
+    );
+    if (!confirmed) return;
+    setReplacementTargetId(id);
+    window.setTimeout(() => fileInputRef.current?.click(), 0);
+  }
+
+  function beginNewUpload() {
+    setReplacementTargetId(null);
+    window.setTimeout(() => fileInputRef.current?.click(), 0);
+  }
+
+  async function archiveReference(id: number, title: string) {
+    const confirmed = window.confirm(
+      `Arsipkan “${title}”?\n\nDokumen akan hilang dari katalog dan pencarian, tetapi berkas serta riwayat pemrosesannya tetap tersimpan.`,
+    );
+    if (!confirmed) return;
+    setUploadError('');
+    try {
+      await archiveImportMutation.mutateAsync({ id });
+      await Promise.all([
+        importsQuery.refetch(),
+        queryClient.invalidateQueries({ queryKey: getListReferencesQueryKey() }),
+        queryClient.invalidateQueries({ queryKey: getSearchReferencesQueryKey(searchParams) }),
+      ]);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Referensi tidak dapat diarsipkan.');
     }
   }
 
@@ -124,24 +168,29 @@ export default function Referensi() {
                 Unggah PDF, DOC, atau DOCX hingga 20 MB. Judul, kategori, topik, dan segmen pencarian akan dibuat otomatis.
               </p>
             </div>
-            <label className={cn(
-              'inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-slate-950 transition-opacity',
-              isUploading && 'pointer-events-none opacity-60',
-            )}>
+            <button
+              type="button"
+              onClick={beginNewUpload}
+              disabled={isUploading}
+              className={cn(
+                'inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-slate-950 transition-opacity',
+                isUploading && 'pointer-events-none opacity-60',
+              )}
+            >
               {isUploading ? <LoaderCircle size={16} className="animate-spin" /> : <Upload size={16} />}
               {isUploading ? 'Mengunggah...' : 'Pilih Dokumen'}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                className="sr-only"
-                disabled={isUploading}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void handleUpload(file);
-                }}
-              />
-            </label>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              className="sr-only"
+              disabled={isUploading}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleUpload(file);
+              }}
+            />
           </div>
           {uploadError && (
             <p className="mt-4 flex items-center gap-2 rounded border border-red-900/50 bg-red-950/20 px-3 py-2 text-sm text-red-300">
@@ -152,22 +201,51 @@ export default function Referensi() {
             <div className="mt-5 border-t border-border pt-4">
               <p className="mb-3 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">Status pemrosesan terbaru</p>
               <div className="space-y-2">
-                {importsQuery.data?.slice(0, 5).map((item) => (
+                {importsQuery.data?.map((item) => (
                   <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded border border-border bg-background/60 px-3 py-2.5">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-bold text-slate-200">{item.title}</p>
                       <p className="truncate text-xs text-slate-500">{item.sourceFilename}</p>
                       {item.error && <p className="mt-1 text-xs text-red-400">{item.error}</p>}
+                      {item.replacesDocumentId && (
+                        <p className="mt-1 text-[10px] text-sky-400">Menggantikan referensi #{item.replacesDocumentId}</p>
+                      )}
+                      {item.replacedByDocumentId && (
+                        <p className="mt-1 text-[10px] text-sky-400">Digantikan oleh referensi #{item.replacedByDocumentId}</p>
+                      )}
                     </div>
-                    <span className={cn(
-                      'inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[9px] font-bold uppercase',
-                      item.status === 'ready' && 'border-emerald-800 bg-emerald-950/30 text-emerald-400',
-                      item.status === 'failed' && 'border-red-900 bg-red-950/30 text-red-400',
-                      item.status === 'processing' && 'border-amber-900 bg-amber-950/30 text-amber-400',
-                    )}>
-                      {item.status === 'ready' ? <CheckCircle2 size={12} /> : item.status === 'failed' ? <XCircle size={12} /> : <LoaderCircle size={12} className="animate-spin" />}
-                      {item.status === 'ready' ? `${item.sectionCount ?? 0} segmen — siap` : item.status === 'failed' ? 'gagal' : 'memproses'}
-                    </span>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <span className={cn(
+                        'inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[9px] font-bold uppercase',
+                        item.archivedAt && 'border-slate-700 bg-slate-900 text-slate-400',
+                        !item.archivedAt && item.status === 'ready' && 'border-emerald-800 bg-emerald-950/30 text-emerald-400',
+                        !item.archivedAt && item.status === 'failed' && 'border-red-900 bg-red-950/30 text-red-400',
+                        !item.archivedAt && item.status === 'processing' && 'border-amber-900 bg-amber-950/30 text-amber-400',
+                      )}>
+                        {item.archivedAt ? <Archive size={12} /> : item.status === 'ready' ? <CheckCircle2 size={12} /> : item.status === 'failed' ? <XCircle size={12} /> : <LoaderCircle size={12} className="animate-spin" />}
+                        {item.archivedAt ? 'diarsipkan' : item.status === 'ready' ? `${item.sectionCount ?? 0} segmen — siap` : item.status === 'failed' ? 'gagal' : 'memproses'}
+                      </span>
+                      {!item.archivedAt && item.status === 'ready' && (
+                        <>
+                          <button
+                            type="button"
+                            disabled={isUploading}
+                            onClick={() => beginReplacement(item.id, item.title)}
+                            className="inline-flex items-center gap-1.5 rounded border border-sky-800 px-2 py-1 text-[10px] font-bold text-sky-300 hover:bg-sky-950/40 disabled:opacity-50"
+                          >
+                            <RefreshCw size={12} /> Ganti
+                          </button>
+                          <button
+                            type="button"
+                            disabled={archiveImportMutation.isPending}
+                            onClick={() => void archiveReference(item.id, item.title)}
+                            className="inline-flex items-center gap-1.5 rounded border border-red-900 px-2 py-1 text-[10px] font-bold text-red-300 hover:bg-red-950/30 disabled:opacity-50"
+                          >
+                            <Archive size={12} /> Arsipkan
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

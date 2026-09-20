@@ -1,4 +1,4 @@
-import { bigint, integer, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, integer, pgEnum, pgTable, serial, text, timestamp, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { appUsersTable, organizationsTable } from "./organizations";
@@ -21,6 +21,9 @@ export const referenceDocumentsTable = pgTable("reference_documents", {
   sourceChecksum: text("source_checksum").notNull(),
   fileType: text("file_type").notNull(),
   objectPath: text("object_path"),
+  replacesDocumentId: integer("replaces_document_id")
+    .references((): AnyPgColumn => referenceDocumentsTable.id, { onDelete: "set null" }),
+  archivedAt: timestamp("archived_at", { withTimezone: true }),
   processingStatus: referenceProcessingStatus("processing_status").notNull().default("ready"),
   processingError: text("processing_error"),
   processedAt: timestamp("processed_at", { withTimezone: true }),

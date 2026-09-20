@@ -487,7 +487,10 @@ export const ListReferenceImportsResponseItem = zod.object({
   "error": zod.string().nullish(),
   "sectionCount": zod.number().optional(),
   "createdAt": zod.coerce.date(),
-  "processedAt": zod.coerce.date().nullish()
+  "processedAt": zod.coerce.date().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "replacesDocumentId": zod.number().nullish(),
+  "replacedByDocumentId": zod.number().nullish()
 })
 export const ListReferenceImportsResponse = zod.array(ListReferenceImportsResponseItem)
 
@@ -503,11 +506,13 @@ export const createReferenceImportBodyCategoryMax = 100;
 
 
 
+
 export const CreateReferenceImportBody = zod.object({
   "objectPath": zod.string().regex(createReferenceImportBodyObjectPathRegExp),
   "sourceFilename": zod.string().min(1),
   "title": zod.string().min(1).max(createReferenceImportBodyTitleMax).optional(),
-  "category": zod.string().min(1).max(createReferenceImportBodyCategoryMax).optional()
+  "category": zod.string().min(1).max(createReferenceImportBodyCategoryMax).optional(),
+  "replacesDocumentId": zod.number().min(1).optional()
 })
 
 export const CreateReferenceImportResponse = zod.object({
@@ -520,7 +525,34 @@ export const CreateReferenceImportResponse = zod.object({
   "error": zod.string().nullish(),
   "sectionCount": zod.number().optional(),
   "createdAt": zod.coerce.date(),
-  "processedAt": zod.coerce.date().nullish()
+  "processedAt": zod.coerce.date().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "replacesDocumentId": zod.number().nullish(),
+  "replacedByDocumentId": zod.number().nullish()
+})
+
+
+/**
+ * @summary Archive a manager-owned reference without deleting its history
+ */
+export const ArchiveReferenceImportParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ArchiveReferenceImportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "fileType": zod.string(),
+  "sourceFilename": zod.string(),
+  "status": zod.enum(['processing', 'ready', 'failed']),
+  "error": zod.string().nullish(),
+  "sectionCount": zod.number().optional(),
+  "createdAt": zod.coerce.date(),
+  "processedAt": zod.coerce.date().nullish(),
+  "archivedAt": zod.coerce.date().nullish(),
+  "replacesDocumentId": zod.number().nullish(),
+  "replacedByDocumentId": zod.number().nullish()
 })
 
 

@@ -548,6 +548,8 @@ export interface ReferenceImportInput {
      * @maxLength 100
      */
   category?: string;
+  /** @minimum 1 */
+  replacesDocumentId?: number;
 }
 
 export interface ReferenceImport {
@@ -563,6 +565,12 @@ export interface ReferenceImport {
   createdAt: string;
   /** @nullable */
   processedAt?: string | null;
+  /** @nullable */
+  archivedAt?: string | null;
+  /** @nullable */
+  replacesDocumentId?: number | null;
+  /** @nullable */
+  replacedByDocumentId?: number | null;
 }
 
 export interface ReferenceSearchHit {

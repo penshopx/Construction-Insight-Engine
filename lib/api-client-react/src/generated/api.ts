@@ -1355,6 +1355,77 @@ export const useCreateReferenceImport = <TError = ErrorType<BadRequestResponse>,
       return useMutation(getCreateReferenceImportMutationOptions(options));
     }
 
+export const getArchiveReferenceImportUrl = (id: number,) => {
+
+
+
+
+  return `/api/references/imports/${id}/archive`
+}
+
+/**
+ * @summary Archive a manager-owned reference without deleting its history
+ */
+export const archiveReferenceImport = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<ReferenceImport> => {
+
+  return customFetch<ReferenceImport>(getArchiveReferenceImportUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getArchiveReferenceImportMutationOptions = <TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveReferenceImport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveReferenceImport>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['archiveReferenceImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveReferenceImport>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  archiveReferenceImport(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveReferenceImportMutationResult = NonNullable<Awaited<ReturnType<typeof archiveReferenceImport>>>
+
+    export type ArchiveReferenceImportMutationError = ErrorType<BadRequestResponse | NotFoundResponse>
+
+    /**
+ * @summary Archive a manager-owned reference without deleting its history
+ */
+export const useArchiveReferenceImport = <TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveReferenceImport>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveReferenceImport>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getArchiveReferenceImportMutationOptions(options));
+    }
+
 export const getSearchReferencesUrl = (params: SearchReferencesParams,) => {
   const normalizedParams = new URLSearchParams();
 
