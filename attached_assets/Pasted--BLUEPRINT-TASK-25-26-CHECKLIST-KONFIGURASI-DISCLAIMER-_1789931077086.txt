@@ -1,0 +1,992 @@
+# BLUEPRINT TASK #25 & #26 — CHECKLIST KONFIGURASI & DISCLAIMER RESPONSIF
+
+Dua task yang Anda kerjakan menyentuh aspek penting: **fleksibilitas operasional** (Task #25) dan **kepatuhan hukum visual** (Task #26). Keduanya harus dirancang dengan prinsip yang sama: tidak over-promise, fail closed, dan menghormati konteks hukum Indonesia.
+
+---
+
+## BAGIAN 1: TASK #25 — CHECKLIST YANG BISA DISESUAIKAN PENGELOLA
+
+### 1.1 Mengapa Ini Penting
+
+Dalam konstruksi Indonesia, setiap kontrak punya kekhasan:
+- **Kontrak pemerintah** → wajib mengikuti Perpres 16/2018 (jaminan, uang muka, dll)
+- **Kontrak FIDIC** → ada klausul Sub-Clause spesifik yang perlu diverifikasi
+- **Kontrak EPC** → ada persyaratan performance test, commissioning
+- **Kontrak khusus owner** → bisa ada persyaratan tambahan (misal: sertifikasi K3 khusus, laporan BIM)
+
+Checklist statis tidak bisa mengakomodasi variasi ini. Pengelola harus bisa menambah persyaratan **tanpa mengubah kode**, tetapi **tidak boleh menghapus persyaratan wajib regulasi**.
+
+### 1.2 Model Data — Dua Lapis Checklist
+
+```sql
+-- Lapis 1: Persyaratan wajib dari regulasi (TIDAK bisa dihapus pengelola)
+CREATE TABLE checklist_requirements_base (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) UNIQUE NOT NULL,  -- 'REG-001', 'REG-002', dll
+    category VARCHAR(50) NOT NULL,
+    -- 'CONTRACT_FORMATION', 'PRE_CONSTRUCTION', 'EXECUTION', 
+    -- 'HANDOVER', 'DLP', 'DISPUTE'
+    
+    title TEXT NOT NULL,
+    description TEXT,
+    
+    -- Dasar regulasi (wajib diisi untuk persyaratan regulasi)
+    legal_basis TEXT,  -- "UU 2/2017 Ps 34", "Perpres 16/2018 Ps 40"
+    
+    -- Apakah bisa di-override oleh kontrak spesifik?
+    overridable BOOLEAN DEFAULT false,
+    override_conditions TEXT,  -- JSON: kondisi ketika boleh di-override
+    
+    -- Kapan harus selesai
+    timing VARCHAR(50) NOT NULL,
+    -- 'BEFORE_SIGNING', 'BEFORE_MOBILIZATION', 'DURING_EXECUTION',
+    -- 'BEFORE_PHO', 'BEFORE_FHO', 'DURING_DLP'
+    
+    -- Siapa yang wajib menyelesaikan
+    responsible_role VARCHAR(30) NOT NULL,
+    -- 'OWNER', 'CONTRACTOR', 'MK', 'JOINT'
+    
+    -- Bukti yang diperlukan
+    required_evidence JSONB DEFAULT '[]',
+    -- [{"type": "document", "description": "Jaminan Pelaksanaan"}]
+    
+    -- Metadata
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_updated_by UUID REFERENCES users(id),
+    last_updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Lapis 2: Persyaratan tambahan dari kontrak spesifik (bisa ditambah pengelola)
+CREATE TABLE checklist_requirements_custom (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id UUID REFERENCES contracts(id) NOT NULL,
+    
+    -- Bisa merujuk ke base requirement (jika mengadopsi)
+    -- atau standalone (jika persyaratan baru)
+    base_requirement_id UUID REFERENCES checklist_requirements_base(id),
+    
+    code VARCHAR(50) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    
+    -- Sumber persyaratan (wajib diisi untuk custom)
+    source_type VARCHAR(30) NOT NULL,
+    -- 'CONTRACT_CLAUSE', 'OWNER_REQUIREMENT', 'BEST_PRACTICE', 'OTHER'
+    
+    source_reference TEXT,  -- "Pasal 15.3 kontrak", "Surat Owner No. 123"
+    
+    timing VARCHAR(50) NOT NULL,
+    responsible_role VARCHAR(30) NOT NULL,
+    required_evidence JSONB DEFAULT '[]',
+    
+    -- Prioritas (untuk sorting)
+    priority INTEGER DEFAULT 100,
+    
+    -- Metadata
+    active BOOLEAN DEFAULT true,
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    last_updated_by UUID REFERENCES users(id),
+    last_updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Tidak boleh duplikat code dalam satu kontrak
+    UNIQUE(contract_id, code)
+);
+
+-- Template checklist yang bisa di-reuse antar kontrak serupa
+CREATE TABLE checklist_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    
+    -- Untuk tipe kontrak apa template ini cocok
+    contract_type VARCHAR(50) NOT NULL,
+    -- 'LUMP_SUM', 'UNIT_PRICE', 'FIDIC_RED', 'FIDIC_YELLOW', 'EPC', 'CUSTOM'
+    
+    -- Daftar persyaratan custom (JSON untuk fleksibilitas)
+    requirements JSONB NOT NULL DEFAULT '[]',
+    
+    -- Metadata
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    is_public BOOLEAN DEFAULT false,  -- Bisa dipakai organisasi lain
+    organization_id UUID REFERENCES organizations(id)
+);
+
+-- Checklist instance per kontrak (gabungan base + custom)
+CREATE VIEW contract_checklist AS
+SELECT 
+    c.id AS contract_id,
+    c.contract_number,
+    
+    -- Persyaratan base (wajib)
+    COALESCE(json_agg(
+        json_build_object(
+            'id', b.id,
+            'code', b.code,
+            'title', b.title,
+            'category', b.category,
+            'timing', b.timing,
+            'responsible_role', b.responsible_role,
+            'source', 'REGULATION',
+            'legal_basis', b.legal_basis,
+            'overridable', b.overridable,
+            'required_evidence', b.required_evidence
+        )
+    ) FILTER (WHERE b.id IS NOT NULL), '[]') AS base_requirements,
+    
+    -- Persyaratan custom (tambahan)
+    COALESCE(json_agg(
+        json_build_object(
+            'id', cu.id,
+            'code', cu.code,
+            'title', cu.title,
+            'category', cu.category,
+            'timing', cu.timing,
+            'responsible_role', cu.responsible_role,
+            'source', cu.source_type,
+            'source_reference', cu.source_reference,
+            'required_evidence', cu.required_evidence,
+            'priority', cu.priority
+        )
+    ) FILTER (WHERE cu.id IS NOT NULL), '[]') AS custom_requirements
+
+FROM contracts c
+LEFT JOIN checklist_requirements_base b ON b.active = true
+LEFT JOIN checklist_requirements_custom cu ON cu.contract_id = c.id AND cu.active = true
+GROUP BY c.id, c.contract_number;
+```
+
+### 1.3 Service Layer — Validasi dan Proteksi
+
+```python
+# services/checklist/checklist_service.py
+
+class ChecklistService:
+    """
+    Mengelola checklist kontrak dengan proteksi terhadap persyaratan regulasi.
+    """
+    
+    # Persyaratan yang TIDAK Boleh dihapus atau di-override
+    PROTECTED_REQUIREMENTS = {
+        "REG-001": {
+            "title": "Jaminan Pelaksanaan",
+            "legal_basis": "Perpres 16/2018 Pasal 40",
+            "reason": "Wajib untuk kontrak pemerintah"
+        },
+        "REG-002": {
+            "title": "Asuransi CAR",
+            "legal_basis": "UU 2/2017 Pasal 34",
+            "reason": "Wajib untuk semua kontrak konstruksi"
+        },
+        "REG-003": {
+            "title": "SMK3 (Sistem Manajemen K3)",
+            "legal_basis": "PP 50/2012",
+            "reason": "Wajib untuk kontrak >Rp10 miliar"
+        },
+        "REG-004": {
+            "title": "Sertifikat Badan Usaha (SBU)",
+            "legal_basis": "UU 2/2017 Pasal 13",
+            "reason": "Kualifikasi wajib kontraktor"
+        }
+    }
+    
+    async def add_custom_requirement(
+        self,
+        contract_id: str,
+        requirement: CustomRequirement,
+        added_by: str
+    ) -> CustomRequirement:
+        """Tambah persyaratan custom ke kontrak"""
+        
+        # 1. Verifikasi user punya hak (hanya kontrak admin/manager)
+        if not await self.has_permission(added_by, contract_id, "manage_checklist"):
+            raise PermissionDenied("Tidak punya hak mengelola checklist")
+        
+        # 2. Validasi tidak duplikat code
+        existing = await self.db.fetch_one(
+            "SELECT id FROM checklist_requirements_custom WHERE contract_id = $1 AND code = $2",
+            contract_id, requirement.code
+        )
+        if existing:
+            raise ValidationError(f"Code {requirement.code} sudah ada di kontrak ini")
+        
+        # 3. Validasi tidak mencoba meng-override persyaratan protected
+        if requirement.code in self.PROTECTED_REQUIREMENTS:
+            protected = self.PROTECTED_REQUIREMENTS[requirement.code]
+            raise ValidationError(
+                f"Code {requirement.code} adalah persyaratan regulasi yang dilindungi: "
+                f"{protected['title']} ({protected['legal_basis']}). "
+                f"Tidak bisa di-override atau dihapus."
+            )
+        
+        # 4. Validasi field wajib
+        self._validate_requirement_fields(requirement)
+        
+        # 5. Simpan
+        saved = await self.db.execute("""
+            INSERT INTO checklist_requirements_custom (
+                contract_id, code, category, title, description,
+                source_type, source_reference, timing,
+                responsible_role, required_evidence, priority,
+                created_by, created_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+            RETURNING *
+        """, 
+            contract_id, requirement.code, requirement.category,
+            requirement.title, requirement.description,
+            requirement.source_type, requirement.source_reference,
+            requirement.timing, requirement.responsible_role,
+            json.dumps(requirement.required_evidence),
+            requirement.priority, added_by
+        )
+        
+        # 6. Audit log
+        await self.audit.log(
+            action="checklist_custom_added",
+            metadata={
+                "contract_id": contract_id,
+                "requirement_code": requirement.code,
+                "requirement_title": requirement.title,
+                "added_by": added_by
+            }
+        )
+        
+        return saved
+    
+    async def update_custom_requirement(
+        self,
+        contract_id: str,
+        requirement_id: str,
+        updates: dict,
+        updated_by: str
+    ):
+        """Update persyaratan custom"""
+        
+        # 1. Verifikasi permission
+        if not await self.has_permission(updated_by, contract_id, "manage_checklist"):
+            raise PermissionDenied()
+        
+        # 2. Ambil requirement lama
+        old = await self.db.fetch_one(
+            "SELECT * FROM checklist_requirements_custom WHERE id = $1 AND contract_id = $2",
+            requirement_id, contract_id
+        )
+        if not old:
+            raise NotFound()
+        
+        # 3. Jika mengubah code, validasi tidak bentrok dengan protected
+        if "code" in updates and updates["code"] in self.PROTECTED_REQUIREMENTS:
+            raise ValidationError("Tidak bisa mengubah code menjadi persyaratan regulasi")
+        
+        # 4. Update
+        await self.db.execute("""
+            UPDATE checklist_requirements_custom
+            SET title = COALESCE($1, title),
+                description = COALESCE($2, description),
+                source_reference = COALESCE($3, source_reference),
+                timing = COALESCE($4, timing),
+                responsible_role = COALESCE($5, responsible_role),
+                required_evidence = COALESCE($6, required_evidence),
+                priority = COALESCE($7, priority),
+                last_updated_by = $8,
+                last_updated_at = NOW()
+            WHERE id = $9
+        """,
+            updates.get("title"),
+            updates.get("description"),
+            updates.get("source_reference"),
+            updates.get("timing"),
+            updates.get("responsible_role"),
+            json.dumps(updates.get("required_evidence")) if "required_evidence" in updates else None,
+            updates.get("priority"),
+            updated_by,
+            requirement_id
+        )
+        
+        # 5. Audit log
+        await self.audit.log(
+            action="checklist_custom_updated",
+            metadata={
+                "contract_id": contract_id,
+                "requirement_id": requirement_id,
+                "updates": updates,
+                "updated_by": updated_by
+            }
+        )
+    
+    async def deactivate_custom_requirement(
+        self,
+        contract_id: str,
+        requirement_id: str,
+        deactivated_by: str,
+        reason: str
+    ):
+        """Nonaktifkan persyaratan custom (soft delete)"""
+        
+        # Verifikasi permission
+        if not await self.has_permission(deactivated_by, contract_id, "manage_checklist"):
+            raise PermissionDenied()
+        
+        # Ambil requirement
+        req = await self.db.fetch_one(
+            "SELECT * FROM checklist_requirements_custom WHERE id = $1",
+            requirement_id
+        )
+        if not req:
+            raise NotFound()
+        
+        # Nonaktifkan
+        await self.db.execute("""
+            UPDATE checklist_requirements_custom
+            SET active = false,
+                last_updated_by = $1,
+                last_updated_at = NOW()
+            WHERE id = $2
+        """, deactivated_by, requirement_id)
+        
+        # Audit log
+        await self.audit.log(
+            action="checklist_custom_deactivated",
+            metadata={
+                "contract_id": contract_id,
+                "requirement_id": requirement_id,
+                "requirement_code": req['code'],
+                "reason": reason,
+                "deactivated_by": deactivated_by
+            }
+        )
+    
+    async def get_checklist_status(self, contract_id: str, user_id: str):
+        """Ambil status checklist untuk kontrak"""
+        
+        # Ambil semua persyaratan (base + custom)
+        base = await self.db.fetch_all("""
+            SELECT *, 'BASE' AS source_type
+            FROM checklist_requirements_base
+            WHERE active = true
+        """)
+        
+        custom = await self.db.fetch_all("""
+            SELECT *, 'CUSTOM' AS source_type
+            FROM checklist_requirements_custom
+            WHERE contract_id = $1 AND active = true
+        """, contract_id)
+        
+        # Gabungkan
+        all_requirements = list(base) + list(custom)
+        
+        # Ambil status completion untuk setiap persyaratan
+        # (asumsikan ada tabel checklist_completions)
+        completions = await self.db.fetch_all("""
+            SELECT requirement_id, requirement_type, completed_at, completed_by, evidence_id
+            FROM checklist_completions
+            WHERE contract_id = $1
+        """, contract_id)
+        
+        completion_map = {
+            (c['requirement_id'], c['requirement_type']): c
+            for c in completions
+        }
+        
+        # Bangun response
+        result = []
+        for req in all_requirements:
+            completion = completion_map.get((req['id'], req['source_type']))
+            
+            result.append({
+                "id": req['id'],
+                "code": req['code'],
+                "title": req['title'],
+                "category": req['category'],
+                "timing": req['timing'],
+                "responsible_role": req['responsible_role'],
+                "source_type": req['source_type'],
+                "legal_basis": req.get('legal_basis'),
+                "source_reference": req.get('source_reference'),
+                "required_evidence": req.get('required_evidence', []),
+                "completed": completion is not None,
+                "completed_at": completion['completed_at'] if completion else None,
+                "completed_by": completion['completed_by'] if completion else None,
+                "evidence_id": completion['evidence_id'] if completion else None
+            })
+        
+        # Sort by timing, then priority
+        timing_order = {
+            'BEFORE_SIGNING': 1,
+            'BEFORE_MOBILIZATION': 2,
+            'DURING_EXECUTION': 3,
+            'BEFORE_PHO': 4,
+            'BEFORE_FHO': 5,
+            'DURING_DLP': 6
+        }
+        
+        result.sort(key=lambda x: (
+            timing_order.get(x['timing'], 99),
+            x.get('priority', 100)
+        ))
+        
+        return result
+    
+    def _validate_requirement_fields(self, req: CustomRequirement):
+        """Validasi field wajib"""
+        if not req.code or not req.title:
+            raise ValidationError("Code dan title wajib diisi")
+        
+        if req.timing not in ['BEFORE_SIGNING', 'BEFORE_MOBILIZATION', 
+                               'DURING_EXECUTION', 'BEFORE_PHO', 
+                               'BEFORE_FHO', 'DURING_DLP']:
+            raise ValidationError(f"Timing tidak valid: {req.timing}")
+        
+        if req.responsible_role not in ['OWNER', 'CONTRACTOR', 'MK', 'JOINT']:
+            raise ValidationError(f"Responsible role tidak valid: {req.responsible_role}")
+        
+        if req.source_type not in ['CONTRACT_CLAUSE', 'OWNER_REQUIREMENT', 
+                                    'BEST_PRACTICE', 'OTHER']:
+            raise ValidationError(f"Source type tidak valid: {req.source_type}")
+```
+
+### 1.4 Test Plan
+
+```python
+# tests/checklist/test_task_25.py
+
+class TestTask25ConfigurableChecklist:
+    
+    async def test_admin_can_add_custom_requirement(self):
+        """Admin kontrak bisa menambah persyaratan custom"""
+        contract = await create_contract()
+        admin = await create_user(role="CONTRACT_ADMIN")
+        
+        req = CustomRequirement(
+            code="CUST-001",
+            title="Laporan BIM Mingguan",
+            category="EXECUTION",
+            source_type="OWNER_REQUIREMENT",
+            source_reference="Surat Owner No. 45/2026",
+            timing="DURING_EXECUTION",
+            responsible_role="CONTRACTOR"
+        )
+        
+        result = await service.add_custom_requirement(contract.id, req, admin.id)
+        
+        assert result['code'] == "CUST-001"
+        assert result['title'] == "Laporan BIM Mingguan"
+    
+    async def test_cannot_override_protected_requirement(self):
+        """Tidak bisa menambah persyaratan dengan code yang dilindungi"""
+        contract = await create_contract()
+        admin = await create_user(role="CONTRACT_ADMIN")
+        
+        req = CustomRequirement(
+            code="REG-001",  # Ini protected (Jaminan Pelaksanaan)
+            title="Jaminan Pelaksanaan Custom",
+            ...
+        )
+        
+        with pytest.raises(ValidationError) as exc:
+            await service.add_custom_requirement(contract.id, req, admin.id)
+        
+        assert "persyaratan regulasi yang dilindungi" in str(exc.value)
+    
+    async def test_cannot_delete_base_requirement(self):
+        """Persyaratan base tidak bisa dihapus"""
+        contract = await create_contract()
+        admin = await create_user(role="CONTRACT_ADMIN")
+        
+        base_req = await get_base_requirement("REG-001")
+        
+        with pytest.raises(ValidationError):
+            await service.deactivate_custom_requirement(
+                contract.id, base_req.id, admin.id, "test"
+            )
+    
+    async def test_checklist_shows_both_base_and_custom(self):
+        """Checklist menampilkan persyaratan base + custom"""
+        contract = await create_contract()
+        admin = await create_user(role="CONTRACT_ADMIN")
+        
+        # Tambah custom
+        await service.add_custom_requirement(contract.id, CustomRequirement(
+            code="CUST-001", title="Laporan BIM", ...
+        ), admin.id)
+        
+        # Ambil checklist
+        checklist = await service.get_checklist_status(contract.id, admin.id)
+        
+        # Harus ada base + custom
+        base_items = [c for c in checklist if c['source_type'] == 'BASE']
+        custom_items = [c for c in checklist if c['source_type'] == 'CUSTOM']
+        
+        assert len(base_items) >= 4  # Minimal 4 persyaratan regulasi
+        assert len(custom_items) == 1
+        assert custom_items[0]['code'] == "CUST-001"
+    
+    async def test_custom_requirement_isolated_per_contract(self):
+        """Persyaratan custom terisolasi per kontrak"""
+        contract_a = await create_contract()
+        contract_b = await create_contract()
+        admin = await create_user(role="CONTRACT_ADMIN")
+        
+        # Tambah custom ke contract A
+        await service.add_custom_requirement(contract_a.id, CustomRequirement(
+            code="CUST-001", title="Laporan BIM", ...
+        ), admin.id)
+        
+        # Check contract B — tidak boleh ada CUST-001
+        checklist_b = await service.get_checklist_status(contract_b.id, admin.id)
+        custom_b = [c for c in checklist_b if c['source_type'] == 'CUSTOM']
+        
+        assert len(custom_b) == 0
+    
+    async def test_audit_log_on_checklist_changes(self):
+        """Setiap perubahan checklist tercatat di audit log"""
+        contract = await create_contract()
+        admin = await create_user(role="CONTRACT_ADMIN")
+        
+        await service.add_custom_requirement(contract.id, CustomRequirement(
+            code="CUST-001", title="Laporan BIM", ...
+        ), admin.id)
+        
+        logs = await audit.get_logs(resource_id=contract.id, action="checklist_custom_added")
+        
+        assert len(logs) == 1
+        assert logs[0].metadata['added_by'] == admin.id
+        assert logs[0].metadata['requirement_code'] == "CUST-001"
+```
+
+### 1.5 Catatan Hukum
+
+**Penting:** Persyaratan base yang dilindungi (PROTECTED_REQUIREMENTS) harus **divalidasi oleh penasihat hukum Indonesia** sebelum di-deploy. Daftar di atas adalah hipotesis berdasarkan regulasi umum, tetapi bisa berubah tergantung interpretasi hukum dan jenis kontrak.
+
+**Prinsip:**
+- Persyaratan regulasi = **lapis bawah yang tidak bisa diutak-atik**
+- Persyaratan kontrak = **lapis atas yang fleksibel**
+- Pengelola bisa menambah, mengedit, menonaktifkan lapis atas
+- Pengelola **tidak bisa** menghapus atau mengubah lapis bawah
+
+---
+
+## BAGIAN 2: TASK #26 — DISCLAIMER RESPONSIF DI MOBILE
+
+### 2.1 Mengapa Ini Penting
+
+Di Indonesia, disclaimer hukum di aplikasi konstruksi bukan hanya formalitas. Jika terjadi sengketa dan pengguna mengklaim "tidak melihat disclaimer", pengadilan bisa mempertanyakan:
+- Apakah disclaimer **benar-benar ditampilkan**?
+- Apakah **terbaca** di perangkat yang umum digunakan?
+- Apakah **tidak disembunyikan** di balik elemen lain?
+
+Task #26 memastikan disclaimer tidak hanya "ada di HTML" tapi **benar-benar terlihat** di viewport kecil.
+
+### 2.2 Test Matrix — Viewport dan Kondisi
+
+```python
+# tests/visual/test_task_26_disclaimer_responsive.py
+
+import pytest
+from playwright.async_api import async_playwright
+
+class TestTask26DisclaimerResponsive:
+    """
+    Memastikan disclaimer terlihat dan terbaca di berbagai viewport.
+    """
+    
+    # Viewport matrix — mencakup perangkat umum di Indonesia
+    VIEWPORTS = [
+        # Mobile kecil (HP entry-level)
+        {"name": "mobile_small", "width": 320, "height": 568, "device": "iPhone SE"},
+        
+        # Mobile standar
+        {"name": "mobile_standard", "width": 375, "height": 667, "device": "iPhone 8"},
+        
+        # Mobile besar
+        {"name": "mobile_large", "width": 414, "height": 896, "device": "iPhone 11"},
+        
+        # Android umum
+        {"name": "android_common", "width": 360, "height": 640, "device": "Galaxy S8"},
+        
+        # Tablet kecil
+        {"name": "tablet_small", "width": 768, "height": 1024, "device": "iPad Mini"},
+        
+        # Desktop kecil
+        {"name": "desktop_small", "width": 1024, "height": 768, "device": "Laptop 13\""},
+        
+        # Desktop standar
+        {"name": "desktop_standard", "width": 1366, "height": 768, "device": "Laptop 15\""},
+    ]
+    
+    @pytest.mark.parametrize("viewport", VIEWPORTS, ids=[v["name"] for v in VIEWPORTS])
+    async def test_disclaimer_visible_on_viewport(self, viewport):
+        """Disclaimer terlihat di viewport tertentu"""
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            context = await browser.new_context(
+                viewport={"width": viewport["width"], "height": viewport["height"]},
+                device_scale_factor=2  # Retina display
+            )
+            page = await context.new_page()
+            
+            # Navigate ke landing page
+            await page.goto("http://localhost:3000/")
+            
+            # Cari disclaimer
+            disclaimer = page.locator('[data-testid="legal-disclaimer"]')
+            
+            # 1. Disclaimer harus ada
+            assert await disclaimer.count() > 0, "Disclaimer tidak ditemukan"
+            
+            # 2. Disclaimer harus visible (tidak hidden oleh CSS)
+            assert await disclaimer.is_visible(), "Disclaimer tidak terlihat"
+            
+            # 3. Disclaimer harus dalam viewport (tidak perlu scroll untuk melihat)
+            # Atau jika perlu scroll, harus jelas ada indikator
+            bounding_box = await disclaimer.bounding_box()
+            viewport_height = viewport["height"]
+            
+            # Disclaimer harus mulai di atas 80% viewport
+            # (artinya user tidak perlu scroll jauh)
+            assert bounding_box["y"] < viewport_height * 0.8, \
+                f"Disclaimer terlalu jauh di bawah (y={bounding_box['y']})"
+            
+            # 4. Disclaimer tidak terpotong
+            assert bounding_box["y"] + bounding_box["height"] <= viewport_height + 100, \
+                "Disclaimer terpotong di bawah (toleransi 100px untuk scroll)"
+            
+            await browser.close()
+    
+    @pytest.mark.parametrize("viewport", VIEWPORTS, ids=[v["name"] for v in VIEWPORTS])
+    async def test_disclaimer_not_obscured(self, viewport):
+        """Disclaimer tidak tertutup elemen lain"""
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            context = await browser.new_context(
+                viewport={"width": viewport["width"], "height": viewport["height"]}
+            )
+            page = await context.new_page()
+            
+            await page.goto("http://localhost:3000/")
+            
+            disclaimer = page.locator('[data-testid="legal-disclaimer"]')
+            
+            # Ambil posisi disclaimer
+            box = await disclaimer.bounding_box()
+            center_x = box["x"] + box["width"] / 2
+            center_y = box["y"] + box["height"] / 2
+            
+            # Check elemen apa yang ada di posisi disclaimer
+            element_at_position = await page.evaluate("""
+                (x, y) => {
+                    const el = document.elementFromPoint(x, y);
+                    return el ? el.outerHTML : null;
+                }
+            """, center_x, center_y)
+            
+            # Elemen di posisi disclaimer harus disclaimer itu sendiri
+            # atau anak dari disclaimer
+            assert "legal-disclaimer" in element_at_position or \
+                   await disclaimer.evaluate("el => el.contains(document.elementFromPoint(...))"), \
+                f"Disclaimer tertutup elemen lain di viewport {viewport['name']}"
+            
+            await browser.close()
+    
+    @pytest.mark.parametrize("viewport", VIEWPORTS, ids=[v["name"] for v in VIEWPORTS])
+    async def test_disclaimer_text_readable(self, viewport):
+        """Teks disclaimer terbaca (font size minimal)"""
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            context = await browser.new_context(
+                viewport={"width": viewport["width"], "height": viewport["height"]}
+            )
+            page = await context.new_page()
+            
+            await page.goto("http://localhost:3000/")
+            
+            disclaimer = page.locator('[data-testid="legal-disclaimer"]')
+            
+            # Ambil computed style
+            font_size = await disclaimer.evaluate("""
+                el => window.getComputedStyle(el).fontSize
+            """)
+            
+            # Parse font size (dalam px)
+            font_size_px = float(font_size.replace("px", ""))
+            
+            # Font size minimal 12px untuk mobile (WCAG)
+            min_font_size = 12 if viewport["width"] < 768 else 14
+            
+            assert font_size_px >= min_font_size, \
+                f"Font size terlalu kecil: {font_size_px}px (min: {min_font_size}px)"
+            
+            # Check line height (untuk readability)
+            line_height = await disclaimer.evaluate("""
+                el => window.getComputedStyle(el).lineHeight
+            """)
+            
+            # Line height minimal 1.4x font size
+            if "px" in line_height:
+                line_height_px = float(line_height.replace("px", ""))
+                assert line_height_px >= font_size_px * 1.4, \
+                    f"Line height terlalu rapat: {line_height_px}px"
+            
+            await browser.close()
+    
+    @pytest.mark.parametrize("viewport", VIEWPORTS, ids=[v["name"] for v in VIEWPORTS])
+    async def test_disclaimer_contrast_ratio(self, viewport):
+        """Disclaimer punya contrast ratio yang cukup (WCAG AA)"""
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            context = await browser.new_context(
+                viewport={"width": viewport["width"], "height": viewport["height"]}
+            )
+            page = await context.new_page()
+            
+            await page.goto("http://localhost:3000/")
+            
+            disclaimer = page.locator('[data-testid="legal-disclaimer"]')
+            
+            # Ambil warna teks dan background
+            colors = await disclaimer.evaluate("""
+                el => {
+                    const style = window.getComputedStyle(el);
+                    return {
+                        color: style.color,
+                        backgroundColor: style.backgroundColor
+                    };
+                }
+            """)
+            
+            # Hitung contrast ratio (simplified)
+            # Untuk test lengkap, gunakan library seperti wcag-contrast
+            contrast_ratio = await calculate_contrast_ratio(
+                colors["color"], 
+                colors["backgroundColor"]
+            )
+            
+            # WCAG AA: minimal 4.5:1 untuk teks normal
+            assert contrast_ratio >= 4.5, \
+                f"Contrast ratio terlalu rendah: {contrast_ratio}:1 (min: 4.5:1)"
+            
+            await browser.close()
+    
+    async def test_disclaimer_persists_after_scroll(self):
+        """Disclaimer tetap terlihat setelah scroll"""
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            page = await browser.new_page(viewport={"width": 375, "height": 667})
+            
+            await page.goto("http://localhost:3000/")
+            
+            # Scroll ke bawah
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            
+            # Check disclaimer masih ada
+            disclaimer = page.locator('[data-testid="legal-disclaimer"]')
+            
+            # Disclaimer bisa sticky di bawah atau tetap di atas
+            # Yang penting: tetap terlihat atau bisa diakses
+            is_visible = await disclaimer.is_visible()
+            is_in_dom = await disclaimer.count() > 0
+            
+            assert is_visible or is_in_dom, \
+                "Disclaimer hilang setelah scroll"
+            
+            await browser.close()
+```
+
+### 2.3 Visual Regression Testing
+
+```python
+# tests/visual/test_disclaimer_screenshots.py
+
+async def test_disclaimer_screenshot_comparison():
+    """Bandingkan screenshot disclaimer dengan baseline"""
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        
+        # Ambil screenshot di mobile
+        mobile_page = await browser.new_page(viewport={"width": 375, "height": 667})
+        await mobile_page.goto("http://localhost:3000/")
+        mobile_screenshot = await mobile_page.locator('[data-testid="legal-disclaimer"]').screenshot()
+        
+        # Ambil screenshot di desktop
+        desktop_page = await browser.new_page(viewport={"width": 1366, "height": 768})
+        await desktop_page.goto("http://localhost:3000/")
+        desktop_screenshot = await desktop_page.locator('[data-testid="legal-disclaimer"]').screenshot()
+        
+        # Bandingkan dengan baseline (gunakan pixelmatch atau similar)
+        mobile_diff = await compare_with_baseline(mobile_screenshot, "disclaimer_mobile_baseline.png")
+        desktop_diff = await compare_with_baseline(desktop_screenshot, "disclaimer_desktop_baseline.png")
+        
+        # Diff harus < 1% (toleransi untuk anti-aliasing)
+        assert mobile_diff < 0.01, f"Mobile disclaimer berubah signifikan: {mobile_diff*100}%"
+        assert desktop_diff < 0.01, f"Desktop disclaimer berubah signifikan: {desktop_diff*100}%"
+        
+        await browser.close()
+```
+
+### 2.4 CSS yang Direkomendasikan
+
+```css
+/* Disclaimer harus terlihat di semua viewport */
+.legal-disclaimer {
+    /* Posisi */
+    position: relative;
+    z-index: 10;  /* Di atas konten biasa, tapi di bawah modal */
+    
+    /* Ukuran */
+    padding: 1rem;
+    margin: 1rem 0;
+    
+    /* Tipografi */
+    font-size: 0.875rem;  /* 14px di desktop */
+    line-height: 1.5;
+    color: var(--text-secondary);
+    
+    /* Visual */
+    background-color: var(--bg-warning);
+    border-left: 4px solid var(--border-warning);
+    border-radius: 4px;
+    
+    /* Pastikan tidak tertutup */
+    pointer-events: auto;
+    opacity: 1;
+}
+
+/* Mobile: font lebih kecil tapi tetap terbaca */
+@media (max-width: 768px) {
+    .legal-disclaimer {
+        font-size: 0.75rem;  /* 12px di mobile */
+        padding: 0.75rem;
+        margin: 0.75rem 0.5rem;
+    }
+}
+
+/* Very small mobile: pastikan tetap terbaca */
+@media (max-width: 375px) {
+    .legal-disclaimer {
+        font-size: 0.75rem;  /* Tetap 12px, jangan lebih kecil */
+        line-height: 1.6;  /* Line height lebih longgar */
+    }
+}
+
+/* Pastikan tidak tertutup fixed navigation */
+.legal-disclaimer {
+    /* Jika ada fixed bottom nav, beri padding */
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Dark mode: pastikan contrast tetap baik */
+@media (prefers-color-scheme: dark) {
+    .legal-disclaimer {
+        background-color: var(--bg-warning-dark);
+        color: var(--text-secondary-dark);
+        /* Verifikasi contrast ratio di dark mode */
+    }
+}
+```
+
+### 2.5 Catatan Implementasi
+
+**Penting:**
+1. **Test harus berjalan di CI** — setiap PR harus lolos test responsif
+2. **Screenshot baseline harus di-commit** — untuk visual regression
+3. **Viewport matrix harus di-review berkala** — tambah perangkat baru jika perlu
+4. **Accessibility (a11y) harus dicek** — bukan hanya visual, tapi juga screen reader
+
+**Disclaimer harus:**
+- ✅ Terlihat tanpa scroll (atau scroll minimal)
+- ✅ Font size minimal 12px di mobile
+- ✅ Contrast ratio minimal 4.5:1 (WCAG AA)
+- ✅ Tidak tertutup elemen lain
+- ✅ Tetap ada setelah scroll
+- ✅ Konsisten di dark mode
+
+---
+
+## BAGIAN 3: IMPLIKASI HUKUM & COMPLIANCE
+
+### 3.1 Task #25 — Checklist Konfigurasi
+
+**Risiko hukum:**
+- Jika pengelola menghapus persyaratan regulasi → kontrak bisa batal demi hukum
+- Jika pengelola menambah persyaratan yang bertentangan dengan regulasi → klausul bisa dibatalkan pengadilan
+
+**Mitigasi:**
+- Persyaratan regulasi **dilindungi** (tidak bisa dihapus/diubah)
+- Persyaratan custom **divalidasi** (tidak boleh bentrok dengan regulasi)
+- Setiap perubahan **diaudit** (audit trail lengkap)
+- **Disclaimer** di UI: "Persyaratan ini adalah tambahan dari kontrak. Persyaratan regulasi tetap berlaku."
+
+### 3.2 Task #26 — Disclaimer Responsif
+
+**Risiko hukum:**
+- Jika disclaimer tidak terlihat → pengguna bisa klaim "tidak tahu"
+- Jika disclaimer terpotong → bisa dianggap "disembunyikan"
+
+**Mitigasi:**
+- Test visual di berbagai viewport
+- Screenshot baseline untuk regression
+- Contrast ratio WCAG AA
+- Font size minimal 12px di mobile
+- Audit trail: "User X melihat disclaimer di viewport Y pada tanggal Z"
+
+---
+
+## BAGIAN 4: URUTAN TASK BERIKUTNYA
+
+Berdasarkan progres Anda:
+
+| Task | Status | Prioritas |
+|---|---|---|
+| #22 Granular RBAC | ✅ Selesai | - |
+| #23 Pengingat notice | ✅ Selesai | - |
+| #25 Checklist konfigurasi | ✅ Selesai | - |
+| #26 Disclaimer responsif | 🔄 Sedang berjalan | Tinggi |
+| #35 Perlindungan jalur non-API | 📋 Pending | Tinggi |
+| Rate limiting risk-based | 📋 Pending | Sedang |
+| Retensi & legal hold | 📋 Pending | Sedang |
+| Enkripsi terbatas | 📋 Pending | Rendah (fase 2) |
+
+**Urutan yang direkomendasikan:**
+1. ✅ Selesaikan **Task #26** — disclaimer responsif
+2. 📋 Lanjut ke **Task #35** — perlindungan jalur non-API
+3. 📋 Rate limiting + deteksi unduhan massal
+4. 📋 Retensi & legal hold (divalidasi penasihat)
+5. 📋 Evaluasi enkripsi terbatas
+
+---
+
+## RINGKASAN
+
+### Task #25 — Checklist Konfigurasi
+
+✅ **Blueprint matang:**
+- Dua lapis: base (regulasi, dilindungi) + custom (kontrak, fleksibel)
+- Service layer dengan validasi dan proteksi
+- Audit trail untuk setiap perubahan
+- Test plan komprehensif
+
+⚠️ **Catatan:**
+- Daftar PROTECTED_REQUIREMENTS perlu validasi penasihat hukum
+- Tidak over-promise: sistem tidak menjamin kepatuhan hukum, hanya membantu mengelola
+
+### Task #26 — Disclaimer Responsif
+
+✅ **Blueprint pengujian visual:**
+- Viewport matrix (7 perangkat umum di Indonesia)
+- Test: visibility, not obscured, readable, contrast ratio, persists after scroll
+- Visual regression testing dengan screenshot baseline
+- CSS yang direkomendasikan
+
+⚠️ **Catatan:**
+- Test harus jalan di CI
+- Accessibility (a11y) juga harus dicek
+- Disclaimer bukan jaminan hukum, tapi mitigasi risiko
+
+Apakah ada aspek spesifik yang ingin Anda dalami lebih lanjut? Misalnya:
+1. **Detail UI untuk checklist editor** — bagaimana pengelola menambah/mengedit persyaratan?
+2. **Blueprint validasi persyaratan custom** — bagaimana memastikan tidak bertentangan dengan regulasi?
+3. **Test plan accessibility (a11y)** — screen reader, keyboard navigation?
+4. **Integrasi checklist dengan workflow** — bagaimana checklist memicu notifikasi atau approval?
