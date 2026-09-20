@@ -571,6 +571,10 @@ export interface ReferenceImport {
   replacesDocumentId?: number | null;
   /** @nullable */
   replacedByDocumentId?: number | null;
+  /** @minimum 0 */
+  attempts: number;
+  /** @minimum 1 */
+  maxAttempts: number;
 }
 
 export interface ReferenceSearchHit {

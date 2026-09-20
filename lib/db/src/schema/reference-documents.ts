@@ -1,4 +1,4 @@
-import { bigint, integer, pgEnum, pgTable, serial, text, timestamp, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { bigint, integer, pgEnum, pgTable, serial, text, timestamp, uniqueIndex, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { appUsersTable, organizationsTable } from "./organizations";
@@ -6,6 +6,13 @@ import { appUsersTable, organizationsTable } from "./organizations";
 export const referenceProcessingStatus = pgEnum("reference_processing_status", [
   "processing",
   "ready",
+  "failed",
+]);
+
+export const referenceExtractionJobStatus = pgEnum("reference_extraction_job_status", [
+  "pending",
+  "processing",
+  "completed",
   "failed",
 ]);
 
@@ -46,6 +53,31 @@ export const referenceUploadsTable = pgTable("reference_uploads", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const referenceExtractionJobsTable = pgTable("reference_extraction_jobs", {
+  id: serial("id").primaryKey(),
+  documentId: integer("document_id")
+    .notNull()
+    .references(() => referenceDocumentsTable.id, { onDelete: "cascade" }),
+  organizationId: integer("organization_id")
+    .notNull()
+    .references(() => organizationsTable.id, { onDelete: "cascade" }),
+  objectPath: text("object_path").notNull(),
+  sourceFilename: text("source_filename").notNull(),
+  expectedSize: bigint("expected_size", { mode: "number" }).notNull(),
+  status: referenceExtractionJobStatus("status").notNull().default("pending"),
+  attempts: integer("attempts").notNull().default(0),
+  maxAttempts: integer("max_attempts").notNull().default(3),
+  availableAt: timestamp("available_at", { withTimezone: true }).notNull().defaultNow(),
+  lockedAt: timestamp("locked_at", { withTimezone: true }),
+  lockToken: text("lock_token"),
+  lastError: text("last_error"),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+}, (table) => [
+  uniqueIndex("reference_extraction_jobs_document_id_unique").on(table.documentId),
+]);
+
 export const referenceSectionsTable = pgTable("reference_sections", {
   id: serial("id").primaryKey(),
   documentId: integer("document_id")
@@ -66,5 +98,6 @@ export const insertReferenceSectionSchema = createInsertSchema(referenceSections
 
 export type ReferenceDocument = typeof referenceDocumentsTable.$inferSelect;
 export type ReferenceSection = typeof referenceSectionsTable.$inferSelect;
+export type ReferenceExtractionJob = typeof referenceExtractionJobsTable.$inferSelect;
 export type InsertReferenceDocument = z.infer<typeof insertReferenceDocumentSchema>;
 export type InsertReferenceSection = z.infer<typeof insertReferenceSectionSchema>;

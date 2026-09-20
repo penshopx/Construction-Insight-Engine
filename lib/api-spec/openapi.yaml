@@ -1207,7 +1207,7 @@ components:
           minimum: 1
     ReferenceImport:
       type: object
-      required: [id, title, category, fileType, sourceFilename, status, createdAt]
+      required: [id, title, category, fileType, sourceFilename, status, createdAt, attempts, maxAttempts]
       properties:
         id:
           type: number
@@ -1238,6 +1238,12 @@ components:
           type: ["number", "null"]
         replacedByDocumentId:
           type: ["number", "null"]
+        attempts:
+          type: number
+          minimum: 0
+        maxAttempts:
+          type: number
+          minimum: 1
     ReferenceSearchHit:
       type: object
       required: [id, documentId, title, category, fileType, sourceFilename, sourceChecksum, sectionNumber, heading, excerpt, topics]

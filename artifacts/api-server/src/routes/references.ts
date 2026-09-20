@@ -13,10 +13,20 @@ import {
   SearchReferencesQueryParams,
   SearchReferencesResponse,
 } from "@workspace/api-zod";
-import { db, referenceDocumentsTable, referenceSectionsTable, referenceUploadsTable } from "@workspace/db";
+import {
+  db,
+  referenceDocumentsTable,
+  referenceExtractionJobsTable,
+  referenceSectionsTable,
+  referenceUploadsTable,
+} from "@workspace/db";
 import referenceIndex from "../lib/reference-index.json" with { type: "json" };
-import { extractReference, metadataFor } from "../lib/reference-extraction";
-import { createReferenceUploadTarget, downloadReferenceObject } from "../lib/reference-storage";
+import { metadataFor } from "../lib/reference-extraction";
+import {
+  failReferenceImport,
+  finalizeReferenceImport,
+} from "../lib/reference-extraction-worker";
+import { createReferenceUploadTarget } from "../lib/reference-storage";
 import { provisionWorkspaceForUser, requireWorkspace } from "../lib/workspace";
 
 type IndexedSection = { id: string; sectionNumber: number; heading: string; content: string; topics: string[] };
@@ -70,6 +80,7 @@ function importPayload(
   row: typeof referenceDocumentsTable.$inferSelect,
   sectionCount?: number,
   replacedByDocumentId?: number | null,
+  job?: typeof referenceExtractionJobsTable.$inferSelect,
 ) {
   return {
     id: row.id, title: row.title, category: row.category, fileType: row.fileType,
@@ -77,73 +88,11 @@ function importPayload(
     sectionCount, createdAt: row.createdAt, processedAt: row.processedAt,
     archivedAt: row.archivedAt, replacesDocumentId: row.replacesDocumentId,
     replacedByDocumentId: replacedByDocumentId ?? null,
+    attempts: job?.attempts ?? 0, maxAttempts: job?.maxAttempts ?? 3,
   };
 }
 
-type ExtractedReference = Awaited<ReturnType<typeof extractReference>>;
-
-export async function finalizeReferenceImport(
-  documentId: number,
-  organizationId: number,
-  extracted: ExtractedReference,
-) {
-  await db.transaction(async (tx) => {
-    const [duplicate] = await tx.select({ id: referenceDocumentsTable.id }).from(referenceDocumentsTable)
-      .where(and(
-        eq(referenceDocumentsTable.organizationId, organizationId),
-        eq(referenceDocumentsTable.sourceChecksum, extracted.checksum),
-        eq(referenceDocumentsTable.processingStatus, "ready"),
-      ))
-      .limit(1);
-    if (duplicate && duplicate.id !== documentId) throw new Error("Dokumen dengan isi yang sama sudah ada di katalog");
-    await tx.insert(referenceSectionsTable).values(extracted.sections.map((section) => ({ documentId, ...section })));
-    await tx.update(referenceDocumentsTable).set({
-      sourceChecksum: extracted.checksum, processingStatus: "ready", processingError: null, processedAt: new Date(),
-    }).where(and(
-      eq(referenceDocumentsTable.id, documentId),
-      eq(referenceDocumentsTable.organizationId, organizationId),
-    ));
-    const [replacement] = await tx.select({ replacesDocumentId: referenceDocumentsTable.replacesDocumentId })
-      .from(referenceDocumentsTable).where(and(
-        eq(referenceDocumentsTable.id, documentId),
-        eq(referenceDocumentsTable.organizationId, organizationId),
-      )).limit(1);
-    if (replacement?.replacesDocumentId) {
-      await tx.update(referenceDocumentsTable).set({ archivedAt: new Date() }).where(and(
-        eq(referenceDocumentsTable.id, replacement.replacesDocumentId),
-        eq(referenceDocumentsTable.organizationId, organizationId),
-        isNull(referenceDocumentsTable.archivedAt),
-      ));
-    }
-  });
-}
-
-export async function failReferenceImport(documentId: number, organizationId: number, message: string) {
-  await db.update(referenceDocumentsTable).set({
-    processingStatus: "failed", processingError: message.slice(0, 500), processedAt: new Date(),
-  }).where(and(
-    eq(referenceDocumentsTable.id, documentId),
-    eq(referenceDocumentsTable.organizationId, organizationId),
-  ));
-}
-
-async function processImport(
-  documentId: number,
-  organizationId: number,
-  objectPath: string,
-  sourceFilename: string,
-  expectedSize: number,
-) {
-  try {
-    const buffer = await downloadReferenceObject(objectPath, 20 * 1024 * 1024);
-    if (buffer.byteLength !== expectedSize) throw new Error("Ukuran berkas tidak cocok dengan metadata unggahan");
-    const extracted = await extractReference(buffer, sourceFilename);
-    await finalizeReferenceImport(documentId, organizationId, extracted);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Ekstraksi gagal";
-    await failReferenceImport(documentId, organizationId, message);
-  }
-}
+export { failReferenceImport, finalizeReferenceImport };
 
 router.get("/references", async (req, res): Promise<void> => {
   const clerkUserId = getAuth(req)?.userId;
@@ -213,11 +162,19 @@ router.get("/references/imports", async (req, res): Promise<void> => {
     .orderBy(desc(referenceDocumentsTable.createdAt));
   const counts = rows.length ? await db.select({ documentId: referenceSectionsTable.documentId }).from(referenceSectionsTable)
     .where(inArray(referenceSectionsTable.documentId, rows.map((row) => row.id))) : [];
+  const jobs = rows.length ? await db.select().from(referenceExtractionJobsTable)
+    .where(inArray(referenceExtractionJobsTable.documentId, rows.map((row) => row.id))) : [];
+  const jobsByDocument = new Map(jobs.map((job) => [job.documentId, job]));
   const replacedBy = new Map(rows.flatMap((row) =>
     row.replacesDocumentId ? [[row.replacesDocumentId, row.id] as const] : [],
   ));
   res.json(ListReferenceImportsResponse.parse(rows.map((row) =>
-    importPayload(row, counts.filter((entry) => entry.documentId === row.id).length, replacedBy.get(row.id)),
+    importPayload(
+      row,
+      counts.filter((entry) => entry.documentId === row.id).length,
+      replacedBy.get(row.id),
+      jobsByDocument.get(row.id),
+    ),
   )));
 });
 
@@ -235,7 +192,7 @@ router.post("/references/imports", async (req, res): Promise<void> => {
   }
   try {
     const metadata = metadataFor(body.data.sourceFilename, body.data.title, body.data.category);
-    const { row, upload } = await db.transaction(async (tx) => {
+    const { row } = await db.transaction(async (tx) => {
       if (body.data.replacesDocumentId) {
         const [existing] = await tx.select({ id: referenceDocumentsTable.id }).from(referenceDocumentsTable)
           .where(and(
@@ -262,11 +219,15 @@ router.post("/references/imports", async (req, res): Promise<void> => {
         objectPath: body.data.objectPath, processingStatus: "processing",
         replacesDocumentId: body.data.replacesDocumentId,
       }).returning();
-      return { row, upload };
+      await tx.insert(referenceExtractionJobsTable).values({
+        documentId: row.id,
+        organizationId: workspace.organizationId,
+        objectPath: body.data.objectPath,
+        sourceFilename: body.data.sourceFilename,
+        expectedSize: upload.expectedSize,
+      });
+      return { row };
     });
-    setImmediate(() => void processImport(
-      row.id, workspace.organizationId, body.data.objectPath, body.data.sourceFilename, upload.expectedSize,
-    ));
     res.status(202).json(CreateReferenceImportResponse.parse(importPayload(row, 0)));
   } catch (error) {
     res.status(400).json({ error: error instanceof Error ? error.message : "Impor tidak dapat dimulai" });

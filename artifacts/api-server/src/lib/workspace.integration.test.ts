@@ -7,12 +7,14 @@ import {
   organizationMembershipsTable,
   organizationsTable,
   referenceDocumentsTable,
+  referenceExtractionJobsTable,
   referenceSectionsTable,
   workItemsTable,
 } from "@workspace/db";
 import { acceptWorkspaceInvitation, provisionWorkspaceForUser } from "./workspace";
 import { dynamicDocuments, failReferenceImport, finalizeReferenceImport } from "../routes/references";
 import { downloadReferenceObject } from "./reference-storage";
+import { claimReferenceExtractionJob } from "./reference-extraction-worker";
 
 const workItemIds: number[] = [];
 const organizationIds: number[] = [];
@@ -220,6 +222,111 @@ describe("organization workspace invariants", () => {
     expect(originalAfterFailure.archivedAt).toBeInstanceOf(Date);
     expect((await dynamicDocuments(workspace.organizationId)).map((document) => document.title))
       .toEqual(["Referensi pengganti"]);
+  });
+
+  it("claims extraction jobs once and recovers an expired lease after restart", async () => {
+    const workspace = await provisionWorkspaceForUser(uniqueId("reference_job"));
+    organizationIds.push(workspace.organizationId);
+    userIds.push(workspace.userId);
+    const [document] = await db.insert(referenceDocumentsTable).values({
+      organizationId: workspace.organizationId,
+      slug: uniqueId("queued_reference"),
+      title: "Referensi antrean",
+      category: "Dasar & Prinsip",
+      sourceFilename: "antrean.pdf",
+      sourceChecksum: "pending",
+      fileType: "PDF",
+      processingStatus: "processing",
+    }).returning();
+    const [job] = await db.insert(referenceExtractionJobsTable).values({
+      documentId: document.id,
+      organizationId: workspace.organizationId,
+      objectPath: `/objects/uploads/org-${workspace.organizationId}-${crypto.randomUUID()}`,
+      sourceFilename: "antrean.pdf",
+      expectedSize: 123,
+    }).returning();
+
+    const firstClaim = await claimReferenceExtractionJob();
+    expect(firstClaim?.id).toBe(job.id);
+    expect(firstClaim?.attempts).toBe(1);
+    expect(await claimReferenceExtractionJob()).toBeNull();
+
+    await db.update(referenceExtractionJobsTable).set({
+      lockedAt: new Date(Date.now() - 10 * 60_000),
+    }).where(eq(referenceExtractionJobsTable.id, job.id));
+    const recoveredClaim = await claimReferenceExtractionJob();
+    expect(recoveredClaim?.id).toBe(job.id);
+    expect(recoveredClaim?.attempts).toBe(2);
+    expect(recoveredClaim?.lockToken).not.toBe(firstClaim?.lockToken);
+  });
+
+  it("marks an interrupted final attempt as failed instead of exceeding the retry limit", async () => {
+    const workspace = await provisionWorkspaceForUser(uniqueId("reference_exhausted_job"));
+    organizationIds.push(workspace.organizationId);
+    userIds.push(workspace.userId);
+    const [document] = await db.insert(referenceDocumentsTable).values({
+      organizationId: workspace.organizationId,
+      slug: uniqueId("exhausted_reference"),
+      title: "Referensi gagal akhir",
+      category: "Dasar & Prinsip",
+      sourceFilename: "gagal.pdf",
+      sourceChecksum: "pending",
+      fileType: "PDF",
+      processingStatus: "processing",
+    }).returning();
+    const [job] = await db.insert(referenceExtractionJobsTable).values({
+      documentId: document.id,
+      organizationId: workspace.organizationId,
+      objectPath: `/objects/uploads/org-${workspace.organizationId}-${crypto.randomUUID()}`,
+      sourceFilename: "gagal.pdf",
+      expectedSize: 123,
+      status: "processing",
+      attempts: 3,
+      maxAttempts: 3,
+      lockedAt: new Date(Date.now() - 10 * 60_000),
+      lockToken: crypto.randomUUID(),
+    }).returning();
+
+    expect(await claimReferenceExtractionJob()).toBeNull();
+    const [failedJob] = await db.select().from(referenceExtractionJobsTable)
+      .where(eq(referenceExtractionJobsTable.id, job.id));
+    const [failedDocument] = await db.select().from(referenceDocumentsTable)
+      .where(eq(referenceDocumentsTable.id, document.id));
+    expect(failedJob.status).toBe("failed");
+    expect(failedJob.attempts).toBe(3);
+    expect(failedDocument.processingStatus).toBe("failed");
+    expect(failedDocument.processingError).toContain("Gagal setelah 3 percobaan");
+  });
+
+  it("replaces existing sections when finalization is safely retried", async () => {
+    const workspace = await provisionWorkspaceForUser(uniqueId("reference_finalize_retry"));
+    organizationIds.push(workspace.organizationId);
+    userIds.push(workspace.userId);
+    const [document] = await db.insert(referenceDocumentsTable).values({
+      organizationId: workspace.organizationId,
+      slug: uniqueId("retry_reference"),
+      title: "Referensi retry",
+      category: "Dasar & Prinsip",
+      sourceFilename: "retry.pdf",
+      sourceChecksum: "pending",
+      fileType: "PDF",
+      processingStatus: "processing",
+    }).returning();
+    const extracted = {
+      checksum: uniqueId("retry_checksum"),
+      sections: [{
+        sectionNumber: 1,
+        heading: "Bagian retry",
+        content: "Isi yang harus tetap tunggal meskipun finalisasi dijalankan kembali.",
+        topics: [],
+      }],
+    };
+
+    await finalizeReferenceImport(document.id, workspace.organizationId, extracted);
+    await finalizeReferenceImport(document.id, workspace.organizationId, extracted);
+    const sections = await db.select().from(referenceSectionsTable)
+      .where(eq(referenceSectionsTable.documentId, document.id));
+    expect(sections).toHaveLength(1);
   });
 
   it("stops downloading when actual object bytes exceed the hard limit", async () => {

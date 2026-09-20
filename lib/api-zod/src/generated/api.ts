@@ -477,6 +477,11 @@ export const RequestReferenceUploadUrlResponse = zod.object({
 /**
  * @summary List manager-visible reference processing jobs
  */
+export const listReferenceImportsResponseAttemptsMin = 0;
+
+
+
+
 export const ListReferenceImportsResponseItem = zod.object({
   "id": zod.number(),
   "title": zod.string(),
@@ -490,7 +495,9 @@ export const ListReferenceImportsResponseItem = zod.object({
   "processedAt": zod.coerce.date().nullish(),
   "archivedAt": zod.coerce.date().nullish(),
   "replacesDocumentId": zod.number().nullish(),
-  "replacedByDocumentId": zod.number().nullish()
+  "replacedByDocumentId": zod.number().nullish(),
+  "attempts": zod.number().min(listReferenceImportsResponseAttemptsMin),
+  "maxAttempts": zod.number().min(1)
 })
 export const ListReferenceImportsResponse = zod.array(ListReferenceImportsResponseItem)
 
@@ -515,6 +522,11 @@ export const CreateReferenceImportBody = zod.object({
   "replacesDocumentId": zod.number().min(1).optional()
 })
 
+export const createReferenceImportResponseAttemptsMin = 0;
+
+
+
+
 export const CreateReferenceImportResponse = zod.object({
   "id": zod.number(),
   "title": zod.string(),
@@ -528,7 +540,9 @@ export const CreateReferenceImportResponse = zod.object({
   "processedAt": zod.coerce.date().nullish(),
   "archivedAt": zod.coerce.date().nullish(),
   "replacesDocumentId": zod.number().nullish(),
-  "replacedByDocumentId": zod.number().nullish()
+  "replacedByDocumentId": zod.number().nullish(),
+  "attempts": zod.number().min(createReferenceImportResponseAttemptsMin),
+  "maxAttempts": zod.number().min(1)
 })
 
 
@@ -538,6 +552,11 @@ export const CreateReferenceImportResponse = zod.object({
 export const ArchiveReferenceImportParams = zod.object({
   "id": zod.coerce.number()
 })
+
+export const archiveReferenceImportResponseAttemptsMin = 0;
+
+
+
 
 export const ArchiveReferenceImportResponse = zod.object({
   "id": zod.number(),
@@ -552,7 +571,9 @@ export const ArchiveReferenceImportResponse = zod.object({
   "processedAt": zod.coerce.date().nullish(),
   "archivedAt": zod.coerce.date().nullish(),
   "replacesDocumentId": zod.number().nullish(),
-  "replacedByDocumentId": zod.number().nullish()
+  "replacedByDocumentId": zod.number().nullish(),
+  "attempts": zod.number().min(archiveReferenceImportResponseAttemptsMin),
+  "maxAttempts": zod.number().min(1)
 })
 
 

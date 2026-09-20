@@ -207,6 +207,11 @@ export default function Referensi() {
                       <p className="truncate text-sm font-bold text-slate-200">{item.title}</p>
                       <p className="truncate text-xs text-slate-500">{item.sourceFilename}</p>
                       {item.error && <p className="mt-1 text-xs text-red-400">{item.error}</p>}
+                      {item.status !== 'ready' && (
+                        <p className="mt-1 text-[10px] text-slate-500">
+                          Percobaan {item.attempts} dari {item.maxAttempts}
+                        </p>
+                      )}
                       {item.replacesDocumentId && (
                         <p className="mt-1 text-[10px] text-sky-400">Menggantikan referensi #{item.replacesDocumentId}</p>
                       )}
