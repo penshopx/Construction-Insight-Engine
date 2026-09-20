@@ -1,0 +1,44 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "teGMVlGv575hVG68h6_20"
+uri = "file://knowledge/kontrakguard-basis-pengetahuan.zip"
+type = "unspecified"
+title = "Paket Basis Pengetahuan KontrakGuard"
+description = "Paket lengkap berisi sintesis, katalog 38 dokumen, JSON terstruktur, korpus hasil ekstraksi, dan laporan deduplikasi."
+logical_id = "9f9a9be5-a94a-4149-8d14-4b44fbe4ee81"
+content_hash = "sha256:4028d0fece2274cc669ad003b52f826f0c3efad174f7a1fd5288c6c0f7205d1b"
+size = 368417
+mtime_ms = 1789889592378
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:d844f9ba-8f45-4186-af18-c963a13c2fd6/9f9a9be5-a94a-4149-8d14-4b44fbe4ee81/fc1ca734-89de-476c-8377-e18061c23a1c"
+storage_version_token = "1789889603497473"
+content_type = "application/octet-stream"
+
+[[outputs]]
+id = "1ajjPPkNj8SSmhbINm17q"
+uri = "file://knowledge/kontrakguard/KNOWLEDGE_BASE.md"
+type = "text"
+title = "Basis Pengetahuan KontrakGuard"
+description = "Versi yang dapat dibaca manusia: taksonomi, konsep inti, kerangka kegagalan, kontrol kontrak, pola kasus, dan antrean validasi."
+logical_id = "01935f44-6028-4274-8b5b-7422244785e4"
+content_hash = "sha256:0b5c225d64009707a8c51aa832c168a7d28b76e9930a821c620cd95b3165b32d"
+size = 18655
+mtime_ms = 1789889582978
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:d844f9ba-8f45-4186-af18-c963a13c2fd6/01935f44-6028-4274-8b5b-7422244785e4/101a53ff-d0bc-4010-aa80-af2a5319311e"
+storage_version_token = "1789889604882400"
+content_type = "text/markdown"
+
+[[outputs]]
+id = "IPewHvSZxHQz31vMgBO6d"
+uri = "file://knowledge/kontrakguard/document-catalog.json"
+type = "unspecified"
+title = "Katalog Dokumen Terstruktur"
+description = "Metadata, kategori, ringkasan, topik, konsep hukum, mutu sumber, serta catatan reliabilitas untuk 38 dokumen unik."
+logical_id = "325a3207-cb87-4138-b620-fb82757cac9a"
+content_hash = "sha256:5686a2e61b2d8da171805fddc585366c30b19d5327391fdd584e3f3ed55b6ab3"
+size = 66537
+mtime_ms = 1789889352546
+storage_uri = "gcs://replit-rams-assets-sisko/rams/assets/repl:d844f9ba-8f45-4186-af18-c963a13c2fd6/325a3207-cb87-4138-b620-fb82757cac9a/ca065ca3-5443-4a29-a0de-7ac9dc4b632c"
+storage_version_token = "1789889606470794"
+content_type = "application/octet-stream"

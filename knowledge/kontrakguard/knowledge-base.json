@@ -1,0 +1,920 @@
+{
+  "collection_summary": "Koleksi memuat 38 dokumen unik dengan fokus pada hukum dan administrasi kontrak, rancangan kontrak, klaim dan sengketa, FIDIC, serta kegagalan bangunan dan konstruksi. Isinya mencampur template, materi akademik, pelatihan, dan studi kasus sehingga setiap penggunaan wajib mempertimbangkan mutu serta keberlakuan sumber.",
+  "taxonomy": [
+    {
+      "id": "kontrak-dan-kewajiban",
+      "name": "Kontrak, kewajiban, dan alokasi risiko",
+      "definition": "Pembentukan kontrak, hierarki dokumen, hak/kewajiban, bentuk kontrak, serta pembagian risiko.",
+      "source_ids": [
+        "62f47060add9",
+        "83b51bc4d4dc",
+        "fa17b673475f",
+        "01f581e8408a",
+        "b8e66274c3b5",
+        "55c76a41c3c0",
+        "9b71e8dd88f5",
+        "6bef8a627533",
+        "35c506073030",
+        "1586a2a63c61",
+        "cca2944e57c7",
+        "87f35ce50ee1"
+      ]
+    },
+    {
+      "id": "administrasi-dan-tenggat",
+      "name": "Administrasi dan tenggat kontraktual",
+      "definition": "Korespondensi, notice, instruksi, register, respons, dan pengendalian batas waktu.",
+      "source_ids": [
+        "62f47060add9",
+        "83b51bc4d4dc",
+        "fa17b673475f",
+        "01f581e8408a",
+        "b8e66274c3b5",
+        "55c76a41c3c0",
+        "9b71e8dd88f5",
+        "6bef8a627533",
+        "35c506073030",
+        "1586a2a63c61",
+        "cca2944e57c7",
+        "87f35ce50ee1"
+      ]
+    },
+    {
+      "id": "perubahan-dan-klaim",
+      "name": "Perubahan, waktu, biaya, dan klaim",
+      "definition": "VO, addendum, EOT, pembuktian dampak, pembayaran, serta penyelesaian sengketa.",
+      "source_ids": [
+        "fa17b673475f",
+        "b8e66274c3b5",
+        "9b71e8dd88f5",
+        "6bef8a627533",
+        "35c506073030",
+        "1586a2a63c61",
+        "87f35ce50ee1",
+        "28759c43c5c2",
+        "f2caf54b07a6",
+        "e726fe881471",
+        "b7648603caa0",
+        "1fcc39ac1a0e"
+      ]
+    },
+    {
+      "id": "mutu-dan-kegagalan",
+      "name": "Mutu, cacat, dan kegagalan bangunan",
+      "definition": "Penyebab teknis dan tata kelola kegagalan, NCR, inspeksi, pengujian, dan pencegahan.",
+      "source_ids": [
+        "62f47060add9",
+        "83b51bc4d4dc",
+        "fa17b673475f",
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "9b71e8dd88f5",
+        "6bef8a627533",
+        "1586a2a63c61",
+        "cca2944e57c7",
+        "87f35ce50ee1",
+        "28759c43c5c2",
+        "c5707d4489d3"
+      ]
+    },
+    {
+      "id": "bukti-dan-akuntabilitas",
+      "name": "Bukti kontemporer dan akuntabilitas",
+      "definition": "Dokumentasi kejadian, provenance, chain of custody, audit trail, dan batas klaim forensik.",
+      "source_ids": [
+        "f2caf54b07a6",
+        "425ef0d6a69d"
+      ]
+    },
+    {
+      "id": "standar-dan-kompetensi",
+      "name": "Standar kontrak dan kompetensi",
+      "definition": "FIDIC, materi pelatihan, praktik profesi, dan orientasi kompetensi.",
+      "source_ids": [
+        "62f47060add9",
+        "fa17b673475f",
+        "b8e66274c3b5",
+        "9b71e8dd88f5",
+        "1586a2a63c61",
+        "28759c43c5c2",
+        "f7012b909aca",
+        "539f1cc358c4",
+        "061faabfe164"
+      ]
+    }
+  ],
+  "core_concepts": [
+    {
+      "cautions": [
+        "Perlu adaptasi dengan hukum lokal yang berlaku"
+      ],
+      "definition": "Standar kontrak konstruksi internasional yang mengatur alur risiko dan kewajiban.",
+      "name": "FIDIC",
+      "operational_value": "Kerangka referensi bagi proyek kompleks untuk standarisasi klaim dan administrasi.",
+      "source_ids": [
+        "62f47060add9",
+        "1586a2a63c61",
+        "539f1cc358c4"
+      ]
+    },
+    {
+      "cautions": [
+        "Perlu bukti tertulis yang kuat untuk pembuktian di pengadilan"
+      ],
+      "definition": "Kondisi di mana salah satu pihak tidak memenuhi kewajiban yang telah diperjanjikan.",
+      "name": "Wanprestasi",
+      "operational_value": "Dasar untuk pengajuan sanksi atau pemutusan kontrak.",
+      "source_ids": [
+        "fa17b673475f",
+        "1586a2a63c61",
+        "f2caf54b07a6"
+      ]
+    },
+    {
+      "cautions": [
+        "Definisi harus diatur secara jelas dalam kontrak"
+      ],
+      "definition": "Keadaan kahar di luar kendali yang menghalangi pemenuhan kontrak.",
+      "name": "Force Majeure",
+      "operational_value": "Alasan untuk pemaafan keterlambatan atau pengakhiran kontrak tanpa sanksi.",
+      "source_ids": [
+        "fa17b673475f",
+        "f2caf54b07a6",
+        "f6305410997a"
+      ]
+    },
+    {
+      "cautions": [
+        "Perlu keterlibatan penilai ahli bersertifikat"
+      ],
+      "definition": "Keadaan runtuhnya bangunan atau ketidaksesuaian fungsi akibat kesalahan teknis/pelaksanaan.",
+      "name": "Kegagalan Bangunan",
+      "operational_value": "Tanggung jawab hukum yang berlangsung hingga 10 tahun.",
+      "source_ids": [
+        "425ef0d6a69d",
+        "82dbb9eb851a",
+        "539f1cc358c4"
+      ]
+    },
+    {
+      "cautions": [
+        "Harus selalu diperbarui secara harian"
+      ],
+      "definition": "Catatan tertulis yang dibuat saat peristiwa terjadi, bukan setelah masalah muncul.",
+      "name": "Bukti Kontemporer",
+      "operational_value": "Alat bukti terkuat dalam manajemen klaim dan sengketa.",
+      "source_ids": [
+        "f2caf54b07a6"
+      ]
+    },
+    {
+      "cautions": [
+        "Kesalahan dalam penentuan dapat memicu sengketa volume"
+      ],
+      "definition": "Metode pembayaran berdasarkan harga borongan tetap vs berdasarkan volume riil.",
+      "name": "Lump Sum vs Harga Satuan",
+      "operational_value": "Menentukan alur alokasi risiko biaya.",
+      "source_ids": [
+        "9b71e8dd88f5",
+        "b91096d0f92c",
+        "061faabfe164"
+      ]
+    },
+    {
+      "cautions": [
+        "Terikat pada etika bisnis dan kepatuhan hukum"
+      ],
+      "definition": "Prinsip bahwa kontrak yang dibuat secara sah berlaku sebagai undang-undang bagi mereka yang membuatnya.",
+      "name": "Pacta Sunt Servanda",
+      "operational_value": "Fondasi hukum dalam menuntut pemenuhan kewajiban.",
+      "source_ids": [
+        "1fcc39ac1a0e",
+        "f6305410997a",
+        "3e47c98f7667"
+      ]
+    },
+    {
+      "cautions": [
+        "Harus segera diklaim sesuai prosedur notice"
+      ],
+      "definition": "Kejadian yang memberikan hak kepada kontraktor untuk kompensasi waktu atau biaya.",
+      "name": "Peristiwa Kompensasi",
+      "operational_value": "Mekanisme administrasi untuk menjaga keseimbangan ekonomi kontrak.",
+      "source_ids": [
+        "e726fe881471",
+        "b46b70500b7a",
+        "7406dc2f08c3"
+      ]
+    },
+    {
+      "cautions": [
+        "Memerlukan biaya lebih tinggi daripada mediasi"
+      ],
+      "definition": "Metode penyelesaian sengketa di luar peradilan umum melalui arbiter independen.",
+      "name": "Arbitrase",
+      "operational_value": "Penyelesaian sengketa yang bersifat final dan mengikat dengan keahlian teknis.",
+      "source_ids": [
+        "35c506073030",
+        "f2caf54b07a6",
+        "f7012b909aca"
+      ]
+    },
+    {
+      "cautions": [
+        "Harus dituangkan dalam bentuk tertulis untuk keamanan hukum"
+      ],
+      "definition": "Syarat sah kontrak di mana perjanjian dianggap lahir saat mencapai kata sepakat.",
+      "name": "Konsensualisme",
+      "operational_value": "Membentuk dasar keterikatan pihak sejak dini.",
+      "source_ids": [
+        "1fcc39ac1a0e",
+        "3e47c98f7667"
+      ]
+    },
+    {
+      "cautions": [
+        "Seringkali disalahartikan sebagai masa gratis perbaikan tanpa batas"
+      ],
+      "definition": "Periode setelah serah terima pertama di mana kontraktor tetap bertanggung jawab atas cacat mutu.",
+      "name": "Masa Pemeliharaan",
+      "operational_value": "Menjamin kualitas hasil kerja setelah proyek selesai secara fisik.",
+      "source_ids": [
+        "6bef8a627533",
+        "425ef0d6a69d",
+        "28ea4e2e0ade"
+      ]
+    },
+    {
+      "cautions": [
+        "Harus mengikuti prosedur yang ditetapkan dalam kontrak"
+      ],
+      "definition": "Pertemuan pembuktian keterlambatan kinerja dalam kontrak kritis.",
+      "name": "Show Cause Meeting (SCM)",
+      "operational_value": "Langkah administrasi untuk menyelamatkan proyek atau memutus kontrak.",
+      "source_ids": [
+        "e726fe881471"
+      ]
+    }
+  ],
+  "failure_framework": [
+    {
+      "cause_group": "Kesalahan Desain dan Perencanaan",
+      "definition": "Ketidaksesuaian atau cacat pada tahap perancangan yang memengaruhi integritas struktural.",
+      "evidence_to_preserve": [
+        "Gambar rencana",
+        "Laporan perhitungan struktur",
+        "Dokumen perencanaan"
+      ],
+      "indicators": [
+        "Perhitungan beban salah",
+        "Pemilihan material tidak tepat",
+        "Ketidaksesuaian SNI"
+      ],
+      "preventive_controls": [
+        "Review desain oleh ahli",
+        "Audit teknis independen",
+        "Penggunaan software simulasi"
+      ],
+      "source_ids": [
+        "83b51bc4d4dc",
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "87f35ce50ee1",
+        "28759c43c5c2",
+        "c5707d4489d3",
+        "d936f002a0d1",
+        "b3678f398da4",
+        "843f31c97fa0"
+      ]
+    },
+    {
+      "cause_group": "Kesalahan Pelaksanaan Konstruksi",
+      "definition": "Penyimpangan dari spesifikasi teknis atau metode kerja selama proses pembangunan di lapangan.",
+      "evidence_to_preserve": [
+        "Laporan harian proyek",
+        "Dokumentasi lapangan",
+        "Hasil uji laboratorium material"
+      ],
+      "indicators": [
+        "Pengurangan material",
+        "Kesalahan volume",
+        "Metode perancah tidak tepat",
+        "Pekerjaan tanpa pengawasan"
+      ],
+      "preventive_controls": [
+        "Supervisi ketat",
+        "Pengendalian mutu (QC)",
+        "Pelatihan tenaga kerja"
+      ],
+      "source_ids": [
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "28759c43c5c2",
+        "c5707d4489d3",
+        "d936f002a0d1",
+        "ea71115e0ca2",
+        "843f31c97fa0"
+      ]
+    },
+    {
+      "cause_group": "Kegagalan Material dan Komponen",
+      "definition": "Penggunaan bahan yang tidak memenuhi standar kualitas atau mengalami degradasi prematur.",
+      "evidence_to_preserve": [
+        "Hasil uji material",
+        "Sertifikat produk",
+        "Sampel material"
+      ],
+      "indicators": [
+        "Korosi tulangan",
+        "Kualitas beton tidak sesuai",
+        "Material cacat bawaan"
+      ],
+      "preventive_controls": [
+        "Inspeksi kedatangan material",
+        "Pengujian laboratorium berkala",
+        "Vendor assessment"
+      ],
+      "source_ids": [
+        "83b51bc4d4dc",
+        "55c76a41c3c0",
+        "28759c43c5c2",
+        "c5707d4489d3",
+        "b3678f398da4",
+        "843f31c97fa0"
+      ]
+    },
+    {
+      "cause_group": "Faktor Operasional dan Pemeliharaan",
+      "definition": "Kegagalan akibat penggunaan bangunan yang tidak sesuai fungsi atau minimnya perawatan.",
+      "evidence_to_preserve": [
+        "Logbook pemeliharaan",
+        "Catatan operasional gedung",
+        "Laporan inspeksi rutin"
+      ],
+      "indicators": [
+        "Beban berlebih",
+        "Kurangnya perawatan rutin",
+        "Malafungsi sistem bangunan"
+      ],
+      "preventive_controls": [
+        "Implementasi SHMS",
+        "Jadwal perawatan berkala",
+        "Pembatasan beban operasional"
+      ],
+      "source_ids": [
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "d936f002a0d1",
+        "cb44f75991dd",
+        "14619e8c6b6f",
+        "b3678f398da4"
+      ]
+    },
+    {
+      "cause_group": "Faktor Alam (Force Majeure)",
+      "definition": "Kejadian eksternal di luar kendali manusia yang menyebabkan kerusakan struktural.",
+      "evidence_to_preserve": [
+        "Data geologi",
+        "Laporan kejadian bencana",
+        "Data cuaca"
+      ],
+      "indicators": [
+        "Gempa bumi",
+        "Tanah tidak stabil",
+        "Fenomena aeroelastik"
+      ],
+      "preventive_controls": [
+        "Analisis risiko geoteknik",
+        "Desain tahan bencana",
+        "Zonasi lokasi"
+      ],
+      "source_ids": [
+        "83b51bc4d4dc",
+        "01f581e8408a",
+        "87f35ce50ee1",
+        "55c76a41c3c0",
+        "b7648603caa0",
+        "cb44f75991dd",
+        "de503ae31e75",
+        "14619e8c6b6f"
+      ]
+    },
+    {
+      "cause_group": "Faktor Organisasi dan Manajemen",
+      "definition": "Kegagalan sistemik akibat lemahnya koordinasi, pengawasan, atau etika profesional.",
+      "evidence_to_preserve": [
+        "Kontrak kerja",
+        "Korespondensi proyek",
+        "Struktur organisasi proyek"
+      ],
+      "indicators": [
+        "Ketiadaan konsultan",
+        "Korupsi",
+        "Pelanggaran kontrak"
+      ],
+      "preventive_controls": [
+        "Penguatan kepatuhan hukum",
+        "Manajemen risiko terintegrasi",
+        "Audit internal"
+      ],
+      "source_ids": [
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "28759c43c5c2",
+        "d936f002a0d1",
+        "b7648603caa0",
+        "ea71115e0ca2",
+        "b3678f398da4",
+        "843f31c97fa0"
+      ]
+    }
+  ],
+  "contract_control_framework": [
+    {
+      "common_failures": [
+        "Ketidakjelasan spesifikasi",
+        "Ketidakkonsistenan isi dokumen"
+      ],
+      "control_area": "Dokumen dan Hierarki",
+      "deadline_triggers": [
+        "Saat penyusunan dokumen tender",
+        "Saat terjadi konflik antar dokumen"
+      ],
+      "objective": "Menetapkan urutan prioritas dokumen kontrak untuk mencegah ambiguitas interpretasi.",
+      "records": [
+        "Surat Perjanjian",
+        "Syarat Umum Kontrak (SSUK)",
+        "Syarat Khusus Kontrak (SSKK)",
+        "Spesifikasi Teknis"
+      ],
+      "source_ids": [
+        "fa17b673475f",
+        "b8e66274c3b5",
+        "a3418a94d880"
+      ]
+    },
+    {
+      "common_failures": [
+        "Kegagalan kinerja kontraktor",
+        "Kelalaian pengawasan"
+      ],
+      "control_area": "Kewajiban Para Pihak",
+      "deadline_triggers": [
+        "Penandatanganan kontrak",
+        "Mobilisasi lapangan"
+      ],
+      "objective": "Memastikan pemenuhan hak dan tanggung jawab kontraktual secara transparan.",
+      "records": [
+        "Surat Perjanjian",
+        "Matriks tanggung jawab"
+      ],
+      "source_ids": [
+        "62f47060add9",
+        "6bef8a627533",
+        "28ea4e2e0ade"
+      ]
+    },
+    {
+      "common_failures": [
+        "Perubahan lingkup pekerjaan tanpa persetujuan tertulis"
+      ],
+      "control_area": "Perubahan (Variations)",
+      "deadline_triggers": [
+        "Perubahan desain",
+        "Kebutuhan lapangan mendesak"
+      ],
+      "objective": "Mengelola perubahan lingkup pekerjaan sesuai prosedur sah agar tidak merusak jadwal dan biaya.",
+      "records": [
+        "Addendum Kontrak",
+        "Perintah Perubahan Pekerjaan (VO)"
+      ],
+      "source_ids": [
+        "fa17b673475f",
+        "753ac4017a76",
+        "b46b70500b7a"
+      ]
+    },
+    {
+      "common_failures": [
+        "Komunikasi buruk",
+        "Tidak ada dokumentasi tertulis"
+      ],
+      "control_area": "Notice dan Korespondensi",
+      "deadline_triggers": [
+        "Kejadian yang mempengaruhi proyek",
+        "Peringatan kontrak kritis"
+      ],
+      "objective": "Menjaga jejak rekam komunikasi sebagai bukti sah dalam kontrak.",
+      "records": [
+        "Surat peringatan",
+        "Notulensi rapat (Minutes of Meeting)",
+        "Korespondensi formal"
+      ],
+      "source_ids": [
+        "35c506073030",
+        "f2caf54b07a6",
+        "e726fe881471"
+      ]
+    },
+    {
+      "common_failures": [
+        "Dokumentasi pendukung tidak memadai",
+        "Keterlambatan pengajuan"
+      ],
+      "control_area": "EOT dan Klaim",
+      "deadline_triggers": [
+        "Setelah peristiwa kompensasi terjadi"
+      ],
+      "objective": "Mengelola klaim waktu dan biaya berdasarkan peristiwa yang dapat dikompensasi.",
+      "records": [
+        "Catatan kejadian harian",
+        "Justifikasi teknis klaim"
+      ],
+      "source_ids": [
+        "35c506073030",
+        "35c506073030",
+        "e726fe881471"
+      ]
+    },
+    {
+      "common_failures": [
+        "Keterlambatan pembayaran",
+        "Deviasi target kinerja"
+      ],
+      "control_area": "Pembayaran",
+      "deadline_triggers": [
+        "Pencapaian milestone",
+        "Akhir periode termin"
+      ],
+      "objective": "Memastikan pembayaran sesuai dengan progress prestasi fisik yang disetujui.",
+      "records": [
+        "Laporan prestasi bulanan",
+        "Berita Acara Pembayaran"
+      ],
+      "source_ids": [
+        "f2caf54b07a6",
+        "b46b70500b7a",
+        "7406dc2f08c3"
+      ]
+    },
+    {
+      "common_failures": [
+        "Kedaluwarsa jaminan",
+        "Kegagalan bangunan"
+      ],
+      "control_area": "Jaminan dan Retensi",
+      "deadline_triggers": [
+        "Penandatanganan kontrak",
+        "Serah terima proyek"
+      ],
+      "objective": "Melindungi hak pemilik proyek terhadap risiko wanprestasi atau kegagalan bangunan.",
+      "records": [
+        "Bank Garansi",
+        "Surat Jaminan Pelaksanaan/Pemeliharaan"
+      ],
+      "source_ids": [
+        "1586a2a63c61",
+        "82dbb9eb851a",
+        "061faabfe164"
+      ]
+    },
+    {
+      "common_failures": [
+        "Lemahnya manajemen mutu",
+        "Pengurangan kualitas"
+      ],
+      "control_area": "Mutu dan NCR",
+      "deadline_triggers": [
+        "Inspeksi rutin",
+        "Ditemukannya cacat konstruksi"
+      ],
+      "objective": "Memastikan standar kualitas terpenuhi sesuai spesifikasi teknis.",
+      "records": [
+        "Rencana Mutu Proyek (RMP)",
+        "Non-Conformance Report (NCR)"
+      ],
+      "source_ids": [
+        "cca2944e57c7",
+        "7406dc2f08c3"
+      ]
+    },
+    {
+      "common_failures": [
+        "Interpretasi pasal ambigu",
+        "Penyelesaian melalui litigasi berkepanjangan"
+      ],
+      "control_area": "Sengketa",
+      "deadline_triggers": [
+        "Kegagalan mencapai kesepakatan klaim"
+      ],
+      "objective": "Menyelesaikan sengketa secara efektif untuk meminimalisir dampak proyek.",
+      "records": [
+        "Berita Acara Penyelesaian Sengketa",
+        "Laporan Mediasi/Arbitrase"
+      ],
+      "source_ids": [
+        "b8e66274c3b5",
+        "35c506073030",
+        "f7012b909aca"
+      ]
+    },
+    {
+      "common_failures": [
+        "Serah terima tertunda",
+        "Dokumentasi akhir tidak lengkap"
+      ],
+      "control_area": "Close-out",
+      "deadline_triggers": [
+        "Penyelesaian pekerjaan utama",
+        "Akhir masa pemeliharaan"
+      ],
+      "objective": "Menuntaskan serah terima pekerjaan dan kewajiban administrasi akhir.",
+      "records": [
+        "Berita Acara Serah Terima (PHO/FHO)",
+        "Dokumen final proyek"
+      ],
+      "source_ids": [
+        "425ef0d6a69d",
+        "753ac4017a76",
+        "539f1cc358c4"
+      ]
+    }
+  ],
+  "case_patterns": [
+    {
+      "description": "Keruntuhan atau penurunan bangunan karena kegagalan pada elemen fondasi atau ketidakstabilan tanah.",
+      "lessons": [
+        "Pentingnya investigasi tanah sebelum desain.",
+        "Analisis struktur pondasi yang mendalam."
+      ],
+      "pattern": "Kegagalan Struktural Akibat Fondasi",
+      "source_ids": [
+        "87f35ce50ee1",
+        "c5707d4489d3",
+        "ea71115e0ca2"
+      ]
+    },
+    {
+      "description": "Keruntuhan mendadak pada gedung publik atau hunian akibat akumulasi kesalahan dari desain hingga pelaksanaan.",
+      "lessons": [
+        "Pentingnya standar pemeliharaan.",
+        "Perlunya audit kelaikan fungsi berkala."
+      ],
+      "pattern": "Kegagalan pada Bangunan Bertingkat/Publik",
+      "source_ids": [
+        "83b51bc4d4dc",
+        "01f581e8408a",
+        "c5707d4489d3",
+        "14619e8c6b6f"
+      ]
+    },
+    {
+      "description": "Kegagalan jembatan yang disebabkan oleh faktor teknis maupun manajemen pengawasan proyek.",
+      "lessons": [
+        "Pengawasan konstruksi harus ketat.",
+        "Evaluasi integritas sambungan dan material."
+      ],
+      "pattern": "Kegagalan Infrastruktur Jembatan",
+      "source_ids": [
+        "55c76a41c3c0",
+        "87f35ce50ee1",
+        "ea71115e0ca2",
+        "b3678f398da4",
+        "843f31c97fa0"
+      ]
+    },
+    {
+      "description": "Kasus kegagalan yang terkait dengan korupsi, wanprestasi, atau pelanggaran etika profesional.",
+      "lessons": [
+        "Transparansi dalam pengadaan barang/jasa.",
+        "Tanggung jawab hukum yang jelas bagi pelaku proyek."
+      ],
+      "pattern": "Kegagalan Akibat Manajemen Proyek Bermasalah",
+      "source_ids": [
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "843f31c97fa0"
+      ]
+    },
+    {
+      "description": "Kerusakan struktural karena beban dinamis atau fenomena alam yang tidak terantisipasi dalam desain.",
+      "lessons": [
+        "Pentingnya mempertimbangkan beban dinamis (angin/gempa).",
+        "Verifikasi model desain dengan kondisi lapangan."
+      ],
+      "pattern": "Kegagalan Akibat Fenomena Dinamis/Eksternal",
+      "source_ids": [
+        "83b51bc4d4dc",
+        "87f35ce50ee1",
+        "de503ae31e75",
+        "14619e8c6b6f"
+      ]
+    }
+  ],
+  "legal_validation_queue": [
+    {
+      "issue": "Kepatuhan regulasi jasa konstruksi",
+      "source_ids": [
+        "62f47060add9",
+        "83b51bc4d4dc",
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "35c506073030",
+        "1586a2a63c61",
+        "cca2944e57c7",
+        "28759c43c5c2",
+        "f2caf54b07a6",
+        "c5707d4489d3",
+        "d936f002a0d1",
+        "b7648603caa0",
+        "1fcc39ac1a0e",
+        "de503ae31e75",
+        "14619e8c6b6f",
+        "425ef0d6a69d",
+        "82dbb9eb851a",
+        "f6305410997a",
+        "b3678f398da4",
+        "539f1cc358c4"
+      ],
+      "suggested_authority": "Kementerian Pekerjaan Umum dan Perumahan Rakyat (PUPR)",
+      "why_validate": "Banyak dokumen merujuk pada UU No. 18 Tahun 1999 yang sudah dicabut; wajib merujuk pada UU No. 2 Tahun 2017 beserta perubahannya."
+    },
+    {
+      "issue": "Standardisasi kontrak pemerintah",
+      "source_ids": [
+        "fa17b673475f",
+        "b8e66274c3b5",
+        "55c76a41c3c0",
+        "9b71e8dd88f5",
+        "6bef8a627533",
+        "28759c43c5c2",
+        "e726fe881471",
+        "a3418a94d880",
+        "f6305410997a",
+        "b46b70500b7a",
+        "539f1cc358c4",
+        "061faabfe164",
+        "b91096d0f92c"
+      ],
+      "suggested_authority": "Lembaga Kebijakan Pengadaan Barang/Jasa Pemerintah (LKPP)",
+      "why_validate": "Dokumen sering menggunakan rujukan Perpres lama (80/2003, 54/2010, 70/2012) yang tidak berlaku."
+    },
+    {
+      "issue": "Implementasi standar FIDIC di Indonesia",
+      "source_ids": [
+        "62f47060add9",
+        "1586a2a63c61",
+        "9b71e8dd88f5",
+        "f7012b909aca",
+        "539f1cc358c4"
+      ],
+      "suggested_authority": "Himpunan Ahli Konstruksi Indonesia (HAKI) atau INKINDO",
+      "why_validate": "FIDIC adalah standar internasional; harus diselaraskan dengan hukum perikatan nasional (KUHPerdata) dan regulasi konstruksi lokal."
+    },
+    {
+      "issue": "Definisi dan klasifikasi kegagalan bangunan",
+      "source_ids": [
+        "83b51bc4d4dc",
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "d936f002a0d1",
+        "b3678f398da4",
+        "82dbb9eb851a"
+      ],
+      "suggested_authority": "Kementerian PUPR",
+      "why_validate": "Penting untuk membedakan 'Gagal Konstruksi' (masa pelaksanaan) dan 'Kegagalan Bangunan' (masa operasional) berdasarkan peraturan terbaru."
+    },
+    {
+      "issue": "Klaim forensik dan analisis teknis",
+      "source_ids": [
+        "83b51bc4d4dc",
+        "01f581e8408a",
+        "55c76a41c3c0",
+        "c5707d4489d3",
+        "ea71115e0ca2",
+        "843f31c97fa0"
+      ],
+      "suggested_authority": "Komite Keselamatan Konstruksi (K2)",
+      "why_validate": "Analisis kegagalan harus didukung oleh bukti investigasi teknis profesional agar memiliki kedudukan hukum."
+    },
+    {
+      "issue": "Perancangan template kontrak (drafting)",
+      "source_ids": [
+        "6bef8a627533",
+        "a3418a94d880",
+        "28ea4e2e0ade",
+        "b91096d0f92c",
+        "7406dc2f08c3"
+      ],
+      "suggested_authority": "Konsultan Hukum Konstruksi atau Notaris/PPAT",
+      "why_validate": "Template sekunder harus diperiksa untuk memastikan klausul force majeure, sanksi, dan penyelesaian sengketa selaras dengan hukum terkini."
+    },
+    {
+      "issue": "Administrasi perubahan kontrak (Addendum/VO)",
+      "source_ids": [
+        "fa17b673475f",
+        "b8e66274c3b5",
+        "e726fe881471",
+        "753ac4017a76",
+        "b46b70500b7a"
+      ],
+      "suggested_authority": "LKPP dan BPK RI (audit proyek pemerintah)",
+      "why_validate": "Prosedur formal addendum harus mengikuti hierarki hukum kontrak agar tidak menjadi sumber sengketa baru."
+    },
+    {
+      "issue": "Penyelesaian sengketa konstruksi (Arbitrase/Mediasi)",
+      "source_ids": [
+        "35c506073030",
+        "f7012b909aca",
+        "061faabfe164"
+      ],
+      "suggested_authority": "Badan Arbitrase Nasional Indonesia (BANI)",
+      "why_validate": "Memilih metode penyelesaian sengketa (UU No. 30 Tahun 1999) perlu disesuaikan dengan klausul arbitrase dalam kontrak yang disepakati."
+    }
+  ],
+  "product_modules": [
+    {
+      "module": "Command Center",
+      "knowledge_supported": [
+        "Paparan risiko portofolio",
+        "Tenggat mendesak",
+        "Kasus mutu dan klaim prioritas"
+      ],
+      "limits": [
+        "Skor risiko harus berlabel ilustratif sampai model divalidasi"
+      ]
+    },
+    {
+      "module": "Proyek",
+      "knowledge_supported": [
+        "Profil kontrak",
+        "Alokasi risiko",
+        "Kewajiban para pihak",
+        "Dokumen utama"
+      ],
+      "limits": [
+        "Tidak menggantikan pembacaan kontrak yang ditandatangani"
+      ]
+    },
+    {
+      "module": "Tenggat Hukum",
+      "knowledge_supported": [
+        "Notice",
+        "Respons",
+        "EOT",
+        "Jaminan",
+        "Retensi dan DLP"
+      ],
+      "limits": [
+        "Tenggat harus dikonfigurasi dari klausul proyek, bukan asumsi umum"
+      ]
+    },
+    {
+      "module": "Evidence Vault",
+      "knowledge_supported": [
+        "Bukti kontemporer",
+        "Inspeksi dan pengujian",
+        "Korespondensi",
+        "Jejak perubahan"
+      ],
+      "limits": [
+        "Hash dan audit trail tidak menjamin penerimaan bukti di pengadilan"
+      ]
+    },
+    {
+      "module": "Manajemen Kasus",
+      "knowledge_supported": [
+        "VO",
+        "EOT",
+        "Klaim",
+        "NCR",
+        "Sengketa"
+      ],
+      "limits": [
+        "Analisis entitlement memerlukan tinjauan profesional dan klausul aktual"
+      ]
+    },
+    {
+      "module": "Referensi",
+      "knowledge_supported": [
+        "Hukum kontrak",
+        "Rancangan kontrak",
+        "FIDIC",
+        "Kegagalan bangunan"
+      ],
+      "limits": [
+        "Sumber sekunder dan regulasi lama harus diberi status serta tanggal verifikasi"
+      ]
+    },
+    {
+      "module": "Kompetensi",
+      "knowledge_supported": [
+        "Orientasi kemampuan kontrak dan administrasi",
+        "Bukti kerja"
+      ],
+      "limits": [
+        "Bukan sertifikasi kompetensi"
+      ]
+    }
+  ]
+}
