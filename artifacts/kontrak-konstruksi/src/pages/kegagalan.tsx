@@ -18,7 +18,7 @@ export default function Kegagalan() {
       <PageHeader 
         eyebrow="Pilar 2: Forensik Bangunan" 
         title="Kegagalan Bangunan & Konstruksi" 
-        description="Ruang dokumentasi awal dan investigasi kegagalan konstruksi sesuai standar Permen PUPR No. 7/2019. Amankan bukti lapangan sebelum rusak."
+        description="Demo alur dokumentasi awal kegagalan konstruksi. Kesesuaian dengan Permen PUPR No. 7/2019 maupun regulasi terkini belum diverifikasi."
         action={
           <div className="flex items-center gap-2 bg-amber-950/30 border border-amber-900/50 rounded-lg p-3">
             <AlertTriangle className="text-amber-500 shrink-0" size={24} />
@@ -33,7 +33,7 @@ export default function Kegagalan() {
       <div className="mb-6 flex items-start gap-3 rounded border border-primary/30 bg-primary/5 p-3">
         <Activity className="mt-0.5 shrink-0 text-primary" size={16} />
         <p className="text-xs leading-relaxed text-slate-300">
-          <strong className="text-primary">MODE DEMONSTRASI:</strong> Data kegagalan bangunan ini adalah sampel untuk mengilustrasikan alur forensik digital. Pada produksi, data ini akan dikumpulkan langsung dari inspektur lapangan via mobile app.
+          <strong className="text-primary">MODE DEMONSTRASI:</strong> Semua data, prioritas, visual, dugaan, dan rekomendasi di halaman ini adalah sampel. Sistem saat ini tidak mengunggah berkas lapangan, melakukan pengujian teknis, atau menghasilkan pendapat ahli.
         </p>
       </div>
 
@@ -106,7 +106,7 @@ export default function Kegagalan() {
                   activeFailure.severity === 'Tinggi' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
                   'bg-primary/10 text-primary border-primary/20'
                 )}>
-                  Exposure: {activeFailure.severity}
+                   Prioritas demo: {activeFailure.severity}
                 </span>
               </div>
               

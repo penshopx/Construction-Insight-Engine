@@ -88,7 +88,7 @@ export default function Kompetensi() {
             <div className="mt-8 bg-amber-950/20 border border-amber-900/30 rounded p-4 flex gap-3 items-start">
               <ShieldCheck size={18} className="text-amber-500 shrink-0 mt-0.5" />
               <p className="text-xs text-slate-400 leading-relaxed">
-                <span className="font-bold text-amber-400">Implementasi Aplikasi:</span> Modul KontrakGuard dirancang selaras dengan unit kompetensi ini. Fitur seperti Evidence Vault dan Joint Case Room adalah instrumen praktis untuk memenuhi standar kerja penanganan sengketa dan asesmen ahli.
+                <span className="font-bold text-amber-400">Catatan Implementasi:</span> Modul ini dimaksudkan sebagai alat bantu latihan dan pemetaan. Keselarasan dengan unit kompetensi, akreditasi, maupun pemenuhan standar asesmen ahli belum diverifikasi.
               </p>
             </div>
           </div>

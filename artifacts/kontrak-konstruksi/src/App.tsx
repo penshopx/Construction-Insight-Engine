@@ -92,7 +92,7 @@ function LandingPage() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <div className="flex items-center gap-3">
           <span className="grid h-10 w-10 place-items-center rounded border border-primary/30 bg-primary/10 text-primary"><ShieldAlert size={20} /></span>
-          <div><p className="font-display font-bold">KontrakGuard</p><p className="font-mono text-[9px] uppercase tracking-[.2em] text-primary">Defense System</p></div>
+          <div><p className="font-display font-bold">KontrakGuard</p><p className="font-mono text-[9px] uppercase tracking-[.2em] text-primary">Administrasi Kontrak</p></div>
         </div>
         <a href={`${basePath}/sign-in`} className="rounded border border-border bg-white/5 px-4 py-2 text-sm font-bold text-slate-100 hover:bg-white/10">Masuk</a>
       </nav>
@@ -100,7 +100,8 @@ function LandingPage() {
         <div>
           <p className="mb-4 font-mono text-xs font-bold uppercase tracking-[.2em] text-primary">Ruang kerja kontrak konstruksi</p>
           <h1 className="max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-6xl">Data kontrak perusahaan Anda, terpisah dan terkendali.</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">Kelola tenggat, bukti, dan kasus dalam ruang kerja organisasi yang aman. Pengelola dan anggota mendapat akses sesuai perannya.</p>
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">Kelola tenggat, metadata bukti, dan kasus dalam ruang kerja organisasi berbasis akun. Pengelola dan anggota mendapat akses sesuai perannya.</p>
+          <p className="mt-4 max-w-2xl text-xs leading-relaxed text-slate-500">KontrakGuard adalah alat administrasi, bukan nasihat hukum, pendapat ahli, sertifikasi, atau jaminan diterimanya data sebagai alat bukti. Verifikasi fakta dan regulasi melalui tenaga profesional serta sumber resmi.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href={`${basePath}/sign-up`} className="inline-flex items-center gap-2 rounded bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">Buat ruang kerja <ArrowRight size={16} /></a>
             <a href={`${basePath}/sign-in`} className="rounded border border-border bg-card px-5 py-3 text-sm font-bold text-slate-100">Masuk ke akun</a>

@@ -82,7 +82,7 @@ export default function Dashboard() {
             </div>
           </div>
           <Link href="/kegagalan" className="inline-flex items-center justify-between w-full rounded border border-amber-900/50 bg-amber-950/20 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-amber-900/40 hover:text-amber-300 transition-colors">
-            Masuk Ruang Forensik <ArrowRight size={14} />
+            Lihat Demo Dokumentasi <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -122,9 +122,9 @@ export default function Dashboard() {
           <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
           <div className="rounded bg-red-500/20 p-2 text-red-400 shrink-0"><TriangleAlert size={18} /></div>
           <div className="flex-1">
-            <p className="font-mono text-[10px] uppercase font-bold text-red-400 mb-1">Klaim EOT Terancam Hangus</p>
+            <p className="font-mono text-[10px] uppercase font-bold text-red-400 mb-1">Tenggat EOT Perlu Ditinjau</p>
             <h4 className="text-sm font-bold text-slate-200">Notice of Delay - Tower A</h4>
-            <p className="text-xs text-slate-400 mt-1 max-w-2xl">Tenggat pengajuan Notice of Delay tersisa 2 hari (Pasal 8.4). Tanpa notifikasi formal, hak perpanjangan waktu dapat digugurkan secara kontraktual.</p>
+            <p className="text-xs text-slate-400 mt-1 max-w-2xl">Contoh tenggat Notice of Delay tersisa 2 hari (Pasal 8.4). Dampaknya terhadap hak perpanjangan waktu bergantung pada kontrak, fakta, dan hukum yang berlaku serta perlu ditinjau profesional.</p>
           </div>
           <Link href="/tenggat" className="shrink-0 inline-flex items-center justify-center gap-2 rounded bg-red-500/20 border border-red-500/30 px-4 py-2 text-xs font-bold text-red-400 hover:bg-red-500/30 transition-colors">
             Draft Notice Sekarang
@@ -146,7 +146,7 @@ export default function Dashboard() {
           <div className="space-y-5 pt-1">
             {[
               { time: '10:42', user: 'Prof. Bambang S.', role: 'Mediator', action: 'Mengunggah Opini Ahli Pendahuluan', target: 'Kasus VO-042', icon: ShieldAlert, color: 'text-primary' },
-              { time: 'Kemarin', user: 'System', role: 'Automated', action: 'Memverifikasi bukti foto dengan metadata GPS', target: 'NCR-008 BSD', icon: CheckCircle2, color: 'text-emerald-400' },
+              { time: 'Kemarin', user: 'System', role: 'Demo', action: 'Mencatat metadata GPS yang dilaporkan', target: 'NCR-008 BSD', icon: CheckCircle2, color: 'text-emerald-400' },
               { time: '17 Jun', user: 'Tim Teknis', role: 'Internal', action: 'Menyelesaikan input kronologi penundaan', target: 'EOT-003', icon: Clock, color: 'text-amber-400' },
               { time: '15 Jun', user: 'Raka A.', role: 'Contract Mgr', action: 'Meminta persetujuan Penilai Ahli independen', target: 'Sengketa Fasad', icon: Users, color: 'text-primary' },
             ].map((log, i) => (
@@ -176,8 +176,8 @@ export default function Dashboard() {
         <section className="fade-up delay-4 rounded-lg border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between border-b border-border pb-4">
             <div>
-              <h2 className="font-display text-base font-bold text-slate-200">Portfolio Risk Exposure</h2>
-              <p className="mt-1 text-xs text-slate-500">Pemantauan risiko proyek berbasis anomali</p>
+              <h2 className="font-display text-base font-bold text-slate-200">Indikator Prioritas Portofolio (Demo)</h2>
+              <p className="mt-1 text-xs text-slate-500">Skor ilustratif; belum memakai model risiko yang tervalidasi</p>
             </div>
             <FileWarning size={18} className="text-slate-500" />
           </div>

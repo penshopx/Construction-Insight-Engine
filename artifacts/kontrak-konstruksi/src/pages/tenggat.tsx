@@ -37,13 +37,17 @@ export default function Tenggat() {
       <PageHeader
         eyebrow="Pilar 1: Hukum & Kontrak"
         title="Tenggat Hukum & Administrasi"
-        description="Pantau batas waktu notifikasi kontraktual. Keterlambatan pengajuan notice dapat menggugurkan hak klaim atau memicu denda (time bar clauses)."
+        description="Catat batas waktu notifikasi kontraktual. Dampak keterlambatan terhadap hak klaim atau denda bergantung pada kontrak, fakta, dan hukum yang berlaku."
         action={
           <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(0,180,255,0.2)]" data-testid="button-add-deadline">
             <Plus size={14} /> Tambah Tenggat
           </button>
         }
       />
+      <div className="mb-6 flex items-start gap-3 rounded border border-amber-900/40 bg-amber-950/20 p-3 text-xs leading-relaxed text-amber-200/80">
+        <Info size={15} className="mt-0.5 shrink-0 text-amber-500" />
+        Tanggal jatuh tempo dimasukkan manual dan tidak dihitung atau divalidasi oleh sistem. Verifikasi klausul, metode perhitungan, hari kalender/kerja, serta konsekuensi hukumnya sebelum bertindak.
+      </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="flex rounded-md border border-border bg-card p-1">
@@ -103,7 +107,7 @@ export default function Tenggat() {
                 <p className="font-mono text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">Jatuh Tempo</p>
                 <p className="font-mono font-bold text-slate-200">{deadline.due ?? 'TBD'}</p>
                 {!deadline.completed && deadline.status === 'Perlu ditinjau' && (
-                  <p className="mt-0.5 text-[10px] font-bold text-red-400 flex items-center md:justify-end gap-1"><Clock size={10} /> Critical Window</p>
+                  <p className="mt-0.5 text-[10px] font-bold text-red-400 flex items-center md:justify-end gap-1"><Clock size={10} /> Perlu ditinjau</p>
                 )}
               </div>
               {!deadline.completed && (

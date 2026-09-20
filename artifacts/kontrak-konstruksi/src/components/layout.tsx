@@ -129,16 +129,16 @@ export function Shell({ children }: { children: ReactNode }) {
           <div className="rounded-lg border border-red-900/30 bg-red-950/20 p-3 mb-4">
             <div className="mb-2 flex items-center gap-2 text-red-400">
               <Zap size={14} className="animate-pulse" />
-              <span className="font-mono text-[9px] uppercase tracking-[0.1em] font-bold">Live Risk Exposure</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.1em] font-bold">Indikator Risiko Demo</span>
             </div>
             <p className="font-mono text-[18px] font-bold text-red-400">Rp 127.4M</p>
-            <p className="text-[10px] text-red-400/60 mt-1">2 high-risk projects detected</p>
+            <p className="text-[10px] text-red-400/60 mt-1">Data ilustratif, bukan penilaian risiko tervalidasi</p>
           </div>
           
           <div className="flex items-start gap-2 border-t border-sidebar-border pt-4">
             <Info size={14} className="shrink-0 text-slate-500 mt-0.5" />
             <p className="text-[9px] leading-relaxed text-slate-500">
-              <span className="font-bold text-slate-400">DISCLAIMER:</span> KontrakGuard adalah sistem pendukung keputusan (decision-support). Data dan analisis dalam platform ini bukan nasihat hukum, sertifikasi, maupun jaminan alat bukti di pengadilan.
+              <span className="font-bold text-slate-400">DISCLAIMER:</span> KontrakGuard adalah alat administrasi dan pendukung keputusan, bukan nasihat hukum, pendapat ahli, sertifikasi, atau penetapan kepatuhan. Sistem tidak menjamin keutuhan, kekekalan, maupun diterimanya data sebagai alat bukti. Verifikasi fakta, regulasi, dan dokumen sumber dengan tenaga profesional serta sumber resmi yang berlaku.
             </p>
           </div>
         </div>

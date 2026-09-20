@@ -1,3 +1,4 @@
 - [KontrakGuard product positioning](kontrakguard-product-positioning.md) — three pillars connect contract administration, construction failure, and expert-led constructive dispute resolution.
 - [OpenAPI integer codegen](openapi-integer-codegen.md) — use numeric API IDs until Orval and Zod versions support generated integer validators together.
 - [Organization tenancy](organization-tenancy.md) — keep organization membership and roles in the app database; Clerk authenticates users but does not provide managed organization tenants.
+- [Legal and forensic claims](legal-forensic-claims.md) — label risk scores as illustrative and regulatory or evidence-integrity claims as unverified until authoritative validation exists.

@@ -102,7 +102,7 @@ export default function Mediasi() {
           {/* Agreed Issues Tracker */}
           <div className="rounded-lg border border-border bg-card p-6 shadow-card">
             <h2 className="font-display font-bold text-lg text-white mb-1">Pokok Sengketa & Resolusi</h2>
-            <p className="text-xs text-slate-400 mb-6">Tracking status persetujuan poin sengketa secara real-time.</p>
+            <p className="text-xs text-slate-400 mb-6">Tampilan demo status pembahasan; bukan persetujuan real-time atau penetapan hukum.</p>
 
             <div className="space-y-4">
               <div className="rounded border border-border bg-background p-4">
@@ -112,7 +112,7 @@ export default function Mediasi() {
                   </div>
                   <span className="font-mono text-[10px] text-slate-500">Isu #1</span>
                 </div>
-                <h4 className="text-sm font-bold text-slate-200 mb-1">Validitas Hak EOT (Extension of Time)</h4>
+                <h4 className="text-sm font-bold text-slate-200 mb-1">Tinjauan Awal Hak EOT (Belum Diverifikasi)</h4>
                 <p className="text-xs text-slate-400 mb-4">Para pihak sepakat keterlambatan disebabkan oleh pembebasan lahan yang merupakan tanggung jawab Owner.</p>
                 <div className="bg-emerald-950/20 rounded p-3 text-xs border border-emerald-900/30">
                   <span className="font-bold text-emerald-300">Resolusi: </span> 
@@ -155,7 +155,7 @@ export default function Mediasi() {
             <div className="flex justify-between items-end mb-4">
               <div>
                 <h2 className="font-display font-bold text-base text-slate-200 flex items-center gap-2">
-                  <FileText size={16} className="text-primary" /> Shared Evidence Room
+                  <FileText size={16} className="text-primary" /> Daftar Dokumen Bersama (Demo)
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">Dokumen yang disetujui untuk diakses mediator.</p>
               </div>

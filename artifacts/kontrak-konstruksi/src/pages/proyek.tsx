@@ -61,14 +61,14 @@ export default function Proyek() {
       <PageHeader 
         eyebrow="Pilar 1: Hukum & Kontrak" 
         title="Portfolio Proyek" 
-        description="Pemantauan nilai kontrak, deviasi jadwal, dan paparan risiko sengketa komulatif di seluruh proyek."
+        description="Contoh pemantauan nilai kontrak, progres, dan indikator prioritas internal. Seluruh angka di halaman ini adalah data ilustratif."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         {[
-          { label: 'Total Value', value: 'Rp 800M+', icon: BarChart3, color: 'text-primary', border: 'border-primary/20' },
-          { label: 'Total Exposure', value: 'Rp 127.4M', icon: AlertCircle, color: 'text-red-400', border: 'border-red-900/30' },
-          { label: 'Proyek Berisiko', value: '2 Kritis', icon: Shield, color: 'text-amber-400', border: 'border-amber-900/30' },
+          { label: 'Total Nilai (Demo)', value: 'Rp 800 M+', icon: BarChart3, color: 'text-primary', border: 'border-primary/20' },
+          { label: 'Indikator Eksposur (Demo)', value: 'Rp 127,4 M', icon: AlertCircle, color: 'text-red-400', border: 'border-red-900/30' },
+          { label: 'Prioritas Tinjauan (Demo)', value: '2 Tinggi', icon: Shield, color: 'text-amber-400', border: 'border-amber-900/30' },
           { label: 'Kontrak Aktif', value: '5', icon: FileText, color: 'text-slate-300', border: 'border-border' },
         ].map((stat, i) => (
           <div key={i} className={cn("fade-up rounded-lg border bg-card p-5 relative overflow-hidden", stat.border, `delay-${i+1}`)}>
@@ -90,7 +90,7 @@ export default function Proyek() {
                 <th className="px-5 py-4 font-bold">Identitas Proyek</th>
                 <th className="px-5 py-4 font-bold">Nilai Kontrak</th>
                 <th className="px-5 py-4 font-bold">Progres</th>
-                <th className="px-5 py-4 font-bold">Risk Exposure</th>
+                <th className="px-5 py-4 font-bold">Indikator Demo</th>
                 <th className="px-5 py-4 font-bold">Isu Utama</th>
                 <th className="px-5 py-4 font-bold"></th>
               </tr>
@@ -123,7 +123,7 @@ export default function Proyek() {
                       'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                     )}>
                       {p.status === 'critical' ? <AlertCircle size={10} /> : p.status === 'warning' ? <Shield size={10} /> : <CheckCircle size={10} />}
-                      Index {p.risk}
+                      Skor ilustratif {p.risk}
                     </span>
                   </td>
                   <td className="px-5 py-4">
@@ -138,6 +138,9 @@ export default function Proyek() {
           </table>
         </div>
       </div>
+      <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
+        Skor dan kategori di atas belum berasal dari model risiko yang tervalidasi. Nilai tersebut bukan probabilitas sengketa, estimasi kerugian, atau penilaian hukum.
+      </p>
     </Shell>
   );
 }

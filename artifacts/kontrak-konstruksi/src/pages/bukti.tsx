@@ -13,15 +13,15 @@ export default function Bukti() {
     <Shell>
       <PageHeader
         eyebrow="Pilar 1: Hukum & Kontrak"
-        title="Evidence Vault"
-        description="Amankan dokumen kontraktual, foto lapangan, dan notifikasi dalam satu register permanen. Persiapan krusial untuk mediasi atau forensik."
+        title="Register Metadata Bukti"
+        description="Catat metadata dokumen, foto lapangan, dan notifikasi untuk membantu administrasi proyek. Halaman ini belum menyimpan berkas asli."
         action={<button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(0,180,255,0.2)]" data-testid="button-add-evidence"><Plus size={14} /> Tambah Bukti</button>}
       />
       
       <div className="mb-6 flex items-start gap-3 rounded border border-primary/30 bg-primary/10 p-4 shadow-[0_0_10px_rgba(0,180,255,0.05)]">
         <ShieldCheck className="mt-0.5 shrink-0 text-primary" size={18} />
         <p className="text-xs leading-relaxed text-slate-300">
-          <strong className="text-primary tracking-wider font-mono">CHAIN OF CUSTODY:</strong> Metadata bukti dicatat secara berurut di database server dan tetap tersedia. Fitur ini merupakan alat administratif proyek, bukan menjamin keabsahan hukum tanpa pengujian forensik resmi.
+          <strong className="text-primary tracking-wider font-mono">RIWAYAT PENCATATAN ADMINISTRATIF:</strong> Sistem mencatat metadata dan waktu pembuatan item di server. Fitur ini bukan chain of custody forensik dan tidak membuktikan keaslian, keutuhan, perpindahan penguasaan, kekekalan, atau diterimanya bukti secara hukum.
         </p>
       </div>
       
@@ -53,7 +53,7 @@ export default function Bukti() {
               <div className="mt-4 sm:mt-0 sm:text-right border-t border-border sm:border-t-0 pt-3 sm:pt-0 w-full sm:w-auto flex flex-row sm:flex-col justify-between sm:justify-center items-center sm:items-end">
                 <p className="font-mono text-[10px] text-slate-500">{new Date(item.createdAt).toLocaleDateString('id-ID')}</p>
                 <p className="sm:mt-1.5 flex items-center gap-1.5 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
-                  <Lock size={10} /> Tersimpan
+                  <Lock size={10} /> Tercatat
                 </p>
               </div>
             </div>
@@ -65,11 +65,11 @@ export default function Bukti() {
             <Fingerprint size={16} className="text-primary" /> Status Register
           </h3>
           <p className="text-xs leading-relaxed text-slate-500 mb-6">
-            Setiap pendaftaran menerima ID urut dan waktu pencatatan dari server. Gunakan ID ini sebagai referensi saat mediasi.
+            Setiap pendaftaran menerima ID item dan waktu pencatatan dari server. ID tersebut hanya referensi administratif, bukan hash berkas atau bukti integritas.
           </p>
           <div className="rounded border border-border bg-background p-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full"></div>
-            <p className="font-mono text-[10px] uppercase text-slate-500 tracking-wider">Total Item Tersimpan</p>
+            <p className="font-mono text-[10px] uppercase text-slate-500 tracking-wider">Total Metadata Tercatat</p>
             <p className="mt-1 font-display text-3xl font-bold text-white tracking-tight" data-testid="text-evidence-count">
               {isLoading ? '—' : evidence.length}
             </p>

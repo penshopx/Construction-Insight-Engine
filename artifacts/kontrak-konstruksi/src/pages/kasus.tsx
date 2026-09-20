@@ -276,7 +276,7 @@ function EvidenceManager({ caseData }: { caseData: ContractCase }) {
   return (
     <div className="bg-card border border-border rounded-lg p-5">
        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-sm font-bold flex items-center gap-2"><FileText size={16} className="text-primary" /> Daftar Bukti Pendukung</h4>
+          <h4 className="text-sm font-bold flex items-center gap-2"><FileText size={16} className="text-primary" /> Metadata Dokumen Pendukung</h4>
           {!open && <button onClick={() => setOpen(true)} className="text-[10px] font-bold px-2 py-1 bg-white/5 border border-border rounded hover:bg-white/10">+ Tambah</button>}
        </div>
 
@@ -313,7 +313,7 @@ function ActivitiesPanel({ caseId }: { caseId: number }) {
 
   return (
     <div className="bg-card border border-border rounded-lg p-5">
-       <h4 className="text-sm font-bold mb-5 flex items-center gap-2"><Activity size={16} className="text-primary" /> Riwayat Audit & Perubahan</h4>
+       <h4 className="text-sm font-bold mb-5 flex items-center gap-2"><Activity size={16} className="text-primary" /> Riwayat Perubahan yang Dicatat</h4>
        <div className="space-y-5 max-h-[300px] overflow-y-auto scrollbar-thin pr-2">
           {activities.length === 0 && <p className="text-xs text-slate-500 italic">Belum ada riwayat aktivitas yang tercatat.</p>}
           {activities.map(act => (
@@ -374,7 +374,7 @@ export default function Kasus() {
       <PageHeader
         eyebrow="Manajemen Kasus & Resolusi"
         title="Joint Case Room"
-        description="Ruang kerja operasional untuk alur kerja VO, EOT, CLAIM, dan NCR. Integrasikan bukti, argumen hukum, dan rekam audit keputusan dengan disiplin ketat."
+        description="Ruang kerja operasional untuk alur VO, EOT, CLAIM, dan NCR. Catatan aplikasi membantu administrasi, tetapi bukan audit independen, pendapat hukum, atau chain of custody."
       />
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">

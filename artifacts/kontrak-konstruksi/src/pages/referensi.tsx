@@ -42,7 +42,7 @@ export default function Referensi() {
       <PageHeader
         eyebrow="Penunjang Keputusan"
         title="Referensi Hukum & Standar"
-        description="Mesin pencari khusus UU, PP, Permen, dan klausul baku. Temukan landasan hukum sebelum mengambil keputusan proyek atau eskalasi sengketa."
+        description="Telusuri teks sumber yang tersedia di katalog. Hasil pencarian bukan penetapan status, keberlakuan, atau penerapan hukum."
         action={
           <div className="hidden text-right md:block">
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-500 mb-0.5">Dokumen Terindeks</p>
@@ -87,7 +87,7 @@ export default function Referensi() {
       {query.trim().length === 1 && (
         <div className="mb-5 rounded border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm text-amber-200 flex items-center gap-2">
           <AlertTriangle size={16} className="text-amber-500 shrink-0" />
-          Masukkan minimal 2 karakter untuk memulai penelusuran forensik teks.
+          Masukkan minimal 2 karakter untuk memulai pencarian teks.
         </div>
       )}
 
@@ -149,12 +149,12 @@ export default function Referensi() {
                   <div className="min-w-0 text-slate-500">
                     <p className="flex items-center gap-2"><FileText size={13} className="shrink-0" /><span className="truncate text-slate-300">{result.sourceFilename}</span></p>
                     <p className="mt-1.5 flex items-center gap-2 font-mono text-[9px]" title={result.sourceChecksum}>
-                      <Fingerprint size={12} className="shrink-0" /> Hash: {result.sourceChecksum.slice(0, 16)}…
+                       <Fingerprint size={12} className="shrink-0" /> Checksum sumber: {result.sourceChecksum.slice(0, 16)}…
                     </p>
                   </div>
                   <div className="flex max-w-md items-start gap-2 rounded border border-amber-900/30 bg-amber-950/10 px-3 py-2 text-amber-400/80">
                     <ShieldAlert size={14} className="mt-0.5 shrink-0" />
-                    <span className="text-[10px] leading-relaxed">Selalu pastikan regulasi rujukan belum diamandemen atau dicabut sebelum menggunakannya dalam somasi/klaim.</span>
+                    <span className="text-[10px] leading-relaxed">Checksum hanya penanda teknis sumber yang diindeks, bukan bukti keaslian atau keberlakuan. Periksa perubahan, pencabutan, tanggal berlaku, dan penerapannya melalui JDIH/sumber resmi sebelum menggunakan rujukan.</span>
                   </div>
                 </div>
               </article>
