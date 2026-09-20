@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "KontrakKonstruksi"
+description = "Aplikasi hukum dan administrasi kontrak konstruksi berbasis kompetensi SKKNI untuk usaha, konsultan, kontraktor, dan ahli kontrak kerja konstruksi."
+version = "1.0.0"
+id = "artifacts/kontrak-konstruksi"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21420
+
+[services.development]
+run = "pnpm --filter @workspace/kontrak-konstruksi run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/kontrak-konstruksi", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/kontrak-konstruksi/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21420"
+BASE_PATH = "/"
