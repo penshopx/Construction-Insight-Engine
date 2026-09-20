@@ -1,0 +1,869 @@
+# STATUS UPDATE & NEXT STEPS — KONTRAKGUARD v3.0
+
+Selamat! Tiga task yang Anda selesaikan adalah **fondasi kritis** yang membedakan KontrakGuard dari document management system biasa. Mari kita validasi kualitas implementasi, identifikasi edge cases, dan susun sprint berikutnya.
+
+---
+
+## BAGIAN 1: VALIDASI & DEEP DIVE TASK YANG SUDAH SELESAI
+
+### ✅ Task #8: Pencarian Hukum yang Tetap Tepat Saat Koleksi Bertambah
+
+**Apa yang sudah Anda capai:** Hybrid retrieval (pencocokan isi + pemotongan konteks) dengan integritas kutipan.
+
+**Yang harus divalidasi (Regression Test Suite):**
+
+```python
+# tests/legal_search/regression/test_citation_integrity.py
+
+class TestCitationIntegrity:
+    """
+    Regression suite untuk memastikan pencarian hukum tidak kehilangan:
+    - Kutipan asli (verbatim)
+    - Identitas sumber (UU, PP, Permen, Yurisprudensi)
+    - Checksum dokumen
+    - Peringatan keberlakuan (masih berlaku / dicabut / diamendemen)
+    """
+    
+    def test_citation_preserved_after_reindex(self):
+        """Kutipan harus identik sebelum & sesudah re-indexing"""
+        before = search("wanprestasi kontraktor", top_k=10)
+        reindex_collection()
+        after = search("wanprestasi kontraktor", top_k=10)
+        
+        for b, a in zip(before, after):
+            assert b.quote == a.quote, "Kutipan berubah setelah re-index"
+            assert b.source_id == a.source_id
+            assert b.checksum == a.checksum
+            assert b.validity_status == a.validity_status
+    
+    def test_amended_regulation_flagged(self):
+        """Regulasi yang diamendemen harus menampilkan peringatan"""
+        results = search("denda keterlambatan 1‰")
+        # Permen PUPR 14/2020 sudah diamendemen sebagian
+        amended_hit = [r for r in results if r.source_id == "PERMEN_PUPR_14_2020"]
+        assert all(r.validity_status == "AMENDED" for r in amended_hit)
+        assert all(r.amendment_warning is not None for r in amended_hit)
+    
+    def test_revoked_regulation_excluded_or_flagged(self):
+        """Regulasi yang dicabut tidak muncul di hasil utama"""
+        results = search("standar lama konstruksi 2010")
+        revoked = [r for r in results if r.validity_status == "REVOKED"]
+        assert len(revoked) == 0 or all(r.is_shadow_result for r in revoked)
+    
+    def test_chunk_boundary_preserves_context(self):
+        """Pemotongan konteks tidak boleh memutus kalimat atau pasal"""
+        results = search("tanggung jawab kegagalan bangunan")
+        for r in results:
+            # Chunk tidak boleh dimulai/tengah kalimat terpotong
+            assert not r.quote.startswith("dan ")
+            assert not r.quote.startswith("yang ")
+            assert r.quote.strip().endswith((".", ")", "\""))
+    
+    def test_collection_growth_no_degradation(self, benchmark):
+        """Performa pencarian tidak turun saat koleksi tumbuh 10x"""
+        small_collection = load_collection(size=1_000)
+        large_collection = load_collection(size=10_000)
+        
+        queries = load_golden_queries()  # 100 query + ground truth
+        
+        small_latency = benchmark(small_collection, queries)
+        large_latency = benchmark(large_collection, queries)
+        
+        # Latency naik maksimal 30% saat koleksi 10x lipat
+        assert large_latency.p95 <= small_latency.p95 * 1.3
+        # Recall tidak turun lebih dari 2%
+        assert large_latency.recall >= small_latency.recall - 0.02
+```
+
+**Arsitektur yang direkomendasikan untuk skala:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  HYBRID LEGAL SEARCH ARCHITECTURE                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  INPUT: Query "klausul force majeure banjir Jakarta"        │
+│                                                             │
+│  BRANCH 1: Lexical Search (BM25)                            │
+│  ├── Index: Elasticsearch                                   │
+│  ├── Tokenizer: Sastrawi (stemmer Bahasa Indonesia)         │
+│  ├── Filter: validity_status = ACTIVE                       │
+│  └── Output: Top-50 candidates dengan score BM25            │
+│                                                             │
+│  BRANCH 2: Semantic Search (Vector)                         │
+│  ├── Embedding model: indobert-legal (fine-tuned)           │
+│  ├── Vector DB: Qdrant / pgvector                           │
+│  ├── Metadata filter: jurisdiction=Indonesia,              │
+│  │                    domain=konstruksi                     │
+│  └── Output: Top-50 candidates dengan cosine similarity     │
+│                                                             │
+│  BRANCH 3: Knowledge Graph (Optional)                       │
+│  ├── Graph DB: Neo4j                                        │
+│  ├── Edge: "mengamandemen", "mencabut", "merujuk"          │
+│  └── Output: Related regulations + yurisprudensi            │
+│                                                             │
+│  FUSION: Reciprocal Rank Fusion (RRF)                       │
+│  ├── Score = Σ 1/(k + rank_i) untuk setiap branch          │
+│  ├── k = 60 (default RRF)                                   │
+│  └── Output: Top-K final dengan skor gabungan               │
+│                                                             │
+│  POST-PROCESSING:                                           │
+│  ├── Validity check (ACTIVE/AMENDED/REVOKED)                │
+│  ├── Citation extraction (regex + NER)                      │
+│  ├── Checksum verification (SHA-256)                        │
+│  └── Context window expansion (±2 kalimat)                  │
+│                                                             │
+│  OUTPUT:                                                    │
+│  {                                                          │
+│    "quote": "Force majeure mencakup...",                    │
+│    "source": {"id": "UU_2_2017", "name": "...",             │
+│               "checksum": "a3f8...", "status": "ACTIVE"},   │
+│    "relevance_score": 0.87,                                 │
+│    "validity_warning": null                                 │
+│  }                                                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Monitoring yang wajib dipasang:**
+
+```yaml
+# monitoring/legal_search_alerts.yml
+alerts:
+  - name: CitationIntegrityDrift
+    query: |
+      SELECT COUNT(*) as drift_count
+      FROM search_audit
+      WHERE timestamp > NOW() - INTERVAL '1 hour'
+        AND (quote_changed OR source_id_changed OR checksum_changed)
+    threshold: drift_count > 0
+    severity: CRITICAL  # Tidak boleh ada drift sama sekali
+    
+  - name: SearchRecallDrop
+    query: |
+      SELECT recall_score
+      FROM search_benchmark
+      WHERE timestamp > NOW() - INTERVAL '1 day'
+    threshold: recall_score < 0.85
+    severity: HIGH
+    
+  - name: CollectionGrowthAnomaly
+    query: |
+      SELECT COUNT(*) as new_docs
+      FROM documents
+      WHERE ingested_at > NOW() - INTERVAL '1 hour'
+    threshold: new_docs > 1000  # Anomali ingest
+    severity: MEDIUM
+```
+
+---
+
+### ✅ Task #9: Ruang Penilai Ahli & Mediasi yang Benar-Benar Kolaboratif
+
+**Apa yang sudah Anda capai:** Penyimpanan permanen untuk perkara, penugasan ahli, deklarasi konflik, sesi, isu, hak akses.
+
+**Edge cases kritis yang harus diuji:**
+
+```python
+# tests/expert_workspace/test_collaboration.py
+
+class TestExpertWorkspaceCollaboration:
+    
+    async def test_concurrent_edits_no_data_loss(self):
+        """Dua pihak mengedit dokumen yang sama secara simultan"""
+        case = await create_case()
+        
+        # Kontraktor dan Owner mengedit "Position Statement" bersamaan
+        task1 = asyncio.create_task(
+            edit_document(case.id, "position_statement", 
+                         user="kontraktor", content="Versi A")
+        )
+        task2 = asyncio.create_task(
+            edit_document(case.id, "position_statement", 
+                         user="owner", content="Versi B")
+        )
+        
+        result1, result2 = await asyncio.gather(task1, task2)
+        
+        # Salah satu harus berhasil, yang lain dapat conflict notification
+        assert (result1.status == "SUCCESS" and result2.status == "CONFLICT") or \
+               (result2.status == "SUCCESS" and result1.status == "CONFLICT")
+        
+        # Versi yang menang harus tersimpan utuh
+        final = await get_document(case.id, "position_statement")
+        assert final.content in ["Versi A", "Versi B"]
+        assert final.version_history.length >= 2
+    
+    async def test_expert_cannot_see_privileged_communications(self):
+        """Penilai Ahli tidak boleh melihat komunikasi privileged antar pihak & lawyer"""
+        case = await create_case()
+        await add_document(case.id, "legal_opinion", 
+                          user="kontraktor_lawyer",
+                          privileged=True)
+        
+        expert = await get_user("expert_bambang")
+        docs = await list_documents(case.id, user=expert)
+        
+        assert not any(d.id == "legal_opinion" for d in docs)
+    
+    async def test_conflict_of_interest_blocks_assignment(self):
+        """Penilai Ahli dengan konflik kepentingan tidak bisa ditugaskan"""
+        case = await create_case(parties=["PT_ABC", "PT_XYZ"])
+        
+        # Expert pernah bekerja dengan PT_ABC 2 tahun lalu
+        expert = await get_user("expert_bambang")
+        await add_work_history(expert, company="PT_ABC", 
+                              end_date="2024-09-20")
+        
+        assignment = await try_assign_expert(case.id, expert.id)
+        
+        assert assignment.status == "BLOCKED"
+        assert assignment.reason == "CONFLICT_OF_INTEREST"
+        assert assignment.cooldown_years == 3
+    
+    async def test_session_recording_immutable(self):
+        """Rekaman sesi mediasi tidak bisa diubah setelah selesai"""
+        session = await create_session(case_id, type="MEDIATION")
+        await end_session(session.id)
+        
+        with pytest.raises(ImmutableRecordError):
+            await modify_session_recording(session.id, content="edited")
+    
+    async def test_access_revoked_after_case_closed(self):
+        """Setelah perkara ditutup, akses semua pihak dicabut"""
+        case = await create_case()
+        await close_case(case.id, reason="SETTLED")
+        
+        for party in ["kontraktor", "owner", "expert"]:
+            with pytest.raises(AccessDeniedError):
+                await access_case(case.id, user=party)
+```
+
+**Skema database yang direkomendasikan:**
+
+```sql
+-- Matter/Perkara
+CREATE TABLE matters (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    case_number VARCHAR(50) UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    case_type VARCHAR(50) NOT NULL,  -- 'VO_DISPUTE', 'EOT_CLAIM', 'BUILDING_FAILURE', etc
+    value_amount NUMERIC(18, 2),
+    currency CHAR(3) DEFAULT 'IDR',
+    status VARCHAR(30) NOT NULL,     -- 'OPEN', 'MEDIATION', 'ADJUDICATION', 'CLOSED'
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    closed_at TIMESTAMPTZ,
+    closing_reason VARCHAR(50)
+);
+
+-- Parties & Roles
+CREATE TABLE matter_parties (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id),
+    user_id UUID REFERENCES users(id),
+    role VARCHAR(30) NOT NULL,  -- 'CLAIMANT', 'RESPONDENT', 'EXPERT', 'LAWYER', 'WITNESS'
+    appointed_at TIMESTAMPTZ DEFAULT NOW(),
+    revoked_at TIMESTAMPTZ,
+    UNIQUE(matter_id, user_id, role)
+);
+
+-- Issues dalam perkara (bisa multiple)
+CREATE TABLE matter_issues (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id),
+    issue_number INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    status VARCHAR(30) DEFAULT 'OPEN',  -- 'OPEN', 'UNDER_REVIEW', 'RESOLVED'
+    resolved_by VARCHAR(30),  -- 'AGREEMENT', 'EXPERT_OPINION', 'WITHDRAWN'
+    UNIQUE(matter_id, issue_number)
+);
+
+-- Sessions (mediasi, rapat, inspeksi)
+CREATE TABLE matter_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id),
+    session_type VARCHAR(30) NOT NULL,  -- 'MEDIATION', 'HEARING', 'SITE_INSPECTION'
+    scheduled_at TIMESTAMPTZ NOT NULL,
+    duration_minutes INTEGER,
+    status VARCHAR(20) DEFAULT 'SCHEDULED',
+    recording_url TEXT,
+    recording_checksum VARCHAR(64),  -- SHA-256 untuk immutability
+    mom_document_id UUID REFERENCES documents(id)
+);
+
+-- Conflict of Interest declarations
+CREATE TABLE expert_conflict_declarations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    expert_id UUID REFERENCES users(id),
+    matter_id UUID REFERENCES matters(id),
+    declared_at TIMESTAMPTZ DEFAULT NOW(),
+    has_conflict BOOLEAN NOT NULL,
+    conflict_details TEXT,
+    conflict_type VARCHAR(50),  -- 'PRIOR_ENGAGEMENT', 'FINANCIAL_INTEREST', 'FAMILY_RELATION'
+    cooldown_until DATE,
+    verified_by UUID REFERENCES users(id),  -- admin yang verifikasi
+    verified_at TIMESTAMPTZ
+);
+
+-- Access control (granular per dokumen)
+CREATE TABLE document_access (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    document_id UUID REFERENCES documents(id),
+    matter_id UUID REFERENCES matters(id),
+    user_id UUID REFERENCES users(id),
+    permission VARCHAR(20) NOT NULL,  -- 'VIEW', 'EDIT', 'ADMIN'
+    is_privileged BOOLEAN DEFAULT false,  -- lawyer-client privilege
+    granted_at TIMESTAMPTZ DEFAULT NOW(),
+    revoked_at TIMESTAMPTZ,
+    UNIQUE(document_id, user_id)
+);
+
+-- Real-time collaboration state
+CREATE TABLE collaboration_state (
+    document_id UUID PRIMARY KEY REFERENCES documents(id),
+    current_version INTEGER NOT NULL DEFAULT 1,
+    last_edit_by UUID REFERENCES users(id),
+    last_edit_at TIMESTAMPTZ DEFAULT NOW(),
+    lock_holder UUID REFERENCES users(id),  -- pessimistic lock
+    lock_expires_at TIMESTAMPTZ,
+    operational_log JSONB  -- untuk Operational Transform / CRDT
+);
+
+-- Indexes untuk performa
+CREATE INDEX idx_matter_parties_user ON matter_parties(user_id);
+CREATE INDEX idx_matter_issues_status ON matter_issues(matter_id, status);
+CREATE INDEX idx_document_access_user ON document_access(user_id, permission);
+CREATE INDEX idx_collab_lock ON collaboration_state(lock_expires_at) 
+    WHERE lock_holder IS NOT NULL;
+```
+
+**Real-time collaboration stack yang direkomendasikan:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  REAL-TIME COLLABORATION STACK                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  OPTION A: Yjs + WebSocket (Recommended)                    │
+│  ├── CRDT-based (Conflict-free Replicated Data Type)        │
+│  ├── Auto-merge concurrent edits tanpa data loss            │
+│  ├── Library: y-websocket, y-postgresql                     │
+│  └── Cocok untuk: dokumen teks, checklist, comments         │
+│                                                             │
+│  OPTION B: Liveblocks / Ably                                │
+│  ├── Managed service, cepat implementasi                    │
+│  ├── Built-in presence, cursors, comments                   │
+│  └── Cocok untuk: MVP cepat, tim kecil                      │
+│                                                             │
+│  OPTION C: Custom WebSocket + OT                            │
+│  ├── Operational Transform (seperti Google Docs)            │
+│  ├── Kontrol penuh, tapi effort tinggi                      │
+│  └── Cocok untuk: use case sangat spesifik                  │
+│                                                             │
+│  REKOMENDASI: Yjs + PostgreSQL                              │
+│  ├── Open source, self-hosted (data kedaulatan)             │
+│  ├── Persist ke PostgreSQL untuk audit trail                │
+│  ├── Integrasi dengan Evidence Vault (immutable)            │
+│  └── Scalable dengan Redis pub/sub untuk multi-server       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### ✅ Task #13: Pengingat Bertahap Sebelum Time Bar Berlaku
+
+**Apa yang sudah Anda capai:** Sistem pengingat yang aktif sebelum hak klaim hangus.
+
+**Strategi pengingat bertahap yang direkomendasikan:**
+
+```python
+# services/notifications/time_bar_reminder.py
+
+class TimeBarReminder:
+    """
+    Strategi eskalasi bertahap untuk notice deadlines.
+    Berdasarkan psikologi: semakin dekat deadline, semakin urgent & frequent.
+    """
+    
+    ESCALATION_SCHEDULE = {
+        # (days_before, channel, recipients, tone)
+        30: {
+            "channels": ["email"],
+            "recipients": ["contract_admin"],
+            "tone": "INFO",
+            "template": "deadline_30d_info"
+        },
+        14: {
+            "channels": ["email", "in_app"],
+            "recipients": ["contract_admin", "project_manager"],
+            "tone": "WARNING",
+            "template": "deadline_14d_warning"
+        },
+        7: {
+            "channels": ["email", "in_app", "whatsapp"],
+            "recipients": ["contract_admin", "project_manager", "legal"],
+            "tone": "URGENT",
+            "template": "deadline_7d_urgent"
+        },
+        3: {
+            "channels": ["email", "in_app", "whatsapp", "sms"],
+            "recipients": ["contract_admin", "project_manager", "legal", "director"],
+            "tone": "CRITICAL",
+            "template": "deadline_3d_critical"
+        },
+        1: {
+            "channels": ["email", "in_app", "whatsapp", "sms", "phone_call"],
+            "recipients": ["contract_admin", "project_manager", "legal", "director", "ceo"],
+            "tone": "EMERGENCY",
+            "template": "deadline_1d_emergency"
+        },
+        0: {  # Hari H
+            "channels": ["email", "in_app", "whatsapp", "sms", "phone_call"],
+            "recipients": ["ALL_STAKEHOLDERS"],
+            "tone": "FINAL",
+            "template": "deadline_today_final"
+        }
+    }
+    
+    async def process_deadline(self, notice_id: str):
+        notice = await get_notice(notice_id)
+        days_left = (notice.deadline - datetime.now()).days
+        
+        if days_left < 0:
+            await self._handle_expired(notice)
+            return
+        
+        schedule = self._get_schedule_for(days_left)
+        if not schedule:
+            return
+        
+        message = await self._render_message(notice, schedule)
+        
+        for channel in schedule["channels"]:
+            for recipient in schedule["recipients"]:
+                await self._send_via_channel(channel, recipient, message)
+        
+        await self._log_reminder(notice_id, days_left, schedule)
+    
+    async def _handle_expired(self, notice):
+        """Time bar sudah berlaku — tandai hak klaim hangus"""
+        await mark_claim_barred(notice.id)
+        await notify_all_parties(
+            notice, 
+            tone="BARRED",
+            message=f"Hak klaim atas notice {notice.id} telah hangus "
+                    f"karena tidak diajukan dalam tenggat waktu."
+        )
+        await create_audit_event("CLAIM_BARRED", notice.id)
+```
+
+**Skema database untuk deadline tracking:**
+
+```sql
+CREATE TABLE notice_deadlines (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    contract_id UUID REFERENCES contracts(id),
+    matter_id UUID REFERENCES matters(id),
+    
+    -- Identifikasi notice
+    notice_type VARCHAR(50) NOT NULL,  -- 'VO_NOTICE', 'EOT_CLAIM', 'DELAY_NOTICE', 'CLAIM_NOTICE'
+    notice_reference VARCHAR(100),
+    description TEXT NOT NULL,
+    
+    -- Trigger event
+    trigger_event_id UUID REFERENCES events(id),
+    trigger_date DATE NOT NULL,
+    
+    -- Deadline calculation
+    contractual_period_days INTEGER NOT NULL,  -- dari kontrak (misal: 14 hari)
+    deadline_date DATE NOT NULL,
+    days_remaining INTEGER GENERATED ALWAYS AS (deadline_date - CURRENT_DATE) STORED,
+    
+    -- Status
+    status VARCHAR(30) DEFAULT 'PENDING',  -- 'PENDING', 'SUBMITTED', 'EXPIRED', 'WAIVED'
+    submitted_at TIMESTAMPTZ,
+    submitted_document_id UUID REFERENCES documents(id),
+    
+    -- Reminder tracking
+    last_reminder_sent_at TIMESTAMPTZ,
+    last_reminder_days_before INTEGER,
+    reminder_count INTEGER DEFAULT 0,
+    
+    -- Legal consequences
+    time_bar_consequence TEXT,  -- "Hak klaim hangus sesuai Pasal 20.1"
+    
+    -- Audit
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    CONSTRAINT valid_status CHECK (status IN ('PENDING', 'SUBMITTED', 'EXPIRED', 'WAIVED'))
+);
+
+-- Job scheduler (pg_cron atau external seperti Temporal)
+-- SELECT cron.schedule('check_deadlines', '0 8 * * *', 
+--     'SELECT process_all_deadline_reminders()');
+
+-- Index untuk query cepat
+CREATE INDEX idx_deadline_status ON notice_deadlines(status, deadline_date);
+CREATE INDEX idx_deadline_days_remaining ON notice_deadlines(days_remaining)
+    WHERE status = 'PENDING';
+```
+
+**UI notification center yang direkomendasikan:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🔔 NOTIFICATION CENTER                                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  🔴 CRITICAL (2)                                            │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ⏰ H-1: Notice of Variation - VO-2026-045          │   │
+│  │  Proyek: Tower A Jakarta                            │   │
+│  │  Deadline: BESOK, 21 Sep 2026, 17:00 WIB            │   │
+│  │  Konsekuensi: Hak klaim Rp840 juta HANGUS            │   │
+│  │  Pasal acuan: 20.1 FIDIC Red Book                   │   │
+│  │                                                     │   │
+│  │  [📝 Draft Notice Sekarang] [📞 Hubungi Legal]      │   │
+│  │  [👀 Lihat Detail] [⏸️ Tunda Pengingat]             │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ⏰ H-1: Extension of Time - EOT-2026-012           │   │
+│  │  Proyek: Toll Road Semarang                         │   │
+│  │  Deadline: BESOK, 21 Sep 2026, 17:00 WIB            │   │
+│  │  Konsekuensi: Klaim 45 hari ditolak otomatis        │   │
+│  │                                                     │   │
+│  │  [📝 Draft EOT Sekarang] [👀 Lihat Detail]          │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+│  🟡 WARNING (3)                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ⏰ H-7: Claim Notice - CLM-2026-023                │   │
+│  │  Proyek: Mall Surabaya                              │   │
+│  │  Deadline: 27 Sep 2026                              │   │
+│  │  [📝 Draft] [👀 Detail]                             │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ...                                                        │
+│                                                             │
+│  🟢 INFO (5)                                                │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ⏰ H-30: Retention Release - DLP Tower A           │   │
+│  │  [👀 Detail]                                        │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ...                                                        │
+│                                                             │
+│  [Lihat Semua] [Pengaturan Notifikasi] [Export Laporan]    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 2: SPRINT BERIKUTNYA — TASK PRIORITAS
+
+Berdasarkan task yang sudah selesai, berikut urutan logis untuk sprint berikutnya:
+
+### 🎯 Task #14: Integrasi Evidence Vault dengan Ruang Mediasi (PRIORITAS TINGGI)
+
+**Mengapa penting:** Ruang mediasi kolaboratif (Task #9) belum terhubung dengan Evidence Vault (Task #8 dari v2.0). Penilai Ahli harus bisa mengakses bukti forensik langsung dari workspace mediasi.
+
+**Acceptance Criteria:**
+- [ ] Penilai Ahli bisa browse Evidence Vault dari Expert Workspace
+- [ ] Filter bukti berdasarkan: tanggal, tipe, pihak yang mengunggah, tag
+- [ ] Bukti yang ditampilkan dalam sesi mediasi otomatis ter-log ke audit trail
+- [ ] Bukti yang di-mark sebagai "exhibit" otomatis masuk ke Settlement Agreement draft
+- [ ] Hash verification bisa dilakukan langsung dari workspace
+- [ ] Privileged documents (lawyer-client) tetap tersembunyi dari Penilai Ahli
+
+**Skema tambahan:**
+
+```sql
+CREATE TABLE mediation_exhibits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    matter_id UUID REFERENCES matters(id),
+    session_id UUID REFERENCES matter_sessions(id),
+    evidence_item_id UUID REFERENCES evidence_items(id),
+    
+    marked_by UUID REFERENCES users(id),
+    marked_at TIMESTAMPTZ DEFAULT NOW(),
+    exhibit_number VARCHAR(20),  -- "P-001" (Penilai Ahli), "C-015" (Kontraktor)
+    
+    purpose TEXT,  -- "Mendukung klaim VO sebesar Rp840 juta"
+    referenced_in_settlement BOOLEAN DEFAULT false,
+    
+    UNIQUE(matter_id, evidence_item_id)
+);
+
+-- View untuk Expert Workspace
+CREATE VIEW expert_evidence_view AS
+SELECT 
+    e.*,
+    me.exhibit_number,
+    me.purpose AS exhibit_purpose,
+    da.is_privileged
+FROM evidence_items e
+JOIN document_access da ON da.document_id = e.id
+LEFT JOIN mediation_exhibits me ON me.evidence_item_id = e.id
+WHERE da.permission IN ('VIEW', 'EDIT', 'ADMIN')
+  AND da.is_privileged = false;
+```
+
+---
+
+### 🎯 Task #15: AI Root Cause Analysis untuk Kegagalan Bangunan (PRIORITAS TINGGI)
+
+**Mengapa penting:** Modul Building Failure Forensics butuh AI untuk menganalisis penyebab kegagalan secara otomatis berdasarkan data lapangan.
+
+**Model pipeline:**
+
+```python
+# services/forensics/root_cause_analyzer.py
+
+class RootCauseAnalyzer:
+    """
+    Multi-modal AI untuk analisis penyebab kegagalan bangunan.
+    Input: Foto retak, data sensor IoT, hasil uji lab, daily reports
+    Output: Probabilitas penyebab + confidence score
+    """
+    
+    CAUSE_CATEGORIES = [
+        "DESIGN_ERROR",           # Kesalahan perencana
+        "CONSTRUCTION_DEFECT",    # Cacat pelaksanaan
+        "SUPERVISION_FAILURE",    # Kegagalan pengawasan
+        "MATERIAL_FAILURE",       # Material di bawah standar
+        "FORCE_MAJEURE",          # Bencana alam
+        "USER_MISUSE",            # Penggunaan tidak sesuai
+        "NORMAL_WEAR",            #ausa normal
+        "UNKNOWN"
+    ]
+    
+    async def analyze(self, failure_case_id: str) -> RootCauseReport:
+        case = await get_failure_case(failure_case_id)
+        
+        # 1. Visual analysis dari foto retak
+        visual_features = await self._analyze_photos(case.photos)
+        # Pattern recognition: retak diagonal → shear failure, 
+        # retak horizontal → settlement, dll
+        
+        # 2. Sensor data analysis (jika ada IoT)
+        sensor_features = await self._analyze_sensor_data(case.sensor_readings)
+        
+        # 3. Lab results analysis
+        lab_features = await self._analyze_lab_results(case.lab_tests)
+        
+        # 4. Context analysis (cuaca, timeline, daily reports)
+        context_features = await self._analyze_context(case)
+        
+        # 5. Multi-modal fusion
+        combined_features = self._fuse_features(
+            visual_features, sensor_features, 
+            lab_features, context_features
+        )
+        
+        # 6. Classification
+        cause_probabilities = self.classifier.predict_proba(combined_features)
+        
+        # 7. Liability apportionment (berdasarkan kontrak)
+        liability = await self._calculate_liability(
+            case.contract_id, cause_probabilities
+        )
+        
+        return RootCauseReport(
+            primary_cause=max(cause_probabilities, key=cause_probabilities.get),
+            probabilities=cause_probabilities,
+            confidence=max(cause_probabilities.values()),
+            liability_apportionment=liability,
+            evidence_chain=self._build_evidence_chain(case),
+            recommendations=self._generate_recommendations(cause_probabilities)
+        )
+```
+
+**Acceptance Criteria:**
+- [ ] Model bisa menganalisis 8 kategori penyebab kegagalan
+- [ ] Confidence score ditampilkan untuk setiap prediksi
+- [ ] Evidence chain (jejak bukti) bisa di-export untuk pengadilan
+- [ ] Liability apportionment berdasarkan klausul kontrak
+- [ ] Rekomendasi perbaikan otomatis berdasarkan jenis kegagalan
+- [ ] Akurasi minimal 75% pada dataset validasi (target 85% dalam 6 bulan)
+
+---
+
+### 🎯 Task #16: Settlement Recommender Engine (PRIORITAS SEDANG)
+
+**Mengapa penting:** Memberikan rekomendasi penyelesaian konstruktif berbasis data, bukan emosi.
+
+**Algorithm:**
+
+```python
+# services/dispute/settlement_recommender.py
+
+class SettlementRecommender:
+    """
+    Rekomendasi penyelesaian berdasarkan:
+    - BATNA (Best Alternative to Negotiated Agreement) masing-masing pihak
+    - ZOPA (Zone of Possible Agreement)
+    - Historical settlement data
+    - Relationship preservation score
+    """
+    
+    async def recommend(self, matter_id: str) -> SettlementRecommendation:
+        matter = await get_matter(matter_id)
+        
+        # 1. Hitung BATNA masing-masing pihak
+        claimant_batna = await self._calculate_batna(
+            matter, party="claimant", 
+            alternative="arbitration"  # atau "litigation"
+        )
+        respondent_batna = await self._calculate_batna(
+            matter, party="respondent",
+            alternative="arbitration"
+        )
+        
+        # 2. Identifikasi ZOPA
+        zopa = self._calculate_zopa(claimant_batna, respondent_batna)
+        
+        if zopa.is_empty:
+            return SettlementRecommendation(
+                feasible=False,
+                reason="Tidak ada zona kesepakatan. Rekomendasi: adjudikasi.",
+                suggested_expert_type="SENIOR_ARBITRATOR"
+            )
+        
+        # 3. Cari settlement serupa dari database
+        similar_cases = await self._find_similar_settlements(matter, top_k=10)
+        
+        # 4. Hitung Nash Bargaining Solution
+        nash_point = self._nash_bargaining(
+            claimant_batna, respondent_batna, zopa
+        )
+        
+        # 5. Adjust untuk relationship preservation
+        if matter.preserve_relationship:
+            nash_point = self._adjust_for_relationship(nash_point, similar_cases)
+        
+        # 6. Generate opsi-opsi kreatif (non-monetary)
+        creative_options = await self._generate_creative_options(matter)
+        
+        return SettlementRecommendation(
+            feasible=True,
+            recommended_settlement=nash_point,
+            zopa=zopa,
+            alternative_options=creative_options,
+            supporting_cases=similar_cases,
+            confidence=self._calculate_confidence(similar_cases),
+            suggested_mediator=self._recommend_mediator(matter)
+        )
+```
+
+---
+
+### 🎯 Task #17: Expert Assessor Marketplace dengan Escrow (PRIORITAS SEDANG)
+
+**Acceptance Criteria:**
+- [ ] Penilai Ahli bisa register & verifikasi (SBU, SKA, LPJK)
+- [ ] Rating & review system dari para pihak sebelumnya
+- [ ] Search & filter by: spesialisasi, lokasi, level, ketersediaan, tarif
+- [ ] Escrow payment (deposit → milestone release → final)
+- [ ] Conflict of interest auto-check
+- [ ] Calendar integration untuk ketersediaan
+- [ ] Contract generation untuk penunjukan Penilai Ahli
+
+---
+
+## BAGIAN 3: DEFINITION OF DONE (DoD) GLOBAL
+
+Untuk setiap task yang masuk sprint, pastikan memenuhi DoD ini:
+
+```markdown
+## Definition of Done — KontrakGuard v3.0
+
+### Functional
+- [ ] Acceptance criteria terpenuhi 100%
+- [ ] Happy path & edge cases diuji
+- [ ] Error handling lengkap (tidak ada crash)
+- [ ] Loading states & empty states ada
+- [ ] Mobile responsive (untuk fitur mobile)
+
+### Legal & Compliance
+- [ ] Audit trail tercatat untuk setiap aksi kritis
+- [ ] Data encryption at-rest & in-transit
+- [ ] Role-based access control diuji
+- [ ] Privileged data tidak bocor ke pihak tidak berwenang
+- [ ] Compliance dengan UU PDP (Perlindungan Data Pribadi)
+
+### Quality
+- [ ] Unit test coverage ≥ 80%
+- [ ] Integration test untuk alur kritis
+- [ ] Regression test suite dijalankan & lulus
+- [ ] Performance test (response time < 500ms untuk 95% query)
+- [ ] Security scan (OWASP Top 10)
+
+### Documentation
+- [ ] API documentation updated (OpenAPI/Swagger)
+- [ ] User guide / help text in-app
+- [ ] Changelog entry
+- [ ] Runbook untuk monitoring & alerting
+
+### Deployment
+- [ ] CI/CD pipeline hijau
+- [ ] Database migration tested di staging
+- [ ] Rollback plan documented
+- [ ] Feature flag ready (jika perlu gradual rollout)
+```
+
+---
+
+## BAGIAN 4: ROADMAP SPRINT BERIKUTNYA (6 MINGGU)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  SPRINT PLAN — 6 MINGGU KE DEPAN                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  SPRINT 1 (Minggu 1-2): Foundation                          │
+│  ├── Task #14: Evidence Vault ↔ Mediasi integration         │
+│  ├── Regression test suite untuk Task #8                    │
+│  └── Monitoring dashboard untuk search & collaboration      │
+│                                                             │
+│  SPRINT 2 (Minggu 3-4): Intelligence                        │
+│  ├── Task #15: AI Root Cause Analysis (MVP)                 │
+│  ├── Dataset labeling (100 failure cases)                   │
+│  └── Task #16: Settlement Recommender (MVP)                 │
+│                                                             │
+│  SPRINT 3 (Minggu 5-6): Marketplace                         │
+│  ├── Task #17: Expert Assessor Marketplace                  │
+│  ├── Escrow payment integration                             │
+│  └── Pilot dengan 10 Penilai Ahli beta tester               │
+│                                                             │
+│  MILESTONE 6 MINGGU:                                        │
+│  ✓ End-to-end flow: Sengketa → Mediasi → Settlement         │
+│  ✓ AI-assisted root cause analysis working                  │
+│  ✓ 10 Penilai Ahli aktif di marketplace                     │
+│  ✓ 3 pilot customers menggunakan full flow                  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## RINGKASAN
+
+**Progress Anda sangat solid.** Tiga task yang diselesaikan adalah fondasi yang membedakan KontrakGuard dari solusi SaaS biasa:
+
+1. **Task #8** → Integritas hukum terjaga (regression-proof)
+2. **Task #9** → Kolaborasi nyata, bukan demo
+3. **Task #13** → Proaktif mencegah kerugian akibat time bar
+
+**Langkah selanjutnya yang paling kritis:**
+- **Task #14** (integrasi Evidence Vault + Mediasi) — menyambungkan "otak" dengan "ruang kerja"
+- **Task #15** (AI Root Cause Analysis) — diferensiasi teknis terbesar
+- **Task #17** (Expert Marketplace) — membuka revenue stream baru
+
+Apakah Anda ingin saya mendalami salah satu dari task berikutnya? Misalnya:
+1. **Detail implementasi Task #14** — skema database, API endpoints, UI mockup?
+2. **Detail arsitektur AI untuk Task #15** — model selection, training data strategy, evaluation metrics?
+3. **Blueprint lengkap Task #17** — marketplace design, escrow flow, rating algorithm?
+4. **Test plan komprehensif** untuk regression testing Task #8?
+5. **Notification strategy detail** untuk Task #13 — template pesan per channel, A/B testing approach?
