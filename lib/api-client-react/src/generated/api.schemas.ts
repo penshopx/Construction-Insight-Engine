@@ -247,6 +247,64 @@ export interface ReferenceDocument {
   topics: string[];
 }
 
+export type ReferenceProcessingStatus = typeof ReferenceProcessingStatus[keyof typeof ReferenceProcessingStatus];
+
+
+export const ReferenceProcessingStatus = {
+  processing: 'processing',
+  ready: 'ready',
+  failed: 'failed',
+} as const;
+
+export interface ReferenceUploadRequest {
+  /** @minLength 1 */
+  name: string;
+  /**
+     * @minimum 1
+     * @maximum 20971520
+     */
+  size: number;
+  /** @minLength 1 */
+  contentType: string;
+}
+
+export interface ReferenceUploadResponse {
+  uploadURL: string;
+  objectPath: string;
+}
+
+export interface ReferenceImportInput {
+  /** @pattern ^/objects/uploads/org-[0-9]+-[a-f0-9-]+$ */
+  objectPath: string;
+  /** @minLength 1 */
+  sourceFilename: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  title?: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  category?: string;
+}
+
+export interface ReferenceImport {
+  id: number;
+  title: string;
+  category: string;
+  fileType: string;
+  sourceFilename: string;
+  status: ReferenceProcessingStatus;
+  /** @nullable */
+  error?: string | null;
+  sectionCount?: number;
+  createdAt: string;
+  /** @nullable */
+  processedAt?: string | null;
+}
+
 export interface ReferenceSearchHit {
   id: string;
   documentId: string;

@@ -362,6 +362,77 @@ export const ListReferencesResponse = zod.array(ListReferencesResponseItem)
 
 
 /**
+ * @summary Request a manager-only upload URL for a reference source
+ */
+
+export const requestReferenceUploadUrlBodySizeMax = 20971520;
+
+
+
+
+export const RequestReferenceUploadUrlBody = zod.object({
+  "name": zod.string().min(1),
+  "size": zod.number().min(1).max(requestReferenceUploadUrlBodySizeMax),
+  "contentType": zod.string().min(1)
+})
+
+export const RequestReferenceUploadUrlResponse = zod.object({
+  "uploadURL": zod.string(),
+  "objectPath": zod.string()
+})
+
+
+/**
+ * @summary List manager-visible reference processing jobs
+ */
+export const ListReferenceImportsResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "fileType": zod.string(),
+  "sourceFilename": zod.string(),
+  "status": zod.enum(['processing', 'ready', 'failed']),
+  "error": zod.string().nullish(),
+  "sectionCount": zod.number().optional(),
+  "createdAt": zod.coerce.date(),
+  "processedAt": zod.coerce.date().nullish()
+})
+export const ListReferenceImportsResponse = zod.array(ListReferenceImportsResponseItem)
+
+
+/**
+ * @summary Start extracting an uploaded reference source
+ */
+export const createReferenceImportBodyObjectPathRegExp = new RegExp('^/objects/uploads/org-[0-9]+-[a-f0-9-]+$');
+
+export const createReferenceImportBodyTitleMax = 200;
+
+export const createReferenceImportBodyCategoryMax = 100;
+
+
+
+export const CreateReferenceImportBody = zod.object({
+  "objectPath": zod.string().regex(createReferenceImportBodyObjectPathRegExp),
+  "sourceFilename": zod.string().min(1),
+  "title": zod.string().min(1).max(createReferenceImportBodyTitleMax).optional(),
+  "category": zod.string().min(1).max(createReferenceImportBodyCategoryMax).optional()
+})
+
+export const CreateReferenceImportResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "fileType": zod.string(),
+  "sourceFilename": zod.string(),
+  "status": zod.enum(['processing', 'ready', 'failed']),
+  "error": zod.string().nullish(),
+  "sectionCount": zod.number().optional(),
+  "createdAt": zod.coerce.date(),
+  "processedAt": zod.coerce.date().nullish()
+})
+
+
+/**
  * @summary Search reference document contents
  */
 export const searchReferencesQueryQMin = 2;

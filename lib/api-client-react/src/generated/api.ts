@@ -29,7 +29,11 @@ import type {
   ListWorkItemsParams,
   NotFoundResponse,
   ReferenceDocument,
+  ReferenceImport,
+  ReferenceImportInput,
   ReferenceSearchResponse,
+  ReferenceUploadRequest,
+  ReferenceUploadResponse,
   SearchReferencesParams,
   WorkItem,
   WorkItemInput,
@@ -1113,6 +1117,225 @@ export function useListReferences<TData = Awaited<ReturnType<typeof listReferenc
 
 
 
+
+export const getRequestReferenceUploadUrlUrl = () => {
+
+
+
+
+  return `/api/references/uploads/request-url`
+}
+
+/**
+ * @summary Request a manager-only upload URL for a reference source
+ */
+export const requestReferenceUploadUrl = async (referenceUploadRequest: ReferenceUploadRequest, options?: Parameters<typeof customFetch>[1]): Promise<ReferenceUploadResponse> => {
+
+  return customFetch<ReferenceUploadResponse>(getRequestReferenceUploadUrlUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(referenceUploadRequest)
+  }
+);}
+
+
+
+
+
+export const getRequestReferenceUploadUrlMutationOptions = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestReferenceUploadUrl>>, TError,{data: BodyType<ReferenceUploadRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof requestReferenceUploadUrl>>, TError,{data: BodyType<ReferenceUploadRequest>}, TContext> => {
+
+const mutationKey = ['requestReferenceUploadUrl'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof requestReferenceUploadUrl>>, {data: BodyType<ReferenceUploadRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  requestReferenceUploadUrl(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RequestReferenceUploadUrlMutationResult = NonNullable<Awaited<ReturnType<typeof requestReferenceUploadUrl>>>
+    export type RequestReferenceUploadUrlMutationBody = BodyType<ReferenceUploadRequest>
+    export type RequestReferenceUploadUrlMutationError = ErrorType<BadRequestResponse>
+
+    /**
+ * @summary Request a manager-only upload URL for a reference source
+ */
+export const useRequestReferenceUploadUrl = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof requestReferenceUploadUrl>>, TError,{data: BodyType<ReferenceUploadRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof requestReferenceUploadUrl>>,
+        TError,
+        {data: BodyType<ReferenceUploadRequest>},
+        TContext
+      > => {
+      return useMutation(getRequestReferenceUploadUrlMutationOptions(options));
+    }
+
+export const getListReferenceImportsUrl = () => {
+
+
+
+
+  return `/api/references/imports`
+}
+
+/**
+ * @summary List manager-visible reference processing jobs
+ */
+export const listReferenceImports = async ( options?: Parameters<typeof customFetch>[1]): Promise<ReferenceImport[]> => {
+
+  return customFetch<ReferenceImport[]>(getListReferenceImportsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReferenceImportsQueryKey = () => {
+    return [
+    `/api/references/imports`
+    ] as const;
+    }
+
+
+export const getListReferenceImportsQueryOptions = <TData = Awaited<ReturnType<typeof listReferenceImports>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReferenceImports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReferenceImportsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReferenceImports>>> = ({ signal }) => listReferenceImports({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReferenceImports>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListReferenceImportsQueryResult = NonNullable<Awaited<ReturnType<typeof listReferenceImports>>>
+export type ListReferenceImportsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List manager-visible reference processing jobs
+ */
+
+export function useListReferenceImports<TData = Awaited<ReturnType<typeof listReferenceImports>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReferenceImports>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListReferenceImportsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateReferenceImportUrl = () => {
+
+
+
+
+  return `/api/references/imports`
+}
+
+/**
+ * @summary Start extracting an uploaded reference source
+ */
+export const createReferenceImport = async (referenceImportInput: ReferenceImportInput, options?: Parameters<typeof customFetch>[1]): Promise<ReferenceImport> => {
+
+  return customFetch<ReferenceImport>(getCreateReferenceImportUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(referenceImportInput)
+  }
+);}
+
+
+
+
+
+export const getCreateReferenceImportMutationOptions = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReferenceImport>>, TError,{data: BodyType<ReferenceImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createReferenceImport>>, TError,{data: BodyType<ReferenceImportInput>}, TContext> => {
+
+const mutationKey = ['createReferenceImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createReferenceImport>>, {data: BodyType<ReferenceImportInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createReferenceImport(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateReferenceImportMutationResult = NonNullable<Awaited<ReturnType<typeof createReferenceImport>>>
+    export type CreateReferenceImportMutationBody = BodyType<ReferenceImportInput>
+    export type CreateReferenceImportMutationError = ErrorType<BadRequestResponse>
+
+    /**
+ * @summary Start extracting an uploaded reference source
+ */
+export const useCreateReferenceImport = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReferenceImport>>, TError,{data: BodyType<ReferenceImportInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createReferenceImport>>,
+        TError,
+        {data: BodyType<ReferenceImportInput>},
+        TContext
+      > => {
+      return useMutation(getCreateReferenceImportMutationOptions(options));
+    }
 
 export const getSearchReferencesUrl = (params: SearchReferencesParams,) => {
   const normalizedParams = new URLSearchParams();

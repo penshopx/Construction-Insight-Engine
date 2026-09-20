@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { and, eq, inArray } from "drizzle-orm";
 import {
   appUsersTable,
@@ -6,9 +6,13 @@ import {
   organizationInvitationsTable,
   organizationMembershipsTable,
   organizationsTable,
+  referenceDocumentsTable,
+  referenceSectionsTable,
   workItemsTable,
 } from "@workspace/db";
 import { acceptWorkspaceInvitation, provisionWorkspaceForUser } from "./workspace";
+import { dynamicDocuments } from "../routes/references";
+import { downloadReferenceObject } from "./reference-storage";
 
 const workItemIds: number[] = [];
 const organizationIds: number[] = [];
@@ -108,5 +112,67 @@ describe("organization workspace invariants", () => {
       eq(workItemsTable.organizationId, first.organizationId),
     )).returning();
     expect(crossTenantUpdate).toHaveLength(0);
+  });
+
+  it("keeps uploaded references inside the active organization", async () => {
+    const first = await provisionWorkspaceForUser(uniqueId("reference_tenant_a"));
+    const second = await provisionWorkspaceForUser(uniqueId("reference_tenant_b"));
+    organizationIds.push(first.organizationId, second.organizationId);
+    userIds.push(first.userId, second.userId);
+
+    const documents = await db.insert(referenceDocumentsTable).values([
+      {
+        organizationId: first.organizationId,
+        slug: uniqueId("reference_a"),
+        title: "Dokumen ruang A",
+        category: "Dasar & Prinsip",
+        sourceFilename: "a.pdf",
+        sourceChecksum: uniqueId("checksum_a"),
+        fileType: "PDF",
+      },
+      {
+        organizationId: second.organizationId,
+        slug: uniqueId("reference_b"),
+        title: "Dokumen ruang B",
+        category: "Dasar & Prinsip",
+        sourceFilename: "b.pdf",
+        sourceChecksum: uniqueId("checksum_b"),
+        fileType: "PDF",
+      },
+    ]).returning();
+    await db.insert(referenceSectionsTable).values(documents.map((document) => ({
+      documentId: document.id,
+      sectionNumber: 1,
+      heading: "Bagian 1",
+      content: `Isi ${document.title} yang cukup panjang untuk menjadi bagian pengujian pemisahan organisasi.`,
+      topics: [],
+    })));
+
+    const firstDocuments = await dynamicDocuments(first.organizationId);
+    expect(firstDocuments.map((document) => document.title)).toEqual(["Dokumen ruang A"]);
+    expect(await dynamicDocuments()).toEqual([]);
+  });
+
+  it("stops downloading when actual object bytes exceed the hard limit", async () => {
+    const originalFetch = globalThis.fetch;
+    process.env.PRIVATE_OBJECT_DIR = "/test-bucket/private";
+    const oversized = new Uint8Array(1025);
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ signed_url: "https://storage.test/object" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }))
+      .mockResolvedValueOnce(new Response(new ReadableStream({
+        start(controller) {
+          controller.enqueue(oversized);
+          controller.close();
+        },
+      }), { status: 200 }));
+
+    await expect(downloadReferenceObject(
+      "/objects/uploads/org-1-00000000-0000-0000-0000-000000000000",
+      1024,
+    )).rejects.toThrow("melebihi");
+    globalThis.fetch = originalFetch;
   });
 });

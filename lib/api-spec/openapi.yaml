@@ -258,6 +258,59 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ReferenceDocument"
+  /references/uploads/request-url:
+    post:
+      operationId: requestReferenceUploadUrl
+      tags: [references]
+      summary: Request a manager-only upload URL for a reference source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferenceUploadRequest"
+      responses:
+        "200":
+          description: Presigned upload target
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferenceUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /references/imports:
+    get:
+      operationId: listReferenceImports
+      tags: [references]
+      summary: List manager-visible reference processing jobs
+      responses:
+        "200":
+          description: Reference processing jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReferenceImport"
+    post:
+      operationId: createReferenceImport
+      tags: [references]
+      summary: Start extracting an uploaded reference source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferenceImportInput"
+      responses:
+        "202":
+          description: Extraction started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferenceImport"
+        "400":
+          $ref: "#/components/responses/BadRequest"
   /references/search:
     get:
       operationId: searchReferences
@@ -634,6 +687,75 @@ components:
           type: array
           items:
             type: string
+    ReferenceProcessingStatus:
+      type: string
+      enum: [processing, ready, failed]
+    ReferenceUploadRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        size:
+          type: number
+          minimum: 1
+          maximum: 20971520
+        contentType:
+          type: string
+          minLength: 1
+    ReferenceUploadResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
+          type: string
+    ReferenceImportInput:
+      type: object
+      required: [objectPath, sourceFilename]
+      properties:
+        objectPath:
+          type: string
+          pattern: "^/objects/uploads/org-[0-9]+-[a-f0-9-]+$"
+        sourceFilename:
+          type: string
+          minLength: 1
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+    ReferenceImport:
+      type: object
+      required: [id, title, category, fileType, sourceFilename, status, createdAt]
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        category:
+          type: string
+        fileType:
+          type: string
+        sourceFilename:
+          type: string
+        status:
+          $ref: "#/components/schemas/ReferenceProcessingStatus"
+        error:
+          type: ["string", "null"]
+        sectionCount:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: ["string", "null"]
+          format: date-time
     ReferenceSearchHit:
       type: object
       required: [id, documentId, title, category, fileType, sourceFilename, sourceChecksum, sectionNumber, heading, excerpt, topics]

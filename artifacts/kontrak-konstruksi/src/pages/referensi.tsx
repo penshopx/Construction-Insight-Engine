@@ -1,9 +1,21 @@
-import { useDeferredValue, useMemo, useState } from 'react';
-import { getSearchReferencesQueryKey, useListReferences, useSearchReferences } from '@workspace/api-client-react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  getListReferencesQueryKey,
+  getListReferenceImportsQueryKey,
+  getSearchReferencesQueryKey,
+  useCreateReferenceImport,
+  useGetWorkspace,
+  useListReferenceImports,
+  useListReferences,
+  useRequestReferenceUploadUrl,
+  useSearchReferences,
+} from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader, Shell } from '@/components/layout';
 import {
   AlertTriangle,
   BookOpen,
+  CheckCircle2,
   Database,
   FileSearch,
   FileText,
@@ -11,16 +23,33 @@ import {
   LoaderCircle,
   Search,
   ShieldAlert,
+  Upload,
+  XCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function Referensi() {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('Semua');
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
   const deferredQuery = useDeferredValue(query.trim());
   const canSearch = deferredQuery.length >= 2;
 
+  const workspaceQuery = useGetWorkspace();
   const documentsQuery = useListReferences();
+  const isManager = workspaceQuery.data?.role === 'manager';
+  const importsQuery = useListReferenceImports({
+    query: {
+      enabled: isManager,
+      queryKey: getListReferenceImportsQueryKey(),
+      refetchInterval: (queryState) =>
+        queryState.state.data?.some((item) => item.status === 'processing') ? 2000 : false,
+    },
+  });
+  const uploadUrlMutation = useRequestReferenceUploadUrl();
+  const createImportMutation = useCreateReferenceImport();
   const searchParams = { q: deferredQuery || '--', category: category === 'Semua' ? undefined : category };
   const searchQuery = useSearchReferences(searchParams, {
     query: { enabled: canSearch, queryKey: getSearchReferencesQueryKey(searchParams) },
@@ -36,6 +65,40 @@ export default function Referensi() {
     : documents.filter((document) => document.category === category);
   const isLoading = documentsQuery.isLoading || (canSearch && searchQuery.isFetching);
   const isError = documentsQuery.isError || (canSearch && searchQuery.isError);
+  const isUploading = uploadUrlMutation.isPending || createImportMutation.isPending;
+
+  useEffect(() => {
+    if (!importsQuery.data?.some((item) => item.status === 'ready')) return;
+    void queryClient.invalidateQueries({ queryKey: getListReferencesQueryKey() });
+  }, [importsQuery.data, queryClient]);
+
+  async function handleUpload(file: File) {
+    setUploadError('');
+    if (!/\.(pdf|doc|docx)$/i.test(file.name)) {
+      setUploadError('Format harus PDF, DOC, atau DOCX.');
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      setUploadError('Ukuran berkas maksimal 20 MB.');
+      return;
+    }
+    try {
+      const target = await uploadUrlMutation.mutateAsync({
+        data: { name: file.name, size: file.size, contentType: file.type || 'application/octet-stream' },
+      });
+      const upload = await fetch(target.uploadURL, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+      if (!upload.ok) throw new Error('Berkas gagal dikirim ke penyimpanan.');
+      await createImportMutation.mutateAsync({ data: { objectPath: target.objectPath, sourceFilename: file.name } });
+      await importsQuery.refetch();
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Unggahan tidak dapat diproses.');
+    }
+  }
 
   return (
     <Shell>
@@ -50,6 +113,68 @@ export default function Referensi() {
           </div>
         }
       />
+
+      {isManager && (
+        <section className="mb-8 rounded-lg border border-primary/25 bg-card p-5 shadow-card">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-primary">Kelola Pustaka</p>
+              <h2 className="mt-1 font-display text-lg font-bold text-slate-100">Tambahkan dokumen rujukan</h2>
+              <p className="mt-1 max-w-2xl text-sm text-slate-400">
+                Unggah PDF, DOC, atau DOCX hingga 20 MB. Judul, kategori, topik, dan segmen pencarian akan dibuat otomatis.
+              </p>
+            </div>
+            <label className={cn(
+              'inline-flex cursor-pointer items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-bold text-slate-950 transition-opacity',
+              isUploading && 'pointer-events-none opacity-60',
+            )}>
+              {isUploading ? <LoaderCircle size={16} className="animate-spin" /> : <Upload size={16} />}
+              {isUploading ? 'Mengunggah...' : 'Pilih Dokumen'}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="sr-only"
+                disabled={isUploading}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleUpload(file);
+                }}
+              />
+            </label>
+          </div>
+          {uploadError && (
+            <p className="mt-4 flex items-center gap-2 rounded border border-red-900/50 bg-red-950/20 px-3 py-2 text-sm text-red-300">
+              <XCircle size={15} /> {uploadError}
+            </p>
+          )}
+          {(importsQuery.data?.length ?? 0) > 0 && (
+            <div className="mt-5 border-t border-border pt-4">
+              <p className="mb-3 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500">Status pemrosesan terbaru</p>
+              <div className="space-y-2">
+                {importsQuery.data?.slice(0, 5).map((item) => (
+                  <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded border border-border bg-background/60 px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-200">{item.title}</p>
+                      <p className="truncate text-xs text-slate-500">{item.sourceFilename}</p>
+                      {item.error && <p className="mt-1 text-xs text-red-400">{item.error}</p>}
+                    </div>
+                    <span className={cn(
+                      'inline-flex items-center gap-1.5 rounded border px-2 py-1 font-mono text-[9px] font-bold uppercase',
+                      item.status === 'ready' && 'border-emerald-800 bg-emerald-950/30 text-emerald-400',
+                      item.status === 'failed' && 'border-red-900 bg-red-950/30 text-red-400',
+                      item.status === 'processing' && 'border-amber-900 bg-amber-950/30 text-amber-400',
+                    )}>
+                      {item.status === 'ready' ? <CheckCircle2 size={12} /> : item.status === 'failed' ? <XCircle size={12} /> : <LoaderCircle size={12} className="animate-spin" />}
+                      {item.status === 'ready' ? `${item.sectionCount ?? 0} segmen — siap` : item.status === 'failed' ? 'gagal' : 'memproses'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="mb-8 rounded-lg border border-border bg-card p-5 shadow-card relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
