@@ -7,6 +7,16 @@
  */
 
 export * from './badRequestResponse';
+export * from './contractCase';
+export * from './contractCaseActivity';
+export * from './contractCaseEvidence';
+export * from './contractCaseInput';
+export * from './contractCaseInputTypeDetails';
+export * from './contractCaseStatus';
+export * from './contractCaseType';
+export * from './contractCaseTypeDetails';
+export * from './contractCaseUpdate';
+export * from './contractCaseUpdateTypeDetails';
 export * from './error';
 export * from './healthStatus';
 export * from './listWorkItemsParams';

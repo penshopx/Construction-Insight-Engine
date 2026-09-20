@@ -88,6 +88,8 @@ export interface WorkItem {
   /** @nullable */
   competencyArea?: string | null;
   completed: boolean;
+  /** @nullable */
+  caseId?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -105,6 +107,7 @@ export interface WorkItemInput {
   kind: string;
   competencyArea?: string;
   completed?: boolean;
+  caseId?: number;
 }
 
 export interface WorkItemUpdate {
@@ -124,6 +127,113 @@ export interface WorkItemUpdate {
   /** @nullable */
   competencyArea?: string | null;
   completed?: boolean;
+  /** @nullable */
+  caseId?: number | null;
+}
+
+export type ContractCaseType = typeof ContractCaseType[keyof typeof ContractCaseType];
+
+
+export const ContractCaseType = {
+  VO: 'VO',
+  EOT: 'EOT',
+  CLAIM: 'CLAIM',
+  NCR: 'NCR',
+} as const;
+
+export type ContractCaseStatus = typeof ContractCaseStatus[keyof typeof ContractCaseStatus];
+
+
+export const ContractCaseStatus = {
+  Draft: 'Draft',
+  Active: 'Active',
+  Under_Review: 'Under Review',
+  Decided: 'Decided',
+  Closed: 'Closed',
+} as const;
+
+export interface ContractCaseEvidence {
+  name: string;
+  note?: string;
+}
+
+export type ContractCaseTypeDetails = {[key: string]: string};
+
+export interface ContractCase {
+  id: number;
+  reference: string;
+  type: ContractCaseType;
+  title: string;
+  project: string;
+  eventDate: string;
+  /** @nullable */
+  noticeDueDate?: string | null;
+  clauseBasis: string;
+  description: string;
+  /** @nullable */
+  impactValue?: string | null;
+  currentStage: number;
+  status: ContractCaseStatus;
+  /** @nullable */
+  owner?: string | null;
+  typeDetails: ContractCaseTypeDetails;
+  evidence: ContractCaseEvidence[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type ContractCaseInputTypeDetails = {[key: string]: string};
+
+export interface ContractCaseInput {
+  type: ContractCaseType;
+  /** @minLength 2 */
+  title: string;
+  /** @minLength 2 */
+  project: string;
+  eventDate: string;
+  noticeDueDate?: string;
+  /** @minLength 1 */
+  clauseBasis: string;
+  /** @minLength 2 */
+  description: string;
+  impactValue?: string;
+  owner?: string;
+  typeDetails: ContractCaseInputTypeDetails;
+  evidence?: ContractCaseEvidence[];
+}
+
+export type ContractCaseUpdateTypeDetails = {[key: string]: string};
+
+export interface ContractCaseUpdate {
+  /** @minLength 2 */
+  title?: string;
+  project?: string;
+  /** @nullable */
+  noticeDueDate?: string | null;
+  clauseBasis?: string;
+  description?: string;
+  /** @nullable */
+  impactValue?: string | null;
+  /** @nullable */
+  owner?: string | null;
+  /**
+     * @minimum 0
+     * @maximum 4
+     */
+  currentStage?: number;
+  status?: ContractCaseStatus;
+  typeDetails?: ContractCaseUpdateTypeDetails;
+  evidence?: ContractCaseEvidence[];
+  changeNote?: string;
+}
+
+export interface ContractCaseActivity {
+  id: number;
+  action: string;
+  detail: string;
+  /** @nullable */
+  actor?: string | null;
+  createdAt: string;
 }
 
 export interface ReferenceDocument {

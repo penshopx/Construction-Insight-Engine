@@ -21,4 +21,5 @@ export interface WorkItemInput {
   kind: string;
   competencyArea?: string;
   completed?: boolean;
+  caseId?: number;
 }

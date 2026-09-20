@@ -24,4 +24,6 @@ export interface WorkItemUpdate {
   /** @nullable */
   competencyArea?: string | null;
   completed?: boolean;
+  /** @nullable */
+  caseId?: number | null;
 }

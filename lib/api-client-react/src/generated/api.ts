@@ -21,6 +21,10 @@ import type {
 
 import type {
   BadRequestResponse,
+  ContractCase,
+  ContractCaseActivity,
+  ContractCaseInput,
+  ContractCaseUpdate,
   HealthStatus,
   ListWorkItemsParams,
   NotFoundResponse,
@@ -368,6 +372,303 @@ export const useUpdateWorkItem = <TError = ErrorType<BadRequestResponse | NotFou
       > => {
       return useMutation(getUpdateWorkItemMutationOptions(options));
     }
+
+export const getListContractCasesUrl = () => {
+
+
+
+
+  return `/api/contract-cases`
+}
+
+/**
+ * @summary List contractual cases
+ */
+export const listContractCases = async ( options?: Parameters<typeof customFetch>[1]): Promise<ContractCase[]> => {
+
+  return customFetch<ContractCase[]>(getListContractCasesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListContractCasesQueryKey = () => {
+    return [
+    `/api/contract-cases`
+    ] as const;
+    }
+
+
+export const getListContractCasesQueryOptions = <TData = Awaited<ReturnType<typeof listContractCases>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listContractCases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListContractCasesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listContractCases>>> = ({ signal }) => listContractCases({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listContractCases>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListContractCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listContractCases>>>
+export type ListContractCasesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List contractual cases
+ */
+
+export function useListContractCases<TData = Awaited<ReturnType<typeof listContractCases>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listContractCases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListContractCasesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateContractCaseUrl = () => {
+
+
+
+
+  return `/api/contract-cases`
+}
+
+/**
+ * @summary Create a guided contractual case
+ */
+export const createContractCase = async (contractCaseInput: ContractCaseInput, options?: Parameters<typeof customFetch>[1]): Promise<ContractCase> => {
+
+  return customFetch<ContractCase>(getCreateContractCaseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contractCaseInput)
+  }
+);}
+
+
+
+
+
+export const getCreateContractCaseMutationOptions = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContractCase>>, TError,{data: BodyType<ContractCaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createContractCase>>, TError,{data: BodyType<ContractCaseInput>}, TContext> => {
+
+const mutationKey = ['createContractCase'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createContractCase>>, {data: BodyType<ContractCaseInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createContractCase(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateContractCaseMutationResult = NonNullable<Awaited<ReturnType<typeof createContractCase>>>
+    export type CreateContractCaseMutationBody = BodyType<ContractCaseInput>
+    export type CreateContractCaseMutationError = ErrorType<BadRequestResponse>
+
+    /**
+ * @summary Create a guided contractual case
+ */
+export const useCreateContractCase = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContractCase>>, TError,{data: BodyType<ContractCaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createContractCase>>,
+        TError,
+        {data: BodyType<ContractCaseInput>},
+        TContext
+      > => {
+      return useMutation(getCreateContractCaseMutationOptions(options));
+    }
+
+export const getUpdateContractCaseUrl = (id: number,) => {
+
+
+
+
+  return `/api/contract-cases/${id}`
+}
+
+/**
+ * @summary Update a contractual case and record its history
+ */
+export const updateContractCase = async (id: number,
+    contractCaseUpdate: ContractCaseUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ContractCase> => {
+
+  return customFetch<ContractCase>(getUpdateContractCaseUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contractCaseUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateContractCaseMutationOptions = <TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContractCase>>, TError,{id: number;data: BodyType<ContractCaseUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateContractCase>>, TError,{id: number;data: BodyType<ContractCaseUpdate>}, TContext> => {
+
+const mutationKey = ['updateContractCase'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateContractCase>>, {id: number;data: BodyType<ContractCaseUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateContractCase(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateContractCaseMutationResult = NonNullable<Awaited<ReturnType<typeof updateContractCase>>>
+    export type UpdateContractCaseMutationBody = BodyType<ContractCaseUpdate>
+    export type UpdateContractCaseMutationError = ErrorType<BadRequestResponse | NotFoundResponse>
+
+    /**
+ * @summary Update a contractual case and record its history
+ */
+export const useUpdateContractCase = <TError = ErrorType<BadRequestResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateContractCase>>, TError,{id: number;data: BodyType<ContractCaseUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateContractCase>>,
+        TError,
+        {id: number;data: BodyType<ContractCaseUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateContractCaseMutationOptions(options));
+    }
+
+export const getListContractCaseActivitiesUrl = (id: number,) => {
+
+
+
+
+  return `/api/contract-cases/${id}/activities`
+}
+
+/**
+ * @summary List the case change history
+ */
+export const listContractCaseActivities = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<ContractCaseActivity[]> => {
+
+  return customFetch<ContractCaseActivity[]>(getListContractCaseActivitiesUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListContractCaseActivitiesQueryKey = (id: number,) => {
+    return [
+    `/api/contract-cases/${id}/activities`
+    ] as const;
+    }
+
+
+export const getListContractCaseActivitiesQueryOptions = <TData = Awaited<ReturnType<typeof listContractCaseActivities>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listContractCaseActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListContractCaseActivitiesQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listContractCaseActivities>>> = ({ signal }) => listContractCaseActivities(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listContractCaseActivities>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListContractCaseActivitiesQueryResult = NonNullable<Awaited<ReturnType<typeof listContractCaseActivities>>>
+export type ListContractCaseActivitiesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the case change history
+ */
+
+export function useListContractCaseActivities<TData = Awaited<ReturnType<typeof listContractCaseActivities>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listContractCaseActivities>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListContractCaseActivitiesQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetWorkspaceUrl = () => {
 

@@ -25,6 +25,8 @@ export interface WorkItem {
   /** @nullable */
   competencyArea?: string | null;
   completed: boolean;
+  /** @nullable */
+  caseId?: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

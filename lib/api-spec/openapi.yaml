@@ -16,6 +16,8 @@ tags:
     description: Searchable contract reference documents
   - name: workspace
     description: Current organization workspace and membership
+  - name: contract-cases
+    description: Guided contractual case workflows
 paths:
   /healthz:
     get:
@@ -92,6 +94,79 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+  /contract-cases:
+    get:
+      operationId: listContractCases
+      tags: [contract-cases]
+      summary: List contractual cases
+      responses:
+        "200":
+          description: Contractual cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContractCase"
+    post:
+      operationId: createContractCase
+      tags: [contract-cases]
+      summary: Create a guided contractual case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContractCaseInput"
+      responses:
+        "201":
+          description: Created contractual case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractCase"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /contract-cases/{id}:
+    patch:
+      operationId: updateContractCase
+      tags: [contract-cases]
+      summary: Update a contractual case and record its history
+      parameters:
+        - $ref: "#/components/parameters/ContractCaseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContractCaseUpdate"
+      responses:
+        "200":
+          description: Updated contractual case
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContractCase"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /contract-cases/{id}/activities:
+    get:
+      operationId: listContractCaseActivities
+      tags: [contract-cases]
+      summary: List the case change history
+      parameters:
+        - $ref: "#/components/parameters/ContractCaseId"
+      responses:
+        "200":
+          description: Case history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContractCaseActivity"
   /workspace:
     get:
       operationId: getWorkspace
@@ -216,6 +291,12 @@ components:
       required: true
       schema:
         type: number
+    ContractCaseId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: number
   responses:
     BadRequest:
       description: Invalid request
@@ -322,6 +403,8 @@ components:
           type: ["string", "null"]
         completed:
           type: boolean
+        caseId:
+          type: ["number", "null"]
         createdAt:
           type: string
           format: date-time
@@ -354,6 +437,8 @@ components:
           type: string
         completed:
           type: boolean
+        caseId:
+          type: number
     WorkItemUpdate:
       type: object
       minProperties: 1
@@ -378,6 +463,155 @@ components:
           type: ["string", "null"]
         completed:
           type: boolean
+        caseId:
+          type: ["number", "null"]
+    ContractCaseType:
+      type: string
+      enum: [VO, EOT, CLAIM, NCR]
+    ContractCaseStatus:
+      type: string
+      enum: [Draft, Active, Under Review, Decided, Closed]
+    ContractCaseEvidence:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        note:
+          type: string
+    ContractCase:
+      type: object
+      required: [id, reference, type, title, project, eventDate, clauseBasis, description, currentStage, status, typeDetails, evidence, createdAt, updatedAt]
+      properties:
+        id:
+          type: number
+        reference:
+          type: string
+        type:
+          $ref: "#/components/schemas/ContractCaseType"
+        title:
+          type: string
+        project:
+          type: string
+        eventDate:
+          type: string
+          format: date
+        noticeDueDate:
+          type: ["string", "null"]
+          format: date
+        clauseBasis:
+          type: string
+        description:
+          type: string
+        impactValue:
+          type: ["string", "null"]
+        currentStage:
+          type: number
+        status:
+          $ref: "#/components/schemas/ContractCaseStatus"
+        owner:
+          type: ["string", "null"]
+        typeDetails:
+          type: object
+          additionalProperties:
+            type: string
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractCaseEvidence"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ContractCaseInput:
+      type: object
+      required: [type, title, project, eventDate, clauseBasis, description, typeDetails]
+      properties:
+        type:
+          $ref: "#/components/schemas/ContractCaseType"
+        title:
+          type: string
+          minLength: 2
+        project:
+          type: string
+          minLength: 2
+        eventDate:
+          type: string
+          format: date
+        noticeDueDate:
+          type: string
+          format: date
+        clauseBasis:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 2
+        impactValue:
+          type: string
+        owner:
+          type: string
+        typeDetails:
+          type: object
+          additionalProperties:
+            type: string
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractCaseEvidence"
+    ContractCaseUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 2
+        project:
+          type: string
+        noticeDueDate:
+          type: ["string", "null"]
+          format: date
+        clauseBasis:
+          type: string
+        description:
+          type: string
+        impactValue:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        currentStage:
+          type: number
+          minimum: 0
+          maximum: 4
+        status:
+          $ref: "#/components/schemas/ContractCaseStatus"
+        typeDetails:
+          type: object
+          additionalProperties:
+            type: string
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/ContractCaseEvidence"
+        changeNote:
+          type: string
+    ContractCaseActivity:
+      type: object
+      required: [id, action, detail, createdAt]
+      properties:
+        id:
+          type: number
+        action:
+          type: string
+        detail:
+          type: string
+        actor:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
     ReferenceDocument:
       type: object
       required: [id, title, category, fileType, sourceFilename, sourceChecksum, sectionCount, topics]

@@ -36,6 +36,7 @@ export const ListWorkItemsResponseItem = zod.object({
   "kind": zod.string(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean(),
+  "caseId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -59,7 +60,8 @@ export const CreateWorkItemBody = zod.object({
   "due": zod.string().optional(),
   "kind": zod.string().min(1),
   "competencyArea": zod.string().optional(),
-  "completed": zod.boolean().optional()
+  "completed": zod.boolean().optional(),
+  "caseId": zod.number().optional()
 })
 
 export const CreateWorkItemResponse = zod.object({
@@ -74,6 +76,7 @@ export const CreateWorkItemResponse = zod.object({
   "kind": zod.string(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean(),
+  "caseId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
@@ -99,7 +102,8 @@ export const UpdateWorkItemBody = zod.object({
   "due": zod.string().nullish(),
   "kind": zod.string().min(1).optional(),
   "competencyArea": zod.string().nullish(),
-  "completed": zod.boolean().optional()
+  "completed": zod.boolean().optional(),
+  "caseId": zod.number().nullish()
 })
 
 export const UpdateWorkItemResponse = zod.object({
@@ -114,9 +118,164 @@ export const UpdateWorkItemResponse = zod.object({
   "kind": zod.string(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean(),
+  "caseId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary List contractual cases
+ */
+export const ListContractCasesResponseItem = zod.object({
+  "id": zod.number(),
+  "reference": zod.string(),
+  "type": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "title": zod.string(),
+  "project": zod.string(),
+  "eventDate": zod.coerce.date(),
+  "noticeDueDate": zod.coerce.date().nullish(),
+  "clauseBasis": zod.string(),
+  "description": zod.string(),
+  "impactValue": zod.string().nullish(),
+  "currentStage": zod.number(),
+  "status": zod.enum(['Draft', 'Active', 'Under Review', 'Decided', 'Closed']),
+  "owner": zod.string().nullish(),
+  "typeDetails": zod.record(zod.string(), zod.string()),
+  "evidence": zod.array(zod.object({
+  "name": zod.string(),
+  "note": zod.string().optional()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListContractCasesResponse = zod.array(ListContractCasesResponseItem)
+
+
+/**
+ * @summary Create a guided contractual case
+ */
+export const createContractCaseBodyTitleMin = 2;
+
+export const createContractCaseBodyProjectMin = 2;
+
+
+export const createContractCaseBodyDescriptionMin = 2;
+
+
+
+export const CreateContractCaseBody = zod.object({
+  "type": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "title": zod.string().min(createContractCaseBodyTitleMin),
+  "project": zod.string().min(createContractCaseBodyProjectMin),
+  "eventDate": zod.coerce.date(),
+  "noticeDueDate": zod.coerce.date().optional(),
+  "clauseBasis": zod.string().min(1),
+  "description": zod.string().min(createContractCaseBodyDescriptionMin),
+  "impactValue": zod.string().optional(),
+  "owner": zod.string().optional(),
+  "typeDetails": zod.record(zod.string(), zod.string()),
+  "evidence": zod.array(zod.object({
+  "name": zod.string(),
+  "note": zod.string().optional()
+})).optional()
+})
+
+export const CreateContractCaseResponse = zod.object({
+  "id": zod.number(),
+  "reference": zod.string(),
+  "type": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "title": zod.string(),
+  "project": zod.string(),
+  "eventDate": zod.coerce.date(),
+  "noticeDueDate": zod.coerce.date().nullish(),
+  "clauseBasis": zod.string(),
+  "description": zod.string(),
+  "impactValue": zod.string().nullish(),
+  "currentStage": zod.number(),
+  "status": zod.enum(['Draft', 'Active', 'Under Review', 'Decided', 'Closed']),
+  "owner": zod.string().nullish(),
+  "typeDetails": zod.record(zod.string(), zod.string()),
+  "evidence": zod.array(zod.object({
+  "name": zod.string(),
+  "note": zod.string().optional()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update a contractual case and record its history
+ */
+export const UpdateContractCaseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const updateContractCaseBodyTitleMin = 2;
+
+export const updateContractCaseBodyCurrentStageMin = 0;
+export const updateContractCaseBodyCurrentStageMax = 4;
+
+
+
+export const UpdateContractCaseBody = zod.object({
+  "title": zod.string().min(updateContractCaseBodyTitleMin).optional(),
+  "project": zod.string().optional(),
+  "noticeDueDate": zod.coerce.date().nullish(),
+  "clauseBasis": zod.string().optional(),
+  "description": zod.string().optional(),
+  "impactValue": zod.string().nullish(),
+  "owner": zod.string().nullish(),
+  "currentStage": zod.number().min(updateContractCaseBodyCurrentStageMin).max(updateContractCaseBodyCurrentStageMax).optional(),
+  "status": zod.enum(['Draft', 'Active', 'Under Review', 'Decided', 'Closed']).optional(),
+  "typeDetails": zod.record(zod.string(), zod.string()).optional(),
+  "evidence": zod.array(zod.object({
+  "name": zod.string(),
+  "note": zod.string().optional()
+})).optional(),
+  "changeNote": zod.string().optional()
+})
+
+export const UpdateContractCaseResponse = zod.object({
+  "id": zod.number(),
+  "reference": zod.string(),
+  "type": zod.enum(['VO', 'EOT', 'CLAIM', 'NCR']),
+  "title": zod.string(),
+  "project": zod.string(),
+  "eventDate": zod.coerce.date(),
+  "noticeDueDate": zod.coerce.date().nullish(),
+  "clauseBasis": zod.string(),
+  "description": zod.string(),
+  "impactValue": zod.string().nullish(),
+  "currentStage": zod.number(),
+  "status": zod.enum(['Draft', 'Active', 'Under Review', 'Decided', 'Closed']),
+  "owner": zod.string().nullish(),
+  "typeDetails": zod.record(zod.string(), zod.string()),
+  "evidence": zod.array(zod.object({
+  "name": zod.string(),
+  "note": zod.string().optional()
+})),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List the case change history
+ */
+export const ListContractCaseActivitiesParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListContractCaseActivitiesResponseItem = zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "detail": zod.string(),
+  "actor": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListContractCaseActivitiesResponse = zod.array(ListContractCaseActivitiesResponseItem)
 
 
 /**
