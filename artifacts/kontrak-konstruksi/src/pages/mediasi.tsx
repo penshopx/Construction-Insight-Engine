@@ -1,190 +1,78 @@
-import { PageHeader, Shell } from '@/components/layout';
-import { Users, Scale, FileText, CheckCircle2, ChevronRight, Download, ShieldCheck, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState, type ReactNode } from "react";
+import { Activity, FileText, Scale, Users } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { PageHeader, Shell } from "@/components/layout";
+import {
+  getGetMediationRoomQueryKey, getListMediationRoomsQueryKey, useAddMediationEvidence,
+  useAddMediationIssue, useAddMediationParticipant, useAddMediationSession,
+  useCreateMediationRoom, useGetMediationRoom, useListMediationRooms, useUpdateMediationIssue,
+  useUpdateMediationRoom, EvidenceConfidentiality, WorkspaceRole,
+  MediationRoomAggregate, MediationIssue,
+} from "@workspace/api-client-react";
 
-export default function Mediasi() {
-  return (
-    <Shell>
-      <PageHeader 
-        eyebrow="Pilar 3: Ahli & Resolusi" 
-        title="Ruang Mediasi Daring" 
-        description="Workspace mediasi netral. Akses bukti yang disepakati, lacak pokok sengketa, dan kelola draf kesepakatan secara konstruktif bersama Penilai Ahli."
-      />
-
-      <div className="mb-6 flex items-start gap-3 rounded border border-primary/30 bg-primary/5 p-3">
-        <Activity className="mt-0.5 shrink-0 text-primary" size={16} />
-        <p className="text-xs leading-relaxed text-slate-300">
-          <strong className="text-primary">MODE DEMONSTRASI:</strong> Tampilan ini mengilustrasikan ruang kerja mediasi. Data para pihak dan dokumen adalah sampel simulasi interaksi.
-        </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Info & Status Column */}
-        <div className="space-y-6">
-          <div className="rounded-lg border border-border bg-card p-5 shadow-card relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-bl-full -mr-12 -mt-12"></div>
-            <div className="flex items-center gap-2 mb-4">
-              <Scale size={18} className="text-emerald-400" />
-              <h3 className="font-display font-bold text-slate-200">Perkara #MED-2026-04</h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <p className="font-mono text-[9px] uppercase text-slate-500 tracking-wider mb-1">Status Saat Ini</p>
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div> Sesi Aktif Berjalan
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
-                <div>
-                  <p className="font-mono text-[9px] uppercase text-slate-500 tracking-wider mb-1">Pemohon</p>
-                  <p className="text-sm font-bold text-slate-200">PT Kontraktor A</p>
-                </div>
-                <div>
-                  <p className="font-mono text-[9px] uppercase text-slate-500 tracking-wider mb-1">Termohon</p>
-                  <p className="text-sm font-bold text-slate-200">PT Pemilik XYZ</p>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <p className="font-mono text-[9px] uppercase text-slate-500 tracking-wider mb-1">Mediator (Penilai Ahli)</p>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-slate-200">Prof. Bambang Sutanto</p>
-                  <span title="Pemeriksaan konflik kepentingan — data demonstrasi">
-                    <ShieldCheck size={14} className="text-primary" />
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-border bg-card p-5">
-            <h3 className="font-display font-bold text-sm text-slate-200 mb-4">Agenda Sesi Mediasi</h3>
-            <div className="space-y-3 relative">
-              <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border"></div>
-              
-              <div className="relative flex gap-3 z-10">
-                <div className="w-6 h-6 rounded-full bg-background border border-emerald-500 text-emerald-500 flex items-center justify-center shrink-0">
-                  <CheckCircle2 size={12} />
-                </div>
-                <div className="pt-0.5">
-                  <p className="text-xs font-bold text-slate-300">Sesi 1: Paparan Awal</p>
-                  <p className="font-mono text-[9px] text-slate-500">15 Sep 2026 • Selesai</p>
-                </div>
-              </div>
-              
-              <div className="relative flex gap-3 z-10">
-                <div className="w-6 h-6 rounded-full bg-primary/20 border border-primary text-primary flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(0,180,255,0.2)]">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-ping"></div>
-                </div>
-                <div className="pt-0.5">
-                  <p className="text-xs font-bold text-primary">Sesi 2: Analisis Kuantum Klaim</p>
-                  <p className="font-mono text-[9px] text-slate-500">Hari ini • Berlangsung</p>
-                </div>
-              </div>
-              
-              <div className="relative flex gap-3 z-10 opacity-50">
-                <div className="w-6 h-6 rounded-full bg-background border border-border text-slate-500 flex items-center justify-center shrink-0">
-                  <span className="text-[10px] font-mono">3</span>
-                </div>
-                <div className="pt-0.5">
-                  <p className="text-xs font-bold text-slate-400">Sesi 3: Finalisasi Kesepakatan</p>
-                  <p className="font-mono text-[9px] text-slate-500">22 Sep 2026 • Terjadwal</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Workspace Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Agreed Issues Tracker */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-            <h2 className="font-display font-bold text-lg text-white mb-1">Pokok Sengketa & Resolusi</h2>
-            <p className="text-xs text-slate-400 mb-6">Tampilan demo status pembahasan; bukan persetujuan real-time atau penetapan hukum.</p>
-
-            <div className="space-y-4">
-              <div className="rounded border border-border bg-background p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">DISEPAKATI</span>
-                  </div>
-                  <span className="font-mono text-[10px] text-slate-500">Isu #1</span>
-                </div>
-                <h4 className="text-sm font-bold text-slate-200 mb-1">Tinjauan Awal Hak EOT (Belum Diverifikasi)</h4>
-                <p className="text-xs text-slate-400 mb-4">Para pihak sepakat keterlambatan disebabkan oleh pembebasan lahan yang merupakan tanggung jawab Owner.</p>
-                <div className="bg-emerald-950/20 rounded p-3 text-xs border border-emerald-900/30">
-                  <span className="font-bold text-emerald-300">Resolusi: </span> 
-                  <span className="text-emerald-200/80">EOT diberikan selama 45 hari kalender tanpa denda keterlambatan.</span>
-                </div>
-              </div>
-
-              <div className="rounded border border-primary/30 bg-primary/5 p-4 shadow-[0_0_15px_rgba(0,180,255,0.03)]">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[10px] font-bold text-primary bg-primary/20 px-2 py-0.5 rounded border border-primary/30">DALAM NEGOSIASI</span>
-                  </div>
-                  <span className="font-mono text-[10px] text-slate-500">Isu #2</span>
-                </div>
-                <h4 className="text-sm font-bold text-slate-200 mb-1">Kompensasi Biaya Idle (Prolongation Cost)</h4>
-                <p className="text-xs text-slate-400 mb-4">Kontraktor menuntut biaya sewa alat berat yang menganggur selama masa tunggu lahan. Owner menolak nilai kuantum.</p>
-                
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-background rounded p-2 border border-border">
-                    <p className="font-mono text-[9px] text-slate-500 mb-1">Posisi Pemohon</p>
-                    <p className="text-xs font-bold text-slate-300">Rp 850.000.000</p>
-                  </div>
-                  <div className="bg-background rounded p-2 border border-border">
-                    <p className="font-mono text-[9px] text-slate-500 mb-1">Posisi Termohon</p>
-                    <p className="text-xs font-bold text-slate-300">Rp 200.000.000</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-primary/20 pt-3">
-                  <span className="text-xs text-slate-400 flex items-center gap-2">
-                    <Users size={14} className="text-primary" /> Menunggu Opini Ahli mengenai nilai depresiasi wajar.
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Shared Evidence Access */}
-          <div className="rounded-lg border border-border bg-card p-6 shadow-card">
-            <div className="flex justify-between items-end mb-4">
-              <div>
-                <h2 className="font-display font-bold text-base text-slate-200 flex items-center gap-2">
-                  <FileText size={16} className="text-primary" /> Daftar Dokumen Bersama (Demo)
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">Dokumen yang disetujui untuk diakses mediator.</p>
-              </div>
-              <button className="text-xs font-bold text-primary hover:text-primary/80 transition-colors">Kelola Akses</button>
-            </div>
-
-            <div className="grid gap-2">
-              {[
-                { name: 'Kontrak Utama & Adendum 1', type: 'PDF', sender: 'Pemilik XYZ' },
-                { name: 'Log Harian Cuaca (BMKG & Site)', type: 'XLSX', sender: 'Kontraktor A' },
-                { name: 'Foto Drone Kondisi Lahan (Timestamped)', type: 'ZIP', sender: 'Kontraktor A' },
-              ].map((doc, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded border border-border bg-background hover:bg-white/5 transition-colors group cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <div className="p-1.5 bg-slate-800 rounded text-slate-400">
-                      <FileText size={14} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">{doc.name}</p>
-                      <p className="text-[10px] text-slate-500 font-mono mt-0.5">Oleh: {doc.sender} • Format {doc.type}</p>
-                    </div>
-                  </div>
-                  <Download size={16} className="text-slate-600 group-hover:text-primary transition-colors" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </Shell>
-  );
+const input = "w-full rounded border border-border bg-background px-3 py-2 text-sm text-slate-200";
+type RoomDraft = { id: number; outcome: string; agreement: string; serverOutcome: string; serverAgreement: string; dirty: boolean; conflict: boolean };
+function RoomEditors({ active, updateRoom }: { active: MediationRoomAggregate; updateRoom: ReturnType<typeof useUpdateMediationRoom> }) {
+  const outcome = active.outcomeNotes ?? ""; const agreement = active.agreementDraft ?? "";
+  const [draft, setDraft] = useState<RoomDraft>({ id: active.id, outcome, agreement, serverOutcome: outcome, serverAgreement: agreement, dirty: false, conflict: false });
+  useEffect(() => {
+    setDraft((current) => {
+      if (current.id !== active.id) return { id: active.id, outcome, agreement, serverOutcome: outcome, serverAgreement: agreement, dirty: false, conflict: false };
+      const remoteChanged = current.serverOutcome !== outcome || current.serverAgreement !== agreement;
+      return remoteChanged && current.dirty ? { ...current, serverOutcome: outcome, serverAgreement: agreement, conflict: true } : remoteChanged ? { ...current, outcome, agreement, serverOutcome: outcome, serverAgreement: agreement } : current;
+    });
+  }, [active.id, outcome, agreement]);
+  const setField = (field: "outcome" | "agreement", value: string) => setDraft((v) => ({ ...v, [field]: value, dirty: true }));
+  const reload = () => setDraft({ id: active.id, outcome, agreement, serverOutcome: outcome, serverAgreement: agreement, dirty: false, conflict: false });
+  const save = (field: "outcomeNotes" | "agreementDraft") => {
+    if (draft.conflict) return;
+    const value = field === "outcomeNotes" ? draft.outcome : draft.agreement;
+    updateRoom.mutate({ id: active.id, data: { [field]: value || null } }, { onSuccess: () => setDraft((v) => ({ ...v, dirty: false, serverOutcome: field === "outcomeNotes" ? value : v.serverOutcome, serverAgreement: field === "agreementDraft" ? value : v.serverAgreement })) });
+  };
+  return <><div className="mt-4 grid gap-3 md:grid-cols-2"><textarea data-testid="input-outcome-notes" className={`${input} min-h-20`} placeholder="Catatan hasil sesi" value={draft.outcome} onChange={(e) => setField("outcome", e.target.value)} onBlur={() => save("outcomeNotes")} /><textarea data-testid="input-agreement-draft" className={`${input} min-h-20`} placeholder="Draf kesepakatan (belum menjadi persetujuan hukum)" value={draft.agreement} onChange={(e) => setField("agreement", e.target.value)} onBlur={() => save("agreementDraft")} /></div>{draft.conflict && <div data-testid="notice-room-conflict" className="mt-3 rounded border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-200">Perubahan terbaru dari pengguna lain tersedia. Draf lokal belum ditimpa.<button data-testid="button-reload-room-draft" onClick={reload} className="ml-2 font-bold underline">Muat ulang nilai server</button></div>}</>;
 }
+
+function IssueEditor({ issue, updateIssue }: { issue: MediationIssue; updateIssue: ReturnType<typeof useUpdateMediationIssue> }) {
+  const server = { claimant: issue.claimantPosition ?? "", respondent: issue.respondentPosition ?? "", resolution: issue.resolution ?? "" };
+  const [draft, setDraft] = useState({ id: issue.id, ...server, server, dirty: false, conflict: false });
+  useEffect(() => setDraft((current) => {
+    if (current.id !== issue.id) return { id: issue.id, ...server, server, dirty: false, conflict: false };
+    const changed = current.server.claimant !== server.claimant || current.server.respondent !== server.respondent || current.server.resolution !== server.resolution;
+    return changed && current.dirty ? { ...current, server, conflict: true } : changed ? { id: issue.id, ...server, server, dirty: false, conflict: false } : current;
+  }), [issue.id, server.claimant, server.respondent, server.resolution]);
+  const set = (key: "claimant" | "respondent" | "resolution", value: string) => setDraft((v) => ({ ...v, [key]: value, dirty: true }));
+  const save = (field: "claimantPosition" | "respondentPosition" | "resolution") => {
+    if (draft.conflict) return;
+    const key = field === "claimantPosition" ? "claimant" : field === "respondentPosition" ? "respondent" : "resolution";
+    updateIssue.mutate({ id: issue.id, data: { [field]: draft[key], ...(field === "resolution" ? { status: draft.resolution ? "AGREED" : "NEGOTIATING" } : {}) } }, { onSuccess: () => setDraft((v) => ({ ...v, dirty: false, server: { ...v.server, [key]: v[key] } })) });
+  };
+  const reload = () => setDraft({ id: issue.id, ...server, server, dirty: false, conflict: false });
+  return <><div className="mt-2 grid gap-2 md:grid-cols-3"><input className={input} placeholder="Posisi pemohon" value={draft.claimant} onChange={(e) => set("claimant", e.target.value)} onBlur={() => save("claimantPosition")} /><input className={input} placeholder="Posisi termohon" value={draft.respondent} onChange={(e) => set("respondent", e.target.value)} onBlur={() => save("respondentPosition")} /><input className={input} placeholder="Resolusi" value={draft.resolution} onChange={(e) => set("resolution", e.target.value)} onBlur={() => save("resolution")} /></div>{draft.conflict && <div data-testid={`notice-issue-conflict-${issue.id}`} className="mt-2 rounded border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-200">Nilai isu berubah di server. Draf lokal dipertahankan.<button data-testid={`button-reload-issue-${issue.id}`} onClick={reload} className="ml-2 font-bold underline">Muat ulang</button></div>}</>;
+}
+export default function Mediasi() {
+  const qc = useQueryClient();
+  const rooms = useListMediationRooms({ query: { staleTime: 20_000, refetchOnWindowFocus: true, queryKey: getListMediationRoomsQueryKey() } });
+  const create = useCreateMediationRoom({ mutation: { onSuccess: (v) => { qc.invalidateQueries({ queryKey: getListMediationRoomsQueryKey() }); setSelected(v.id); } } });
+  const [selected, setSelected] = useState<number>();
+  const room = useGetMediationRoom(selected ?? 0, { query: { enabled: !!selected, staleTime: 10_000, refetchInterval: 30_000, queryKey: getGetMediationRoomQueryKey(selected ?? 0) } });
+  const updateRoom = useUpdateMediationRoom({ mutation: { onSuccess: () => selected && qc.invalidateQueries({ queryKey: getGetMediationRoomQueryKey(selected) }) } });
+  const addParticipant = useAddMediationParticipant({ mutation: { onSuccess: () => selected && qc.invalidateQueries({ queryKey: getGetMediationRoomQueryKey(selected) }) } });
+  const addSession = useAddMediationSession({ mutation: { onSuccess: () => selected && qc.invalidateQueries({ queryKey: getGetMediationRoomQueryKey(selected) }) } });
+  const addIssue = useAddMediationIssue({ mutation: { onSuccess: () => selected && qc.invalidateQueries({ queryKey: getGetMediationRoomQueryKey(selected) }) } });
+  const updateIssue = useUpdateMediationIssue({ mutation: { onSuccess: () => selected && qc.invalidateQueries({ queryKey: getGetMediationRoomQueryKey(selected) }) } });
+  const addEvidence = useAddMediationEvidence({ mutation: { onSuccess: () => selected && qc.invalidateQueries({ queryKey: getGetMediationRoomQueryKey(selected) }) } });
+  const [title, setTitle] = useState(""); const [participant, setParticipant] = useState(""); const [issue, setIssue] = useState(""); const [evidence, setEvidence] = useState(""); const [confidentiality, setConfidentiality] = useState<EvidenceConfidentiality>("ORGANIZATION"); const [allowedRoles, setAllowedRoles] = useState<WorkspaceRole[]>([]);
+  useEffect(() => { if (!selected && rooms.data?.[0]) setSelected(rooms.data[0].id); }, [rooms.data, selected]);
+  const active = room.data;
+  return <Shell><PageHeader eyebrow="Pilar 3: Ahli & Resolusi" title="Ruang Mediasi Kolaboratif" description="Ruang bersama untuk agenda, pokok sengketa, akses bukti, dan draf kesepakatan. Catatan aplikasi bersifat administratif, bukan penetapan atau penerimaan hukum."/>
+    <div className="mb-6 flex gap-3 rounded border border-primary/30 bg-primary/5 p-3 text-xs text-slate-300"><Activity className="shrink-0 text-primary" size={16}/><span>Perubahan ruang dapat dilihat anggota organisasi setelah tersimpan. Bukti hanya ditampilkan sesuai peran yang diizinkan server.</span></div>
+    <div className="grid gap-6 lg:grid-cols-[300px_1fr]"><aside className="space-y-3"><div className="space-y-2 rounded-lg border border-dashed border-border bg-card p-4"><input data-testid="input-room-title" className={input} placeholder="Judul ruang baru" value={title} onChange={(e) => setTitle(e.target.value)}/><button data-testid="button-create-room" disabled={!title.trim() || create.isPending} onClick={() => create.mutate({ data: { title } })} className="w-full rounded bg-primary py-2 text-xs font-bold text-primary-foreground">Buat ruang</button></div>{rooms.isLoading && <p className="text-xs text-slate-500">Memuat ruang...</p>}{rooms.isError && <p className="text-xs text-red-400">Ruang gagal dimuat.</p>}{!rooms.isLoading && !rooms.data?.length && <p className="rounded border border-dashed border-border p-5 text-center text-xs text-slate-500">Belum ada ruang mediasi.</p>}{rooms.data?.map((r) => <button data-testid={`card-room-${r.id}`} key={r.id} onClick={() => setSelected(r.id)} className={`w-full rounded-lg border p-4 text-left ${selected === r.id ? "border-primary bg-primary/5" : "border-border bg-card"}`}><p className="font-mono text-[10px] text-primary">{r.reference}</p><p className="mt-1 text-sm font-bold text-slate-200">{r.title}</p><p className="mt-2 text-[10px] text-slate-500">{r.status}</p></button>)}</aside>
+      {!active ? <div className="flex min-h-96 items-center justify-center rounded-lg border border-dashed border-border text-sm text-slate-500">Pilih ruang mediasi untuk mulai berkolaborasi.</div> : <main className="space-y-5"><div className="rounded-lg border border-border bg-card p-5"><div className="flex items-center justify-between"><div><h2 className="font-display text-xl font-bold text-white"><Scale className="mr-2 inline text-emerald-400" size={20}/>{active.title}</h2><p className="mt-1 text-xs text-slate-500">{active.reference} · {active.status}</p></div><select data-testid="select-room-status" className={input+" max-w-40"} value={active.status} onChange={(e) => updateRoom.mutate({ id: active.id, data: { status: e.target.value } })}><option>DRAFT</option><option>ACTIVE</option><option>CLOSED</option></select></div><RoomEditors active={active} updateRoom={updateRoom}/></div>
+        <section className="grid gap-5 md:grid-cols-2"><Panel title="Peserta & akses"><form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); if (participant) addParticipant.mutate({ id: active.id, data: { displayName: participant, role: "PARTY", accessRole: "PARTY" } }); setParticipant(""); }}><input data-testid="input-participant" required className={input} placeholder="Nama peserta" value={participant} onChange={(e) => setParticipant(e.target.value)}/><button data-testid="button-add-participant" className="rounded bg-primary px-3 text-xs">+</button></form>{active.participants.map((p) => <p data-testid={`text-participant-${p.id}`} key={p.id} className="mt-2 text-xs text-slate-300"><Users size={13} className="mr-1 inline text-primary"/>{p.displayName} · {p.accessRole}</p>)}</Panel>
+          <Panel title="Agenda sesi"><form className="space-y-2" onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); addSession.mutate({ id: active.id, data: { title: String(f.get("title")), agenda: String(f.get("agenda")) } }); e.currentTarget.reset(); }}><input name="title" required className={input} placeholder="Judul sesi"/><textarea name="agenda" className={input} placeholder="Agenda dan catatan awal"/><button data-testid="button-add-session" className="rounded bg-primary px-3 py-2 text-xs font-bold">Tambah sesi</button></form>{active.sessions.map((s) => <p key={s.id} className="mt-2 text-xs text-slate-300">{s.title} · {s.agenda || "Agenda belum diisi"}</p>)}</Panel></section>
+        <section className="rounded-lg border border-border bg-card p-5"><h2 className="mb-3 text-sm font-bold text-slate-200">Pokok sengketa</h2><form className="mb-4 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (issue) addIssue.mutate({ id: active.id, data: { title: issue, description: issue } }); setIssue(""); }}><input data-testid="input-issue" required className={input} placeholder="Tambah pokok sengketa" value={issue} onChange={(e) => setIssue(e.target.value)}/><button data-testid="button-add-issue" className="rounded bg-primary px-3 text-xs">Tambah</button></form>{active.issues.map((i) => <div key={i.id} className="mb-3 rounded border border-border bg-background p-3"><p className="text-sm font-bold text-slate-200">{i.title}</p><p className="mt-1 text-xs text-slate-400">{i.description}</p><IssueEditor issue={i} updateIssue={updateIssue}/></div>)}</section>
+        <Panel title="Bukti bersama"><form className="space-y-2" onSubmit={(e) => { e.preventDefault(); if (!evidence || (confidentiality === "RESTRICTED" && allowedRoles.length === 0)) return; const roles = confidentiality === "ORGANIZATION" ? [] : confidentiality === "MANAGERS" ? ["manager" as WorkspaceRole] : allowedRoles; addEvidence.mutate({ id: active.id, data: { name: evidence, confidentiality, allowedRoles: roles } }); setEvidence(""); }}><input data-testid="input-evidence" required className={input} placeholder="Nama metadata bukti" value={evidence} onChange={(e) => setEvidence(e.target.value)}/><label className="block text-[10px] uppercase text-slate-500">Tingkat kerahasiaan</label><select data-testid="select-evidence-confidentiality" className={input} value={confidentiality} onChange={(e) => { const value = e.target.value as EvidenceConfidentiality; setConfidentiality(value); if (value === "ORGANIZATION") setAllowedRoles([]); if (value === "MANAGERS") setAllowedRoles(["manager"]); }}><option value="ORGANIZATION">Organisasi — semua anggota organisasi</option><option value="RESTRICTED">Terbatas — hanya peran terpilih</option><option value="MANAGERS">Pengelola — hanya manager</option></select>{confidentiality === "RESTRICTED" && <div className="rounded border border-border bg-background p-2"><p className="mb-2 text-[10px] text-slate-400">Pilih peran yang boleh melihat metadata bukti.</p>{(["manager", "member"] as WorkspaceRole[]).map((role) => <label key={role} className="mr-4 text-xs text-slate-300"><input data-testid={`checkbox-evidence-role-${role}`} type="checkbox" checked={allowedRoles.includes(role)} onChange={(e) => setAllowedRoles((roles) => e.target.checked ? [...new Set([...roles, role])] : roles.filter((item) => item !== role))}/> {role}</label>)}</div>}<p className="text-[10px] text-slate-500">{confidentiality === "ORGANIZATION" ? "Semua anggota organisasi dapat melihat bukti." : confidentiality === "MANAGERS" ? "Hanya manager yang dapat melihat bukti." : "Hanya peran yang dipilih yang dapat melihat bukti."}</p><button data-testid="button-add-evidence" disabled={addEvidence.isPending || (confidentiality === "RESTRICTED" && allowedRoles.length === 0)} className="rounded bg-primary px-3 py-2 text-xs">{addEvidence.isPending ? "Menyimpan..." : "Tambah bukti"}</button></form>{active.evidence.map((e) => <p data-testid={`text-evidence-${e.id}`} key={e.id} className="mt-2 text-xs text-slate-300"><FileText size={13} className="mr-1 inline text-primary"/>{e.name} · {e.confidentiality}</p>)}</Panel>
+        <Panel title="Rekam aktivitas administratif">{active.activities.length ? active.activities.map((a) => <p key={a.id} className="mt-2 text-xs text-slate-400">{a.action}: {a.detail}</p>) : <p className="text-xs text-slate-500">Belum ada aktivitas tercatat.</p>}<p className="mt-3 text-[10px] text-slate-500">Rekam ini tidak menyatakan penerimaan hukum otomatis.</p></Panel>
+      </main>}</div></Shell>;
+}
+function Panel({ title, children }: { title: string; children: ReactNode }) { return <section className="rounded-lg border border-border bg-card p-5"><h2 className="mb-3 text-sm font-bold text-slate-200">{title}</h2>{children}</section>; }

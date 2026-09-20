@@ -464,3 +464,391 @@ export const SearchReferencesResponse = zod.object({
 })
 
 
+export const ListFailureCasesResponseItem = zod.object({
+  "id": zod.number(),
+  "caseId": zod.number().nullish(),
+  "project": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "severity": zod.string(),
+  "description": zod.string(),
+  "status": zod.string(),
+  "eventDate": zod.coerce.date(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListFailureCasesResponse = zod.array(ListFailureCasesResponseItem)
+
+
+
+export const createFailureCaseBodyTitleMin = 2;
+
+
+export const createFailureCaseBodyDescriptionMin = 2;
+
+
+
+export const CreateFailureCaseBody = zod.object({
+  "caseId": zod.number().optional(),
+  "project": zod.string().min(1),
+  "title": zod.string().min(createFailureCaseBodyTitleMin),
+  "category": zod.string().min(1),
+  "severity": zod.string().optional(),
+  "description": zod.string().min(createFailureCaseBodyDescriptionMin),
+  "eventDate": zod.coerce.date()
+})
+
+export const CreateFailureCaseResponse = zod.object({
+  "id": zod.number(),
+  "caseId": zod.number().nullish(),
+  "project": zod.string(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "severity": zod.string(),
+  "description": zod.string(),
+  "status": zod.string(),
+  "eventDate": zod.coerce.date(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const ListExpertAssignmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "failureCaseId": zod.number().nullish(),
+  "contractCaseId": zod.number().nullish(),
+  "expertName": zod.string(),
+  "expertContact": zod.string().nullish(),
+  "role": zod.string(),
+  "scope": zod.string(),
+  "status": zod.string(),
+  "scopeAcceptedAt": zod.coerce.date().nullish(),
+  "conflictStatus": zod.string(),
+  "conflictDeclaration": zod.string().nullish(),
+  "conflictDeclaredAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListExpertAssignmentsResponse = zod.array(ListExpertAssignmentsResponseItem)
+
+
+export const createExpertAssignmentBodyExpertNameMin = 2;
+
+export const createExpertAssignmentBodyScopeMin = 2;
+
+
+
+export const CreateExpertAssignmentBody = zod.object({
+  "failureCaseId": zod.number().optional(),
+  "contractCaseId": zod.number().optional(),
+  "expertName": zod.string().min(createExpertAssignmentBodyExpertNameMin),
+  "expertContact": zod.string().optional(),
+  "role": zod.string().optional(),
+  "scope": zod.string().min(createExpertAssignmentBodyScopeMin)
+})
+
+export const CreateExpertAssignmentResponse = zod.object({
+  "id": zod.number(),
+  "failureCaseId": zod.number().nullish(),
+  "contractCaseId": zod.number().nullish(),
+  "expertName": zod.string(),
+  "expertContact": zod.string().nullish(),
+  "role": zod.string(),
+  "scope": zod.string(),
+  "status": zod.string(),
+  "scopeAcceptedAt": zod.coerce.date().nullish(),
+  "conflictStatus": zod.string(),
+  "conflictDeclaration": zod.string().nullish(),
+  "conflictDeclaredAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const UpdateExpertAssignmentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateExpertAssignmentBody = zod.object({
+  "status": zod.string().optional(),
+  "scopeAccepted": zod.boolean().optional(),
+  "conflictStatus": zod.string().optional(),
+  "conflictDeclaration": zod.string().optional()
+})
+
+export const UpdateExpertAssignmentResponse = zod.object({
+  "id": zod.number(),
+  "failureCaseId": zod.number().nullish(),
+  "contractCaseId": zod.number().nullish(),
+  "expertName": zod.string(),
+  "expertContact": zod.string().nullish(),
+  "role": zod.string(),
+  "scope": zod.string(),
+  "status": zod.string(),
+  "scopeAcceptedAt": zod.coerce.date().nullish(),
+  "conflictStatus": zod.string(),
+  "conflictDeclaration": zod.string().nullish(),
+  "conflictDeclaredAt": zod.coerce.date().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const ListMediationRoomsResponseItem = zod.object({
+  "id": zod.number(),
+  "contractCaseId": zod.number().nullish(),
+  "failureCaseId": zod.number().nullish(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "agreementDraft": zod.string().nullish(),
+  "outcomeNotes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListMediationRoomsResponse = zod.array(ListMediationRoomsResponseItem)
+
+
+export const createMediationRoomBodyTitleMin = 2;
+
+
+
+export const CreateMediationRoomBody = zod.object({
+  "contractCaseId": zod.number().optional(),
+  "failureCaseId": zod.number().optional(),
+  "title": zod.string().min(createMediationRoomBodyTitleMin)
+})
+
+export const CreateMediationRoomResponse = zod.object({
+  "id": zod.number(),
+  "contractCaseId": zod.number().nullish(),
+  "failureCaseId": zod.number().nullish(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "agreementDraft": zod.string().nullish(),
+  "outcomeNotes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const GetMediationRoomParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetMediationRoomResponse = zod.object({
+  "id": zod.number(),
+  "contractCaseId": zod.number().nullish(),
+  "failureCaseId": zod.number().nullish(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "agreementDraft": zod.string().nullish(),
+  "outcomeNotes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}).and(zod.object({
+  "participants": zod.array(zod.object({
+  "id": zod.number(),
+  "displayName": zod.string(),
+  "contact": zod.string().nullish(),
+  "role": zod.string(),
+  "accessRole": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "sessions": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "status": zod.string(),
+  "agenda": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "issues": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "claimantPosition": zod.string().nullish(),
+  "respondentPosition": zod.string().nullish(),
+  "resolution": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})),
+  "evidence": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "objectPath": zod.string().nullish(),
+  "mimeType": zod.string().nullish(),
+  "confidentiality": zod.enum(['ORGANIZATION', 'RESTRICTED', 'MANAGERS']),
+  "allowedRoles": zod.array(zod.enum(['manager', 'member'])),
+  "uploadedBy": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "activities": zod.array(zod.object({
+  "id": zod.number(),
+  "action": zod.string(),
+  "detail": zod.string(),
+  "actor": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+}))
+}))
+
+
+export const UpdateMediationRoomParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateMediationRoomBody = zod.object({
+  "status": zod.string().optional(),
+  "agreementDraft": zod.string().nullish(),
+  "outcomeNotes": zod.string().nullish()
+})
+
+export const UpdateMediationRoomResponse = zod.object({
+  "id": zod.number(),
+  "contractCaseId": zod.number().nullish(),
+  "failureCaseId": zod.number().nullish(),
+  "reference": zod.string(),
+  "title": zod.string(),
+  "status": zod.string(),
+  "agreementDraft": zod.string().nullish(),
+  "outcomeNotes": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const AddMediationParticipantParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const addMediationParticipantBodyDisplayNameMin = 2;
+
+
+
+export const AddMediationParticipantBody = zod.object({
+  "displayName": zod.string().min(addMediationParticipantBodyDisplayNameMin),
+  "contact": zod.string().optional(),
+  "role": zod.string(),
+  "accessRole": zod.string().optional()
+})
+
+export const AddMediationParticipantResponse = zod.object({
+  "id": zod.number(),
+  "displayName": zod.string(),
+  "contact": zod.string().nullish(),
+  "role": zod.string(),
+  "accessRole": zod.string(),
+  "createdAt": zod.coerce.date()
+})
+
+
+export const AddMediationSessionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const addMediationSessionBodyTitleMin = 2;
+
+
+
+export const AddMediationSessionBody = zod.object({
+  "title": zod.string().min(addMediationSessionBodyTitleMin),
+  "scheduledAt": zod.coerce.date().optional(),
+  "agenda": zod.string().optional()
+})
+
+export const AddMediationSessionResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "scheduledAt": zod.coerce.date().nullish(),
+  "status": zod.string(),
+  "agenda": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+export const AddMediationIssueParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const addMediationIssueBodyTitleMin = 2;
+
+export const addMediationIssueBodyDescriptionMin = 2;
+
+
+
+export const AddMediationIssueBody = zod.object({
+  "title": zod.string().min(addMediationIssueBodyTitleMin),
+  "description": zod.string().min(addMediationIssueBodyDescriptionMin)
+})
+
+export const AddMediationIssueResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "claimantPosition": zod.string().nullish(),
+  "respondentPosition": zod.string().nullish(),
+  "resolution": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const UpdateMediationIssueParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateMediationIssueBody = zod.object({
+  "claimantPosition": zod.string().nullish(),
+  "respondentPosition": zod.string().nullish(),
+  "resolution": zod.string().nullish(),
+  "status": zod.string().optional()
+})
+
+export const UpdateMediationIssueResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "claimantPosition": zod.string().nullish(),
+  "respondentPosition": zod.string().nullish(),
+  "resolution": zod.string().nullish(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+export const AddMediationEvidenceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const AddMediationEvidenceBody = zod.object({
+  "name": zod.string().min(1),
+  "objectPath": zod.string().optional(),
+  "mimeType": zod.string().optional(),
+  "confidentiality": zod.enum(['ORGANIZATION', 'RESTRICTED', 'MANAGERS']).optional(),
+  "allowedRoles": zod.array(zod.enum(['manager', 'member'])).optional()
+})
+
+export const AddMediationEvidenceResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "objectPath": zod.string().nullish(),
+  "mimeType": zod.string().nullish(),
+  "confidentiality": zod.enum(['ORGANIZATION', 'RESTRICTED', 'MANAGERS']),
+  "allowedRoles": zod.array(zod.enum(['manager', 'member'])),
+  "uploadedBy": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+

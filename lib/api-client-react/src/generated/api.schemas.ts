@@ -236,6 +236,219 @@ export interface ContractCaseActivity {
   createdAt: string;
 }
 
+export interface FailureCase {
+  id: number;
+  /** @nullable */
+  caseId?: number | null;
+  project: string;
+  reference: string;
+  title: string;
+  category: string;
+  severity: string;
+  description: string;
+  status: string;
+  eventDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FailureCaseInput {
+  caseId?: number;
+  /** @minLength 1 */
+  project: string;
+  /** @minLength 2 */
+  title: string;
+  /** @minLength 1 */
+  category: string;
+  severity?: string;
+  /** @minLength 2 */
+  description: string;
+  eventDate: string;
+}
+
+export interface ExpertAssignment {
+  id: number;
+  /** @nullable */
+  failureCaseId?: number | null;
+  /** @nullable */
+  contractCaseId?: number | null;
+  expertName: string;
+  /** @nullable */
+  expertContact?: string | null;
+  role: string;
+  scope: string;
+  status: string;
+  /** @nullable */
+  scopeAcceptedAt?: string | null;
+  conflictStatus: string;
+  /** @nullable */
+  conflictDeclaration?: string | null;
+  /** @nullable */
+  conflictDeclaredAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExpertAssignmentInput {
+  failureCaseId?: number;
+  contractCaseId?: number;
+  /** @minLength 2 */
+  expertName: string;
+  expertContact?: string;
+  role?: string;
+  /** @minLength 2 */
+  scope: string;
+}
+
+export interface ExpertAssignmentUpdate {
+  status?: string;
+  scopeAccepted?: boolean;
+  conflictStatus?: string;
+  conflictDeclaration?: string;
+}
+
+export interface MediationRoom {
+  id: number;
+  /** @nullable */
+  contractCaseId?: number | null;
+  /** @nullable */
+  failureCaseId?: number | null;
+  reference: string;
+  title: string;
+  status: string;
+  /** @nullable */
+  agreementDraft?: string | null;
+  /** @nullable */
+  outcomeNotes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediationRoomInput {
+  contractCaseId?: number;
+  failureCaseId?: number;
+  /** @minLength 2 */
+  title: string;
+}
+
+export interface MediationRoomUpdate {
+  status?: string;
+  /** @nullable */
+  agreementDraft?: string | null;
+  /** @nullable */
+  outcomeNotes?: string | null;
+}
+
+export interface MediationParticipant {
+  id: number;
+  displayName: string;
+  /** @nullable */
+  contact?: string | null;
+  role: string;
+  accessRole: string;
+  createdAt: string;
+}
+
+export interface MediationParticipantInput {
+  /** @minLength 2 */
+  displayName: string;
+  contact?: string;
+  role: string;
+  accessRole?: string;
+}
+
+export interface MediationSession {
+  id: number;
+  title: string;
+  /** @nullable */
+  scheduledAt?: string | null;
+  status: string;
+  /** @nullable */
+  agenda?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  createdAt: string;
+}
+
+export interface MediationSessionInput {
+  /** @minLength 2 */
+  title: string;
+  scheduledAt?: string;
+  agenda?: string;
+}
+
+export interface MediationIssue {
+  id: number;
+  title: string;
+  description: string;
+  /** @nullable */
+  claimantPosition?: string | null;
+  /** @nullable */
+  respondentPosition?: string | null;
+  /** @nullable */
+  resolution?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediationIssueInput {
+  /** @minLength 2 */
+  title: string;
+  /** @minLength 2 */
+  description: string;
+}
+
+export interface MediationIssueUpdate {
+  /** @nullable */
+  claimantPosition?: string | null;
+  /** @nullable */
+  respondentPosition?: string | null;
+  /** @nullable */
+  resolution?: string | null;
+  status?: string;
+}
+
+export type EvidenceConfidentiality = typeof EvidenceConfidentiality[keyof typeof EvidenceConfidentiality];
+
+
+export const EvidenceConfidentiality = {
+  ORGANIZATION: 'ORGANIZATION',
+  RESTRICTED: 'RESTRICTED',
+  MANAGERS: 'MANAGERS',
+} as const;
+
+export interface MediationEvidence {
+  id: number;
+  name: string;
+  /** @nullable */
+  objectPath?: string | null;
+  /** @nullable */
+  mimeType?: string | null;
+  confidentiality: EvidenceConfidentiality;
+  allowedRoles: WorkspaceRole[];
+  /** @nullable */
+  uploadedBy?: string | null;
+  createdAt: string;
+}
+
+export interface MediationEvidenceInput {
+  /** @minLength 1 */
+  name: string;
+  objectPath?: string;
+  mimeType?: string;
+  confidentiality?: EvidenceConfidentiality;
+  allowedRoles?: WorkspaceRole[];
+}
+
+export type MediationRoomAggregate = MediationRoom & {
+  participants: MediationParticipant[];
+  sessions: MediationSession[];
+  issues: MediationIssue[];
+  evidence: MediationEvidence[];
+  activities: ContractCaseActivity[];
+};
+
 export interface ReferenceDocument {
   id: string;
   title: string;

@@ -7,6 +7,7 @@ import {
   X, AlertTriangle, Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link } from 'wouter';
 import {
   useListContractCases,
   useCreateContractCase,
@@ -17,6 +18,12 @@ import {
   ContractCase,
   ContractCaseType,
   ContractCaseStatus,
+  getListFailureCasesQueryKey,
+  getListExpertAssignmentsQueryKey,
+  getListMediationRoomsQueryKey,
+  useListFailureCases,
+  useListExpertAssignments,
+  useListMediationRooms,
 } from '@workspace/api-client-react';
 
 // Constants
@@ -330,6 +337,32 @@ function ActivitiesPanel({ caseId }: { caseId: number }) {
   );
 }
 
+function CollaborationLinks({ caseId }: { caseId: number }) {
+  const failures = useListFailureCases({ query: { staleTime: 30_000, queryKey: getListFailureCasesQueryKey() } });
+  const experts = useListExpertAssignments({ query: { staleTime: 30_000, queryKey: getListExpertAssignmentsQueryKey() } });
+  const rooms = useListMediationRooms({ query: { staleTime: 30_000, queryKey: getListMediationRoomsQueryKey() } });
+  const linkedFailures = (failures.data ?? []).filter((item) => item.caseId === caseId);
+  const linkedExperts = (experts.data ?? []).filter((item) => item.contractCaseId === caseId);
+  const linkedRooms = (rooms.data ?? []).filter((item) => item.contractCaseId === caseId);
+  return (
+    <div className="bg-card border border-border rounded-lg p-5">
+      <h4 className="text-sm font-bold mb-1 flex items-center gap-2"><Briefcase size={16} className="text-primary" /> Kolaborasi Terhubung</h4>
+      <p className="text-[11px] text-slate-500 mb-4">Rekam administratif yang terkait dengan kasus ini.</p>
+      {failures.isLoading || experts.isLoading || rooms.isLoading ? <p className="text-xs text-slate-500">Memuat ruang kolaborasi...</p> : (
+        <div className="space-y-3">
+          <CollaborationGroup title="Kegagalan bangunan" href="/kegagalan" items={linkedFailures.map((item) => ({ id: item.id, label: `${item.reference} · ${item.title}` }))} empty="Belum ada laporan kegagalan terhubung." />
+          <CollaborationGroup title="Penugasan ahli" href="/penilai-ahli" items={linkedExperts.map((item) => ({ id: item.id, label: `${item.expertName} · ${item.status}` }))} empty="Belum ada penugasan ahli terhubung." />
+          <CollaborationGroup title="Ruang mediasi" href="/mediasi" items={linkedRooms.map((item) => ({ id: item.id, label: `${item.reference} · ${item.title}` }))} empty="Belum ada ruang mediasi terhubung." />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CollaborationGroup({ title, href, items, empty }: { title: string; href: string; items: Array<{ id: number; label: string }>; empty: string }) {
+  return <div className="rounded border border-border bg-background p-3"><div className="flex items-center justify-between"><span className="text-xs font-bold text-slate-300">{title}</span><Link href={href} className="text-[10px] font-bold text-primary hover:underline">Buka ruang</Link></div>{items.length ? items.map((item) => <p data-testid={`linked-collaboration-${item.id}`} key={item.id} className="mt-2 text-xs text-slate-400">{item.label}</p>) : <p className="mt-2 text-[11px] italic text-slate-600">{empty}</p>}</div>;
+}
+
 export default function Kasus() {
   const [search, setSearch] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
@@ -530,6 +563,7 @@ export default function Kasus() {
                         </div>
 
                         <EvidenceManager caseData={activeCase} />
+                         <CollaborationLinks caseId={activeCase.id} />
                      </div>
                   </div>
                </div>

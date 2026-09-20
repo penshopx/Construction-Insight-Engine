@@ -1,205 +1,56 @@
-import { useState } from 'react';
-import { PageHeader, Shell } from '@/components/layout';
-import { Building2, Search, AlertTriangle, Crosshair, Camera, FileText, UploadCloud, ChevronRight, Activity } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from "react";
+import { AlertTriangle, Building2, FileText, Search, ShieldCheck } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { PageHeader, Shell } from "@/components/layout";
+import { cn } from "@/lib/utils";
+import {
+  getListFailureCasesQueryKey, useCreateFailureCase, useListContractCases,
+  useListFailureCases, FailureCase,
+} from "@workspace/api-client-react";
 
-const failures = [
-  { id: 'FLR-26-001', project: 'Housing BSD', type: 'Struktur Bawah', issue: 'Retak Geser Kolom Basement', severity: 'Tinggi', status: 'Investigasi Ahli', date: '12 Sep 2026', evidence: 14 },
-  { id: 'FLR-26-002', project: 'Tower A Jakarta', type: 'Fasad', issue: 'Kebocoran Tirai Kaca (Curtain Wall)', severity: 'Sedang', status: 'Laporan Awal', date: '18 Sep 2026', evidence: 5 },
-  { id: 'FLR-26-003', project: 'Mall Surabaya', type: 'Struktur Atas', issue: 'Lendutan Pelat Lantai > Toleransi', severity: 'Kritis', status: 'Analisis Lab', date: '05 Okt 2026', evidence: 22 },
-];
+const input = "w-full rounded border border-border bg-background px-3 py-2 text-sm text-slate-200";
 
 export default function Kegagalan() {
-  const [selected, setSelected] = useState(failures[0].id);
-  const activeFailure = failures.find(f => f.id === selected);
-
-  return (
-    <Shell>
-      <PageHeader 
-        eyebrow="Pilar 2: Forensik Bangunan" 
-        title="Kegagalan Bangunan & Konstruksi" 
-        description="Demo alur dokumentasi awal kegagalan konstruksi. Kesesuaian dengan Permen PUPR No. 7/2019 maupun regulasi terkini belum diverifikasi."
-        action={
-          <div className="flex items-center gap-2 bg-amber-950/30 border border-amber-900/50 rounded-lg p-3">
-            <AlertTriangle className="text-amber-500 shrink-0" size={24} />
-            <div className="text-left">
-              <p className="font-mono text-[9px] uppercase font-bold text-amber-500">Standar Keselamatan</p>
-              <p className="text-xs text-amber-200/80">Utamakan K3. Evakuasi area sebelum forensik.</p>
-            </div>
-          </div>
-        }
-      />
-
-      <div className="mb-6 flex items-start gap-3 rounded border border-primary/30 bg-primary/5 p-3">
-        <Activity className="mt-0.5 shrink-0 text-primary" size={16} />
-        <p className="text-xs leading-relaxed text-slate-300">
-          <strong className="text-primary">MODE DEMONSTRASI:</strong> Semua data, prioritas, visual, dugaan, dan rekomendasi di halaman ini adalah sampel. Sistem saat ini tidak mengunggah berkas lapangan, melakukan pengujian teknis, atau menghasilkan pendapat ahli.
-        </p>
+  const qc = useQueryClient();
+  const list = useListFailureCases({ query: { staleTime: 30_000, refetchOnWindowFocus: true, queryKey: getListFailureCasesQueryKey() } });
+  const cases = useListContractCases({ query: { staleTime: 30_000, queryKey: ["contract-cases"] } });
+  const create = useCreateFailureCase({ mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getListFailureCasesQueryKey() }) } });
+  const [selected, setSelected] = useState<number>();
+  const [search, setSearch] = useState("");
+  const [form, setForm] = useState({ title: "", project: "", category: "Struktur", severity: "Sedang", description: "", eventDate: new Date().toISOString().slice(0, 10), caseId: "" });
+  const failures = list.data ?? [];
+  useEffect(() => { if (!selected && failures[0]) setSelected(failures[0].id); }, [failures, selected]);
+  const filtered = useMemo(() => failures.filter((f) => `${f.title} ${f.project} ${f.reference}`.toLowerCase().includes(search.toLowerCase())), [failures, search]);
+  const active = failures.find((f) => f.id === selected);
+  const update = (key: keyof typeof form, value: string) => setForm((v) => ({ ...v, [key]: value }));
+  return <Shell>
+    <PageHeader eyebrow="Pilar 2: Forensik Bangunan" title="Kegagalan Bangunan & Konstruksi" description="Ruang dokumentasi kolaboratif untuk mencatat kejadian, bukti administratif, dan penugasan ahli. Catatan ini bukan pendapat teknis atau penetapan hukum." action={<div className="flex items-center gap-2 rounded-lg border border-amber-900/50 bg-amber-950/30 p-3"><AlertTriangle className="text-amber-500" size={20}/><span className="text-xs text-amber-200/80">Utamakan K3 dan evakuasi sebelum pemeriksaan.</span></div>}/>
+    <div className="mb-6 rounded border border-primary/30 bg-primary/5 p-3 text-xs text-slate-300"><strong className="text-primary">CATATAN ADMINISTRATIF:</strong> Data tersimpan untuk kolaborasi organisasi. Integritas berkas, pengujian teknis, dan penerimaan hukum harus diverifikasi secara terpisah.</div>
+    <div className="grid gap-6 lg:grid-cols-[350px_1fr]">
+      <div className="space-y-4">
+        <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16}/><input data-testid="input-search-failure" className={`${input} pl-9`} placeholder="Cari laporan..." value={search} onChange={(e) => setSearch(e.target.value)}/></div>
+        {list.isLoading && <p className="text-xs text-slate-500">Memuat laporan tersimpan...</p>}
+        {list.isError && <p className="text-xs text-red-400">Laporan gagal dimuat. Coba lagi.</p>}
+        {!list.isLoading && !filtered.length && <p className="rounded border border-dashed border-border p-5 text-center text-xs text-slate-500">Belum ada laporan dalam organisasi ini.</p>}
+        <div className="max-h-[500px] space-y-3 overflow-y-auto">{filtered.map((f) => <button data-testid={`card-failure-${f.id}`} key={f.id} onClick={() => setSelected(f.id)} className={cn("w-full rounded-lg border p-4 text-left", selected === f.id ? "border-amber-500/50 bg-amber-500/5" : "border-border bg-card")}>
+          <div className="flex justify-between"><span className="font-mono text-[10px] text-amber-400">{f.severity}</span><span className="font-mono text-[10px] text-slate-500">{f.reference}</span></div><h3 className="mt-2 text-sm font-bold text-slate-200">{f.title}</h3><p className="mt-1 text-xs text-slate-500">{f.project} · {f.category}</p><p className="mt-2 text-[10px] text-slate-400">{f.status}</p>
+        </button>)}</div>
+        <form className="space-y-2 rounded-lg border border-dashed border-border bg-card p-4" onSubmit={(e) => { e.preventDefault(); create.mutate({ data: { ...form, caseId: form.caseId ? Number(form.caseId) : undefined } }, { onSuccess: (v) => { setSelected(v.id); setForm({ title: "", project: "", category: "Struktur", severity: "Sedang", description: "", eventDate: new Date().toISOString().slice(0, 10), caseId: "" }); } }); }}>
+          <h3 className="text-sm font-bold text-slate-200"><Building2 size={15} className="mr-1 inline"/>Buat laporan baru</h3>
+          <input data-testid="input-failure-title" required className={input} placeholder="Judul kejadian" value={form.title} onChange={(e) => update("title", e.target.value)}/>
+          <input data-testid="input-failure-project" required className={input} placeholder="Proyek" value={form.project} onChange={(e) => update("project", e.target.value)}/>
+          <div className="grid grid-cols-2 gap-2"><input className={input} placeholder="Kategori" value={form.category} onChange={(e) => update("category", e.target.value)}/><select className={input} value={form.severity} onChange={(e) => update("severity", e.target.value)}><option>Sedang</option><option>Tinggi</option><option>Kritis</option></select></div>
+          <input type="date" className={input} value={form.eventDate} onChange={(e) => update("eventDate", e.target.value)}/>
+          <select className={input} value={form.caseId} onChange={(e) => update("caseId", e.target.value)}><option value="">Hubungkan ke kasus kontrak (opsional)</option>{(cases.data ?? []).map((c) => <option key={c.id} value={c.id}>{c.reference} · {c.title}</option>)}</select>
+          <textarea data-testid="input-failure-description" required className={`${input} min-h-20`} placeholder="Uraian kejadian" value={form.description} onChange={(e) => update("description", e.target.value)}/>
+          <button data-testid="button-create-failure" disabled={create.isPending} className="w-full rounded bg-primary px-3 py-2 text-xs font-bold text-primary-foreground">{create.isPending ? "Menyimpan..." : "Simpan laporan"}</button>
+        </form>
       </div>
+      {active ? <FailureDetail failure={active}/> : <div className="flex min-h-96 items-center justify-center rounded-lg border border-dashed border-border text-sm text-slate-500">Pilih laporan untuk melihat ruang kolaborasi.</div>}
+    </div>
+  </Shell>;
+}
 
-      <div className="grid gap-6 lg:grid-cols-[350px_1fr]">
-        <div className="flex flex-col gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-            <input 
-              placeholder="Cari Laporan Insiden..." 
-              className="w-full bg-background border border-border rounded-md py-2.5 pl-9 pr-3 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:border-primary transition-colors"
-            />
-          </div>
-          
-          <div className="space-y-3 overflow-y-auto max-h-[600px] scrollbar-thin pr-1">
-            {failures.map((f, i) => (
-              <button 
-                key={f.id}
-                onClick={() => setSelected(f.id)}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg border transition-all fade-up group",
-                  `delay-${(i % 4) + 1}`,
-                  selected === f.id 
-                    ? 'border-amber-500/50 bg-amber-500/5 shadow-[0_0_15px_rgba(245,158,11,0.05)]' 
-                    : 'border-border bg-card hover:border-slate-600 hover:bg-white/5'
-                )}
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span className={cn(
-                    "font-mono text-[9px] uppercase font-bold tracking-wider",
-                    f.severity === 'Kritis' ? 'text-red-400' :
-                    f.severity === 'Tinggi' ? 'text-amber-400' : 'text-primary'
-                  )}>
-                    {f.severity} Priority
-                  </span>
-                  <span className="font-mono text-[10px] text-slate-500">{f.id}</span>
-                </div>
-                <h4 className={cn("text-sm font-bold mb-1 leading-tight", selected === f.id ? "text-white" : "text-slate-200")}>{f.issue}</h4>
-                <p className="text-xs text-slate-500 mb-3">{f.project} • {f.type}</p>
-                <div className="flex justify-between items-center text-[11px]">
-                  <span className="font-mono text-slate-400">{f.date}</span>
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/5 border border-border text-slate-300">
-                    {f.status}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-          
-          <button className="mt-2 w-full rounded border border-dashed border-border bg-transparent py-3 text-sm font-bold text-slate-400 hover:bg-white/5 hover:text-slate-200 transition-colors flex items-center justify-center gap-2">
-            <Building2 size={16} /> Buat Laporan Insiden Baru
-          </button>
-        </div>
-
-        {activeFailure && (
-          <div className="rounded-lg border border-border bg-card flex flex-col h-full fade-up shadow-card">
-            {/* Header */}
-            <div className="border-b border-border p-6 bg-background/50">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-white mb-2">{activeFailure.issue}</h2>
-                  <div className="flex items-center gap-3 text-sm">
-                    <span className="text-slate-300 font-medium">{activeFailure.project}</span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-slate-400">{activeFailure.type}</span>
-                  </div>
-                </div>
-                <span className={cn(
-                  "px-3 py-1 rounded border font-mono text-[10px] uppercase font-bold tracking-widest",
-                  activeFailure.severity === 'Kritis' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                  activeFailure.severity === 'Tinggi' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                  'bg-primary/10 text-primary border-primary/20'
-                )}>
-                   Prioritas demo: {activeFailure.severity}
-                </span>
-              </div>
-              
-              {/* Tab Navigation (Visual only for demo) */}
-              <div className="flex gap-6 border-b border-border/50">
-                <button className="pb-3 text-sm font-bold text-primary border-b-2 border-primary">Dokumentasi Awal</button>
-                <button className="pb-3 text-sm font-bold text-slate-500 hover:text-slate-300">Analisis Akar Masalah</button>
-                <button className="pb-3 text-sm font-bold text-slate-500 hover:text-slate-300">Dampak & Liabilitas</button>
-                <button className="pb-3 text-sm font-bold text-slate-500 hover:text-slate-300">Opini Ahli</button>
-              </div>
-            </div>
-
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="grid gap-6 md:grid-cols-2 mb-8">
-                {/* Visual Evidence Summary */}
-                <div className="border border-border rounded-lg p-4 bg-background">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-sm text-slate-200 flex items-center gap-2">
-                      <Camera size={16} className="text-primary" /> Visual Lapangan
-                    </h3>
-                    <span className="text-xs text-slate-500 font-mono">{activeFailure.evidence} Foto/Video</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="aspect-video bg-white/5 rounded border border-border/50 flex items-center justify-center relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                        <span className="text-xs font-bold">Lihat Metadata</span>
-                      </div>
-                      <Crosshair size={24} className="text-slate-600" />
-                    </div>
-                    <div className="aspect-video bg-white/5 rounded border border-border/50 flex items-center justify-center relative overflow-hidden group">
-                      <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                        <span className="text-xs font-bold">Lihat Metadata</span>
-                      </div>
-                      <Crosshair size={24} className="text-slate-600" />
-                    </div>
-                  </div>
-                  <button className="w-full mt-3 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-border py-2 rounded text-xs font-bold text-slate-300 transition-colors">
-                    <UploadCloud size={14} /> Tambah Bukti Visual
-                  </button>
-                </div>
-
-                {/* IDR Form Fields (Readonly Demo) */}
-                <div className="border border-border rounded-lg p-4 bg-background">
-                  <h3 className="font-bold text-sm text-slate-200 mb-4 flex items-center gap-2">
-                    <FileText size={16} className="text-primary" /> Initial Damage Report
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-1">Gejala (Symptoms)</p>
-                      <p className="text-sm text-slate-300">Retak diagonal pada kolom struktur K-14 (Grid C-4) dengan lebar rata-rata 2.4mm. Ditemukan spalling pada area joint kolom-balok.</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-1">Dugaan Awal</p>
-                      <p className="text-sm text-slate-300">Kegagalan geser akibat mutu beton tidak mencapai rencana (fc' terindikasi rendah) atau defisiensi penulangan geser.</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-1">Tindakan Sementara</p>
-                      <p className="text-sm text-slate-300">Pemasangan shoring/perancah baja sementara pada grid C-4, C-5. Area ditutup dari pekerja.</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Next Steps */}
-              <div className="border border-border rounded-lg p-5 bg-card shadow-inner">
-                <h3 className="font-bold text-sm text-slate-200 mb-4">Langkah Investigasi Lanjutan (Rekomendasi)</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded border border-border bg-background hover:border-primary/50 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded bg-primary/20 text-primary flex items-center justify-center font-mono text-xs font-bold">1</div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-200 group-hover:text-primary transition-colors">Non-Destructive Testing (NDT)</p>
-                        <p className="text-xs text-slate-500">Uji UPV (Ultrasonic Pulse Velocity) & Hammer Test</p>
-                      </div>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-600 group-hover:text-primary" />
-                  </div>
-                  <div className="flex items-center justify-between p-3 rounded border border-border bg-background hover:border-primary/50 transition-colors cursor-pointer group">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded bg-white/5 text-slate-400 flex items-center justify-center font-mono text-xs font-bold">2</div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-200 group-hover:text-primary transition-colors">Penunjukan Penilai Ahli Forensik</p>
-                        <p className="text-xs text-slate-500">Eskalasi untuk analisis liabilitas dan perbaikan</p>
-                      </div>
-                    </div>
-                    <ChevronRight size={16} className="text-slate-600 group-hover:text-primary" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </Shell>
-  );
+function FailureDetail({ failure }: { failure: FailureCase }) {
+  return <div className="rounded-lg border border-border bg-card p-6 shadow-card"><div className="flex items-start justify-between border-b border-border pb-5"><div><p className="font-mono text-xs text-slate-500">{failure.reference}</p><h2 data-testid={`text-failure-title-${failure.id}`} className="mt-2 font-display text-2xl font-bold text-white">{failure.title}</h2><p className="mt-2 text-sm text-slate-400">{failure.project} · {failure.category} · {failure.eventDate}</p></div><span className="rounded border border-amber-500/30 px-3 py-1 text-xs text-amber-400">{failure.severity}</span></div><div className="grid gap-5 pt-5 md:grid-cols-2"><section className="rounded border border-border bg-background p-4"><h3 className="mb-3 text-sm font-bold text-slate-200"><FileText size={15} className="mr-2 inline text-primary"/>Uraian kejadian</h3><p className="text-sm leading-relaxed text-slate-300">{failure.description}</p></section><section className="rounded border border-border bg-background p-4"><h3 className="mb-3 text-sm font-bold text-slate-200"><ShieldCheck size={15} className="mr-2 inline text-primary"/>Kolaborasi</h3><p className="text-xs leading-relaxed text-slate-400">Laporan ini tersimpan pada organisasi dan dapat dihubungkan dengan penugasan ahli atau ruang mediasi. Aktivitas yang tercatat adalah rekam administratif, bukan penerimaan hukum otomatis.</p><p className="mt-4 text-xs text-slate-500">Status: {failure.status}</p></section></div></div>;
 }

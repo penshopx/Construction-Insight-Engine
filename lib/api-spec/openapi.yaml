@@ -18,6 +18,8 @@ tags:
     description: Current organization workspace and membership
   - name: contract-cases
     description: Guided contractual case workflows
+  - name: collaboration
+    description: Shared expert review and mediation workspaces
 paths:
   /healthz:
     get:
@@ -336,6 +338,180 @@ paths:
                 $ref: "#/components/schemas/ReferenceSearchResponse"
         "400":
           $ref: "#/components/responses/BadRequest"
+  /collaboration/failure-cases:
+    get:
+      operationId: listFailureCases
+      tags: [collaboration]
+      responses:
+        "200":
+          description: Persistent failure cases
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/FailureCase" } }
+    post:
+      operationId: createFailureCase
+      tags: [collaboration]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/FailureCaseInput" } }
+      responses:
+        "201":
+          description: Created failure case
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/FailureCase" } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+  /collaboration/expert-assignments:
+    get:
+      operationId: listExpertAssignments
+      tags: [collaboration]
+      responses:
+        "200":
+          description: Expert assignments
+          content:
+            application/json: { schema: { type: array, items: { $ref: "#/components/schemas/ExpertAssignment" } } }
+    post:
+      operationId: createExpertAssignment
+      tags: [collaboration]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/ExpertAssignmentInput" } }
+      responses:
+        "201":
+          description: Created assignment
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/ExpertAssignment" } }
+  /collaboration/expert-assignments/{id}:
+    patch:
+      operationId: updateExpertAssignment
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/ExpertAssignmentUpdate" } }
+      responses:
+        "200":
+          description: Updated assignment
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/ExpertAssignment" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /collaboration/mediation-rooms:
+    get:
+      operationId: listMediationRooms
+      tags: [collaboration]
+      responses:
+        "200":
+          description: Mediation rooms
+          content:
+            application/json: { schema: { type: array, items: { $ref: "#/components/schemas/MediationRoom" } } }
+    post:
+      operationId: createMediationRoom
+      tags: [collaboration]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationRoomInput" } }
+      responses:
+        "201":
+          description: Created mediation room
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationRoom" } }
+  /collaboration/mediation-rooms/{id}:
+    get:
+      operationId: getMediationRoom
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      responses:
+        "200":
+          description: Room aggregate
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationRoomAggregate" } }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      operationId: updateMediationRoom
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationRoomUpdate" } }
+      responses:
+        "200":
+          description: Updated room
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationRoom" } }
+  /collaboration/mediation-rooms/{id}/participants:
+    post:
+      operationId: addMediationParticipant
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationParticipantInput" } }
+      responses:
+        "201":
+          description: Added participant
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationParticipant" } }
+  /collaboration/mediation-rooms/{id}/sessions:
+    post:
+      operationId: addMediationSession
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationSessionInput" } }
+      responses:
+        "201":
+          description: Added session
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationSession" } }
+  /collaboration/mediation-rooms/{id}/issues:
+    post:
+      operationId: addMediationIssue
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationIssueInput" } }
+      responses:
+        "201":
+          description: Added issue
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationIssue" } }
+  /collaboration/mediation-issues/{id}:
+    patch:
+      operationId: updateMediationIssue
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationIssueUpdate" } }
+      responses:
+        "200":
+          description: Updated issue
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationIssue" } }
+  /collaboration/mediation-rooms/{id}/evidence:
+    post:
+      operationId: addMediationEvidence
+      tags: [collaboration]
+      parameters: [{ $ref: "#/components/parameters/CollaborationId" }]
+      requestBody:
+        required: true
+        content:
+          application/json: { schema: { $ref: "#/components/schemas/MediationEvidenceInput" } }
+      responses:
+        "201":
+          description: Added evidence metadata
+          content:
+            application/json: { schema: { $ref: "#/components/schemas/MediationEvidence" } }
 components:
   parameters:
     WorkItemId:
@@ -350,6 +526,11 @@ components:
       required: true
       schema:
         type: number
+    CollaborationId:
+      in: path
+      name: id
+      required: true
+      schema: { type: number }
   responses:
     BadRequest:
       description: Invalid request
@@ -665,6 +846,195 @@ components:
         createdAt:
           type: string
           format: date-time
+    FailureCase:
+      type: object
+      required: [id, project, reference, title, category, severity, description, status, eventDate, createdAt, updatedAt]
+      properties:
+        id: { type: number }
+        caseId: { type: ["number", "null"] }
+        project: { type: string }
+        reference: { type: string }
+        title: { type: string }
+        category: { type: string }
+        severity: { type: string }
+        description: { type: string }
+        status: { type: string }
+        eventDate: { type: string, format: date }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    FailureCaseInput:
+      type: object
+      required: [project, title, category, description, eventDate]
+      properties:
+        caseId: { type: number }
+        project: { type: string, minLength: 1 }
+        title: { type: string, minLength: 2 }
+        category: { type: string, minLength: 1 }
+        severity: { type: string }
+        description: { type: string, minLength: 2 }
+        eventDate: { type: string, format: date }
+    ExpertAssignment:
+      type: object
+      required: [id, expertName, role, scope, status, conflictStatus, createdAt, updatedAt]
+      properties:
+        id: { type: number }
+        failureCaseId: { type: ["number", "null"] }
+        contractCaseId: { type: ["number", "null"] }
+        expertName: { type: string }
+        expertContact: { type: ["string", "null"] }
+        role: { type: string }
+        scope: { type: string }
+        status: { type: string }
+        scopeAcceptedAt: { type: ["string", "null"], format: date-time }
+        conflictStatus: { type: string }
+        conflictDeclaration: { type: ["string", "null"] }
+        conflictDeclaredAt: { type: ["string", "null"], format: date-time }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ExpertAssignmentInput:
+      type: object
+      required: [expertName, scope]
+      properties:
+        failureCaseId: { type: number }
+        contractCaseId: { type: number }
+        expertName: { type: string, minLength: 2 }
+        expertContact: { type: string }
+        role: { type: string }
+        scope: { type: string, minLength: 2 }
+    ExpertAssignmentUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        status: { type: string }
+        scopeAccepted: { type: boolean }
+        conflictStatus: { type: string }
+        conflictDeclaration: { type: string }
+    MediationRoom:
+      type: object
+      required: [id, reference, title, status, createdAt, updatedAt]
+      properties:
+        id: { type: number }
+        contractCaseId: { type: ["number", "null"] }
+        failureCaseId: { type: ["number", "null"] }
+        reference: { type: string }
+        title: { type: string }
+        status: { type: string }
+        agreementDraft: { type: ["string", "null"] }
+        outcomeNotes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MediationRoomInput:
+      type: object
+      required: [title]
+      properties:
+        contractCaseId: { type: number }
+        failureCaseId: { type: number }
+        title: { type: string, minLength: 2 }
+    MediationRoomUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        status: { type: string }
+        agreementDraft: { type: ["string", "null"] }
+        outcomeNotes: { type: ["string", "null"] }
+    MediationParticipant:
+      type: object
+      required: [id, displayName, role, accessRole, createdAt]
+      properties:
+        id: { type: number }
+        displayName: { type: string }
+        contact: { type: ["string", "null"] }
+        role: { type: string }
+        accessRole: { type: string }
+        createdAt: { type: string, format: date-time }
+    MediationParticipantInput:
+      type: object
+      required: [displayName, role]
+      properties:
+        displayName: { type: string, minLength: 2 }
+        contact: { type: string }
+        role: { type: string }
+        accessRole: { type: string }
+    MediationSession:
+      type: object
+      required: [id, title, status, createdAt]
+      properties:
+        id: { type: number }
+        title: { type: string }
+        scheduledAt: { type: ["string", "null"], format: date-time }
+        status: { type: string }
+        agenda: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    MediationSessionInput:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 2 }
+        scheduledAt: { type: string, format: date-time }
+        agenda: { type: string }
+    MediationIssue:
+      type: object
+      required: [id, title, description, status, createdAt, updatedAt]
+      properties:
+        id: { type: number }
+        title: { type: string }
+        description: { type: string }
+        claimantPosition: { type: ["string", "null"] }
+        respondentPosition: { type: ["string", "null"] }
+        resolution: { type: ["string", "null"] }
+        status: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    MediationIssueInput:
+      type: object
+      required: [title, description]
+      properties:
+        title: { type: string, minLength: 2 }
+        description: { type: string, minLength: 2 }
+    MediationIssueUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        claimantPosition: { type: ["string", "null"] }
+        respondentPosition: { type: ["string", "null"] }
+        resolution: { type: ["string", "null"] }
+        status: { type: string }
+    MediationEvidence:
+      type: object
+      required: [id, name, confidentiality, allowedRoles, createdAt]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        objectPath: { type: ["string", "null"] }
+        mimeType: { type: ["string", "null"] }
+        confidentiality: { $ref: "#/components/schemas/EvidenceConfidentiality" }
+        allowedRoles: { type: array, items: { $ref: "#/components/schemas/WorkspaceRole" } }
+        uploadedBy: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+    MediationEvidenceInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+        objectPath: { type: string }
+        mimeType: { type: string }
+        confidentiality: { $ref: "#/components/schemas/EvidenceConfidentiality" }
+        allowedRoles: { type: array, items: { $ref: "#/components/schemas/WorkspaceRole" } }
+    MediationRoomAggregate:
+      allOf:
+        - $ref: "#/components/schemas/MediationRoom"
+        - type: object
+          required: [participants, sessions, issues, evidence, activities]
+          properties:
+            participants: { type: array, items: { $ref: "#/components/schemas/MediationParticipant" } }
+            sessions: { type: array, items: { $ref: "#/components/schemas/MediationSession" } }
+            issues: { type: array, items: { $ref: "#/components/schemas/MediationIssue" } }
+            evidence: { type: array, items: { $ref: "#/components/schemas/MediationEvidence" } }
+            activities: { type: array, items: { $ref: "#/components/schemas/ContractCaseActivity" } }
+    EvidenceConfidentiality:
+      type: string
+      enum: [ORGANIZATION, RESTRICTED, MANAGERS]
     ReferenceDocument:
       type: object
       required: [id, title, category, fileType, sourceFilename, sourceChecksum, sectionCount, topics]

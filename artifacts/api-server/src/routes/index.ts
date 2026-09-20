@@ -4,6 +4,7 @@ import workItemsRouter from "./work-items";
 import referencesRouter from "./references";
 import workspaceRouter from "./workspace";
 import contractCasesRouter from "./contract-cases";
+import collaborationRouter from "./collaboration";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(workItemsRouter);
 router.use(referencesRouter);
 router.use(workspaceRouter);
 router.use(contractCasesRouter);
+router.use(collaborationRouter);
 
 export default router;

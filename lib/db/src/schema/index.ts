@@ -21,3 +21,4 @@ export * from "./work-items";
 export * from "./contract-cases";
 export * from "./reference-documents";
 export * from "./organizations";
+export * from "./collaboration";

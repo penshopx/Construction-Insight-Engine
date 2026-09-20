@@ -25,8 +25,26 @@ import type {
   ContractCaseActivity,
   ContractCaseInput,
   ContractCaseUpdate,
+  ExpertAssignment,
+  ExpertAssignmentInput,
+  ExpertAssignmentUpdate,
+  FailureCase,
+  FailureCaseInput,
   HealthStatus,
   ListWorkItemsParams,
+  MediationEvidence,
+  MediationEvidenceInput,
+  MediationIssue,
+  MediationIssueInput,
+  MediationIssueUpdate,
+  MediationParticipant,
+  MediationParticipantInput,
+  MediationRoom,
+  MediationRoomAggregate,
+  MediationRoomInput,
+  MediationRoomUpdate,
+  MediationSession,
+  MediationSessionInput,
   NotFoundResponse,
   ReferenceDocument,
   ReferenceImport,
@@ -1420,4 +1438,945 @@ export function useSearchReferences<TData = Awaited<ReturnType<typeof searchRefe
 
 
 
+
+export const getListFailureCasesUrl = () => {
+
+
+
+
+  return `/api/collaboration/failure-cases`
+}
+
+export const listFailureCases = async ( options?: Parameters<typeof customFetch>[1]): Promise<FailureCase[]> => {
+
+  return customFetch<FailureCase[]>(getListFailureCasesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListFailureCasesQueryKey = () => {
+    return [
+    `/api/collaboration/failure-cases`
+    ] as const;
+    }
+
+
+export const getListFailureCasesQueryOptions = <TData = Awaited<ReturnType<typeof listFailureCases>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFailureCases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListFailureCasesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listFailureCases>>> = ({ signal }) => listFailureCases({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listFailureCases>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListFailureCasesQueryResult = NonNullable<Awaited<ReturnType<typeof listFailureCases>>>
+export type ListFailureCasesQueryError = ErrorType<unknown>
+
+
+
+export function useListFailureCases<TData = Awaited<ReturnType<typeof listFailureCases>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listFailureCases>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListFailureCasesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateFailureCaseUrl = () => {
+
+
+
+
+  return `/api/collaboration/failure-cases`
+}
+
+export const createFailureCase = async (failureCaseInput: FailureCaseInput, options?: Parameters<typeof customFetch>[1]): Promise<FailureCase> => {
+
+  return customFetch<FailureCase>(getCreateFailureCaseUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(failureCaseInput)
+  }
+);}
+
+
+
+
+
+export const getCreateFailureCaseMutationOptions = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFailureCase>>, TError,{data: BodyType<FailureCaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createFailureCase>>, TError,{data: BodyType<FailureCaseInput>}, TContext> => {
+
+const mutationKey = ['createFailureCase'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createFailureCase>>, {data: BodyType<FailureCaseInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createFailureCase(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateFailureCaseMutationResult = NonNullable<Awaited<ReturnType<typeof createFailureCase>>>
+    export type CreateFailureCaseMutationBody = BodyType<FailureCaseInput>
+    export type CreateFailureCaseMutationError = ErrorType<BadRequestResponse>
+
+    export const useCreateFailureCase = <TError = ErrorType<BadRequestResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFailureCase>>, TError,{data: BodyType<FailureCaseInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createFailureCase>>,
+        TError,
+        {data: BodyType<FailureCaseInput>},
+        TContext
+      > => {
+      return useMutation(getCreateFailureCaseMutationOptions(options));
+    }
+
+export const getListExpertAssignmentsUrl = () => {
+
+
+
+
+  return `/api/collaboration/expert-assignments`
+}
+
+export const listExpertAssignments = async ( options?: Parameters<typeof customFetch>[1]): Promise<ExpertAssignment[]> => {
+
+  return customFetch<ExpertAssignment[]>(getListExpertAssignmentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListExpertAssignmentsQueryKey = () => {
+    return [
+    `/api/collaboration/expert-assignments`
+    ] as const;
+    }
+
+
+export const getListExpertAssignmentsQueryOptions = <TData = Awaited<ReturnType<typeof listExpertAssignments>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listExpertAssignments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListExpertAssignmentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listExpertAssignments>>> = ({ signal }) => listExpertAssignments({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listExpertAssignments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListExpertAssignmentsQueryResult = NonNullable<Awaited<ReturnType<typeof listExpertAssignments>>>
+export type ListExpertAssignmentsQueryError = ErrorType<unknown>
+
+
+
+export function useListExpertAssignments<TData = Awaited<ReturnType<typeof listExpertAssignments>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listExpertAssignments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListExpertAssignmentsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateExpertAssignmentUrl = () => {
+
+
+
+
+  return `/api/collaboration/expert-assignments`
+}
+
+export const createExpertAssignment = async (expertAssignmentInput: ExpertAssignmentInput, options?: Parameters<typeof customFetch>[1]): Promise<ExpertAssignment> => {
+
+  return customFetch<ExpertAssignment>(getCreateExpertAssignmentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(expertAssignmentInput)
+  }
+);}
+
+
+
+
+
+export const getCreateExpertAssignmentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createExpertAssignment>>, TError,{data: BodyType<ExpertAssignmentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createExpertAssignment>>, TError,{data: BodyType<ExpertAssignmentInput>}, TContext> => {
+
+const mutationKey = ['createExpertAssignment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createExpertAssignment>>, {data: BodyType<ExpertAssignmentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createExpertAssignment(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateExpertAssignmentMutationResult = NonNullable<Awaited<ReturnType<typeof createExpertAssignment>>>
+    export type CreateExpertAssignmentMutationBody = BodyType<ExpertAssignmentInput>
+    export type CreateExpertAssignmentMutationError = ErrorType<unknown>
+
+    export const useCreateExpertAssignment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createExpertAssignment>>, TError,{data: BodyType<ExpertAssignmentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createExpertAssignment>>,
+        TError,
+        {data: BodyType<ExpertAssignmentInput>},
+        TContext
+      > => {
+      return useMutation(getCreateExpertAssignmentMutationOptions(options));
+    }
+
+export const getUpdateExpertAssignmentUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/expert-assignments/${id}`
+}
+
+export const updateExpertAssignment = async (id: number,
+    expertAssignmentUpdate: ExpertAssignmentUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ExpertAssignment> => {
+
+  return customFetch<ExpertAssignment>(getUpdateExpertAssignmentUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(expertAssignmentUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateExpertAssignmentMutationOptions = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExpertAssignment>>, TError,{id: number;data: BodyType<ExpertAssignmentUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateExpertAssignment>>, TError,{id: number;data: BodyType<ExpertAssignmentUpdate>}, TContext> => {
+
+const mutationKey = ['updateExpertAssignment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateExpertAssignment>>, {id: number;data: BodyType<ExpertAssignmentUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateExpertAssignment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateExpertAssignmentMutationResult = NonNullable<Awaited<ReturnType<typeof updateExpertAssignment>>>
+    export type UpdateExpertAssignmentMutationBody = BodyType<ExpertAssignmentUpdate>
+    export type UpdateExpertAssignmentMutationError = ErrorType<NotFoundResponse>
+
+    export const useUpdateExpertAssignment = <TError = ErrorType<NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateExpertAssignment>>, TError,{id: number;data: BodyType<ExpertAssignmentUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateExpertAssignment>>,
+        TError,
+        {id: number;data: BodyType<ExpertAssignmentUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateExpertAssignmentMutationOptions(options));
+    }
+
+export const getListMediationRoomsUrl = () => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms`
+}
+
+export const listMediationRooms = async ( options?: Parameters<typeof customFetch>[1]): Promise<MediationRoom[]> => {
+
+  return customFetch<MediationRoom[]>(getListMediationRoomsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListMediationRoomsQueryKey = () => {
+    return [
+    `/api/collaboration/mediation-rooms`
+    ] as const;
+    }
+
+
+export const getListMediationRoomsQueryOptions = <TData = Awaited<ReturnType<typeof listMediationRooms>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMediationRooms>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMediationRoomsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMediationRooms>>> = ({ signal }) => listMediationRooms({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMediationRooms>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListMediationRoomsQueryResult = NonNullable<Awaited<ReturnType<typeof listMediationRooms>>>
+export type ListMediationRoomsQueryError = ErrorType<unknown>
+
+
+
+export function useListMediationRooms<TData = Awaited<ReturnType<typeof listMediationRooms>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listMediationRooms>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListMediationRoomsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateMediationRoomUrl = () => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms`
+}
+
+export const createMediationRoom = async (mediationRoomInput: MediationRoomInput, options?: Parameters<typeof customFetch>[1]): Promise<MediationRoom> => {
+
+  return customFetch<MediationRoom>(getCreateMediationRoomUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationRoomInput)
+  }
+);}
+
+
+
+
+
+export const getCreateMediationRoomMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMediationRoom>>, TError,{data: BodyType<MediationRoomInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMediationRoom>>, TError,{data: BodyType<MediationRoomInput>}, TContext> => {
+
+const mutationKey = ['createMediationRoom'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMediationRoom>>, {data: BodyType<MediationRoomInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMediationRoom(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMediationRoomMutationResult = NonNullable<Awaited<ReturnType<typeof createMediationRoom>>>
+    export type CreateMediationRoomMutationBody = BodyType<MediationRoomInput>
+    export type CreateMediationRoomMutationError = ErrorType<unknown>
+
+    export const useCreateMediationRoom = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMediationRoom>>, TError,{data: BodyType<MediationRoomInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createMediationRoom>>,
+        TError,
+        {data: BodyType<MediationRoomInput>},
+        TContext
+      > => {
+      return useMutation(getCreateMediationRoomMutationOptions(options));
+    }
+
+export const getGetMediationRoomUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms/${id}`
+}
+
+export const getMediationRoom = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<MediationRoomAggregate> => {
+
+  return customFetch<MediationRoomAggregate>(getGetMediationRoomUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMediationRoomQueryKey = (id: number,) => {
+    return [
+    `/api/collaboration/mediation-rooms/${id}`
+    ] as const;
+    }
+
+
+export const getGetMediationRoomQueryOptions = <TData = Awaited<ReturnType<typeof getMediationRoom>>, TError = ErrorType<NotFoundResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMediationRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMediationRoomQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMediationRoom>>> = ({ signal }) => getMediationRoom(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMediationRoom>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMediationRoomQueryResult = NonNullable<Awaited<ReturnType<typeof getMediationRoom>>>
+export type GetMediationRoomQueryError = ErrorType<NotFoundResponse>
+
+
+
+export function useGetMediationRoom<TData = Awaited<ReturnType<typeof getMediationRoom>>, TError = ErrorType<NotFoundResponse>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMediationRoom>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMediationRoomQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateMediationRoomUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms/${id}`
+}
+
+export const updateMediationRoom = async (id: number,
+    mediationRoomUpdate: MediationRoomUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MediationRoom> => {
+
+  return customFetch<MediationRoom>(getUpdateMediationRoomUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationRoomUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateMediationRoomMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMediationRoom>>, TError,{id: number;data: BodyType<MediationRoomUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMediationRoom>>, TError,{id: number;data: BodyType<MediationRoomUpdate>}, TContext> => {
+
+const mutationKey = ['updateMediationRoom'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMediationRoom>>, {id: number;data: BodyType<MediationRoomUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateMediationRoom(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMediationRoomMutationResult = NonNullable<Awaited<ReturnType<typeof updateMediationRoom>>>
+    export type UpdateMediationRoomMutationBody = BodyType<MediationRoomUpdate>
+    export type UpdateMediationRoomMutationError = ErrorType<unknown>
+
+    export const useUpdateMediationRoom = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMediationRoom>>, TError,{id: number;data: BodyType<MediationRoomUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMediationRoom>>,
+        TError,
+        {id: number;data: BodyType<MediationRoomUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateMediationRoomMutationOptions(options));
+    }
+
+export const getAddMediationParticipantUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms/${id}/participants`
+}
+
+export const addMediationParticipant = async (id: number,
+    mediationParticipantInput: MediationParticipantInput, options?: Parameters<typeof customFetch>[1]): Promise<MediationParticipant> => {
+
+  return customFetch<MediationParticipant>(getAddMediationParticipantUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationParticipantInput)
+  }
+);}
+
+
+
+
+
+export const getAddMediationParticipantMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationParticipant>>, TError,{id: number;data: BodyType<MediationParticipantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addMediationParticipant>>, TError,{id: number;data: BodyType<MediationParticipantInput>}, TContext> => {
+
+const mutationKey = ['addMediationParticipant'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addMediationParticipant>>, {id: number;data: BodyType<MediationParticipantInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addMediationParticipant(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddMediationParticipantMutationResult = NonNullable<Awaited<ReturnType<typeof addMediationParticipant>>>
+    export type AddMediationParticipantMutationBody = BodyType<MediationParticipantInput>
+    export type AddMediationParticipantMutationError = ErrorType<unknown>
+
+    export const useAddMediationParticipant = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationParticipant>>, TError,{id: number;data: BodyType<MediationParticipantInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addMediationParticipant>>,
+        TError,
+        {id: number;data: BodyType<MediationParticipantInput>},
+        TContext
+      > => {
+      return useMutation(getAddMediationParticipantMutationOptions(options));
+    }
+
+export const getAddMediationSessionUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms/${id}/sessions`
+}
+
+export const addMediationSession = async (id: number,
+    mediationSessionInput: MediationSessionInput, options?: Parameters<typeof customFetch>[1]): Promise<MediationSession> => {
+
+  return customFetch<MediationSession>(getAddMediationSessionUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationSessionInput)
+  }
+);}
+
+
+
+
+
+export const getAddMediationSessionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationSession>>, TError,{id: number;data: BodyType<MediationSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addMediationSession>>, TError,{id: number;data: BodyType<MediationSessionInput>}, TContext> => {
+
+const mutationKey = ['addMediationSession'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addMediationSession>>, {id: number;data: BodyType<MediationSessionInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addMediationSession(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddMediationSessionMutationResult = NonNullable<Awaited<ReturnType<typeof addMediationSession>>>
+    export type AddMediationSessionMutationBody = BodyType<MediationSessionInput>
+    export type AddMediationSessionMutationError = ErrorType<unknown>
+
+    export const useAddMediationSession = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationSession>>, TError,{id: number;data: BodyType<MediationSessionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addMediationSession>>,
+        TError,
+        {id: number;data: BodyType<MediationSessionInput>},
+        TContext
+      > => {
+      return useMutation(getAddMediationSessionMutationOptions(options));
+    }
+
+export const getAddMediationIssueUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms/${id}/issues`
+}
+
+export const addMediationIssue = async (id: number,
+    mediationIssueInput: MediationIssueInput, options?: Parameters<typeof customFetch>[1]): Promise<MediationIssue> => {
+
+  return customFetch<MediationIssue>(getAddMediationIssueUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationIssueInput)
+  }
+);}
+
+
+
+
+
+export const getAddMediationIssueMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationIssue>>, TError,{id: number;data: BodyType<MediationIssueInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addMediationIssue>>, TError,{id: number;data: BodyType<MediationIssueInput>}, TContext> => {
+
+const mutationKey = ['addMediationIssue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addMediationIssue>>, {id: number;data: BodyType<MediationIssueInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addMediationIssue(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddMediationIssueMutationResult = NonNullable<Awaited<ReturnType<typeof addMediationIssue>>>
+    export type AddMediationIssueMutationBody = BodyType<MediationIssueInput>
+    export type AddMediationIssueMutationError = ErrorType<unknown>
+
+    export const useAddMediationIssue = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationIssue>>, TError,{id: number;data: BodyType<MediationIssueInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addMediationIssue>>,
+        TError,
+        {id: number;data: BodyType<MediationIssueInput>},
+        TContext
+      > => {
+      return useMutation(getAddMediationIssueMutationOptions(options));
+    }
+
+export const getUpdateMediationIssueUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-issues/${id}`
+}
+
+export const updateMediationIssue = async (id: number,
+    mediationIssueUpdate: MediationIssueUpdate, options?: Parameters<typeof customFetch>[1]): Promise<MediationIssue> => {
+
+  return customFetch<MediationIssue>(getUpdateMediationIssueUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationIssueUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateMediationIssueMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMediationIssue>>, TError,{id: number;data: BodyType<MediationIssueUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMediationIssue>>, TError,{id: number;data: BodyType<MediationIssueUpdate>}, TContext> => {
+
+const mutationKey = ['updateMediationIssue'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMediationIssue>>, {id: number;data: BodyType<MediationIssueUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateMediationIssue(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMediationIssueMutationResult = NonNullable<Awaited<ReturnType<typeof updateMediationIssue>>>
+    export type UpdateMediationIssueMutationBody = BodyType<MediationIssueUpdate>
+    export type UpdateMediationIssueMutationError = ErrorType<unknown>
+
+    export const useUpdateMediationIssue = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMediationIssue>>, TError,{id: number;data: BodyType<MediationIssueUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMediationIssue>>,
+        TError,
+        {id: number;data: BodyType<MediationIssueUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateMediationIssueMutationOptions(options));
+    }
+
+export const getAddMediationEvidenceUrl = (id: number,) => {
+
+
+
+
+  return `/api/collaboration/mediation-rooms/${id}/evidence`
+}
+
+export const addMediationEvidence = async (id: number,
+    mediationEvidenceInput: MediationEvidenceInput, options?: Parameters<typeof customFetch>[1]): Promise<MediationEvidence> => {
+
+  return customFetch<MediationEvidence>(getAddMediationEvidenceUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(mediationEvidenceInput)
+  }
+);}
+
+
+
+
+
+export const getAddMediationEvidenceMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationEvidence>>, TError,{id: number;data: BodyType<MediationEvidenceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof addMediationEvidence>>, TError,{id: number;data: BodyType<MediationEvidenceInput>}, TContext> => {
+
+const mutationKey = ['addMediationEvidence'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof addMediationEvidence>>, {id: number;data: BodyType<MediationEvidenceInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  addMediationEvidence(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AddMediationEvidenceMutationResult = NonNullable<Awaited<ReturnType<typeof addMediationEvidence>>>
+    export type AddMediationEvidenceMutationBody = BodyType<MediationEvidenceInput>
+    export type AddMediationEvidenceMutationError = ErrorType<unknown>
+
+    export const useAddMediationEvidence = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof addMediationEvidence>>, TError,{id: number;data: BodyType<MediationEvidenceInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof addMediationEvidence>>,
+        TError,
+        {id: number;data: BodyType<MediationEvidenceInput>},
+        TContext
+      > => {
+      return useMutation(getAddMediationEvidenceMutationOptions(options));
+    }
 
