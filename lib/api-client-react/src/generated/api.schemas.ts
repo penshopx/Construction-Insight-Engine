@@ -88,6 +88,10 @@ export interface WorkItem {
   /** @nullable */
   competencyArea?: string | null;
   completed: boolean;
+  /** @items.minimum 0 */
+  reminderDays: number[];
+  /** @items.minimum 0 */
+  reminderSentDays: number[];
   /** @nullable */
   caseId?: number | null;
   createdAt: string;
@@ -108,6 +112,12 @@ export interface WorkItemInput {
   competencyArea?: string;
   completed?: boolean;
   caseId?: number;
+  /**
+     * @maxItems 8
+     * @items.minimum 0
+     * @items.maximum 365
+     */
+  reminderDays?: number[];
 }
 
 export interface WorkItemUpdate {
@@ -129,6 +139,12 @@ export interface WorkItemUpdate {
   completed?: boolean;
   /** @nullable */
   caseId?: number | null;
+  /**
+     * @maxItems 8
+     * @items.minimum 0
+     * @items.maximum 365
+     */
+  reminderDays?: number[];
 }
 
 export type ContractCaseType = typeof ContractCaseType[keyof typeof ContractCaseType];

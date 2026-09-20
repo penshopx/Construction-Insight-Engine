@@ -24,6 +24,14 @@ export const ListWorkItemsQueryParams = zod.object({
   "category": zod.enum(['administration', 'decision', 'evidence', 'risk']).optional()
 })
 
+export const listWorkItemsResponseReminderDaysItemMin = 0;
+export const listWorkItemsResponseReminderDaysItemMultipleOf = 1;
+
+export const listWorkItemsResponseReminderSentDaysItemMin = 0;
+export const listWorkItemsResponseReminderSentDaysItemMultipleOf = 1;
+
+
+
 export const ListWorkItemsResponseItem = zod.object({
   "id": zod.number(),
   "category": zod.enum(['administration', 'decision', 'evidence', 'risk']),
@@ -36,6 +44,8 @@ export const ListWorkItemsResponseItem = zod.object({
   "kind": zod.string(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean(),
+  "reminderDays": zod.array(zod.number().min(listWorkItemsResponseReminderDaysItemMin).multipleOf(listWorkItemsResponseReminderDaysItemMultipleOf)),
+  "reminderSentDays": zod.array(zod.number().min(listWorkItemsResponseReminderSentDaysItemMin).multipleOf(listWorkItemsResponseReminderSentDaysItemMultipleOf)),
   "caseId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -47,6 +57,12 @@ export const ListWorkItemsResponse = zod.array(ListWorkItemsResponseItem)
  * @summary Create a work item
  */
 
+
+export const createWorkItemBodyReminderDaysItemMin = 0;
+export const createWorkItemBodyReminderDaysItemMax = 365;
+export const createWorkItemBodyReminderDaysItemMultipleOf = 1;
+
+export const createWorkItemBodyReminderDaysMax = 8;
 
 
 
@@ -61,8 +77,17 @@ export const CreateWorkItemBody = zod.object({
   "kind": zod.string().min(1),
   "competencyArea": zod.string().optional(),
   "completed": zod.boolean().optional(),
-  "caseId": zod.number().optional()
+  "caseId": zod.number().optional(),
+  "reminderDays": zod.array(zod.number().min(createWorkItemBodyReminderDaysItemMin).max(createWorkItemBodyReminderDaysItemMax).multipleOf(createWorkItemBodyReminderDaysItemMultipleOf)).max(createWorkItemBodyReminderDaysMax).optional()
 })
+
+export const createWorkItemResponseReminderDaysItemMin = 0;
+export const createWorkItemResponseReminderDaysItemMultipleOf = 1;
+
+export const createWorkItemResponseReminderSentDaysItemMin = 0;
+export const createWorkItemResponseReminderSentDaysItemMultipleOf = 1;
+
+
 
 export const CreateWorkItemResponse = zod.object({
   "id": zod.number(),
@@ -76,6 +101,8 @@ export const CreateWorkItemResponse = zod.object({
   "kind": zod.string(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean(),
+  "reminderDays": zod.array(zod.number().min(createWorkItemResponseReminderDaysItemMin).multipleOf(createWorkItemResponseReminderDaysItemMultipleOf)),
+  "reminderSentDays": zod.array(zod.number().min(createWorkItemResponseReminderSentDaysItemMin).multipleOf(createWorkItemResponseReminderSentDaysItemMultipleOf)),
   "caseId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
@@ -91,6 +118,12 @@ export const UpdateWorkItemParams = zod.object({
 
 
 
+export const updateWorkItemBodyReminderDaysItemMin = 0;
+export const updateWorkItemBodyReminderDaysItemMax = 365;
+export const updateWorkItemBodyReminderDaysItemMultipleOf = 1;
+
+export const updateWorkItemBodyReminderDaysMax = 8;
+
 
 
 export const UpdateWorkItemBody = zod.object({
@@ -103,8 +136,17 @@ export const UpdateWorkItemBody = zod.object({
   "kind": zod.string().min(1).optional(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean().optional(),
-  "caseId": zod.number().nullish()
+  "caseId": zod.number().nullish(),
+  "reminderDays": zod.array(zod.number().min(updateWorkItemBodyReminderDaysItemMin).max(updateWorkItemBodyReminderDaysItemMax).multipleOf(updateWorkItemBodyReminderDaysItemMultipleOf)).max(updateWorkItemBodyReminderDaysMax).optional()
 })
+
+export const updateWorkItemResponseReminderDaysItemMin = 0;
+export const updateWorkItemResponseReminderDaysItemMultipleOf = 1;
+
+export const updateWorkItemResponseReminderSentDaysItemMin = 0;
+export const updateWorkItemResponseReminderSentDaysItemMultipleOf = 1;
+
+
 
 export const UpdateWorkItemResponse = zod.object({
   "id": zod.number(),
@@ -118,6 +160,8 @@ export const UpdateWorkItemResponse = zod.object({
   "kind": zod.string(),
   "competencyArea": zod.string().nullish(),
   "completed": zod.boolean(),
+  "reminderDays": zod.array(zod.number().min(updateWorkItemResponseReminderDaysItemMin).multipleOf(updateWorkItemResponseReminderDaysItemMultipleOf)),
+  "reminderSentDays": zod.array(zod.number().min(updateWorkItemResponseReminderSentDaysItemMin).multipleOf(updateWorkItemResponseReminderSentDaysItemMultipleOf)),
   "caseId": zod.number().nullish(),
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()

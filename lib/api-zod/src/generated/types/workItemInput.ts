@@ -22,4 +22,10 @@ export interface WorkItemInput {
   competencyArea?: string;
   completed?: boolean;
   caseId?: number;
+  /**
+     * @maxItems 8
+     * @items.minimum 0
+     * @items.maximum 365
+     */
+  reminderDays?: number[];
 }

@@ -26,4 +26,10 @@ export interface WorkItemUpdate {
   completed?: boolean;
   /** @nullable */
   caseId?: number | null;
+  /**
+     * @maxItems 8
+     * @items.minimum 0
+     * @items.maximum 365
+     */
+  reminderDays?: number[];
 }

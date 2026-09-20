@@ -8,7 +8,7 @@ import {
   type WorkItem,
 } from '@workspace/api-client-react';
 import { PageHeader, Shell } from '@/components/layout';
-import { AlertTriangle, Check, Clock, Info, Plus, X } from 'lucide-react';
+import { AlertTriangle, Bell, Check, Clock, Info, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type DeadlineFilter = 'all' | 'action_needed' | 'resolved';
@@ -28,6 +28,15 @@ export default function Tenggat() {
   const resolveDeadline = (deadline: WorkItem) => {
     updateDeadline.mutate(
       { id: deadline.id, data: { completed: true, status: 'Selesai' } },
+      { onSuccess: refresh },
+    );
+  };
+  const toggleReminderDay = (deadline: WorkItem, day: number) => {
+    const reminderDays = deadline.reminderDays.includes(day)
+      ? deadline.reminderDays.filter((value) => value !== day)
+      : [...deadline.reminderDays, day].sort((a, b) => b - a);
+    updateDeadline.mutate(
+      { id: deadline.id, data: { reminderDays } },
       { onSuccess: refresh },
     );
   };
@@ -99,6 +108,28 @@ export default function Tenggat() {
                 </div>
                 <h3 className={`text-sm font-bold ${deadline.completed ? 'text-slate-400 line-through' : 'text-slate-200'}`}>{deadline.title}</h3>
                 {deadline.description && <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400"><Info size={12} className="shrink-0" /> {deadline.description}</p>}
+                {deadline.caseId && !deadline.completed && (
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <Bell size={12} className="mr-1 text-primary" />
+                    {[14, 7, 3, 1].map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleReminderDay(deadline, day)}
+                        disabled={updateDeadline.isPending}
+                        className={cn(
+                          "rounded border px-2 py-1 text-[10px] font-bold transition-colors disabled:opacity-50",
+                          deadline.reminderDays.includes(day)
+                            ? "border-primary/40 bg-primary/15 text-primary"
+                            : "border-border bg-background text-slate-500 hover:text-slate-300",
+                        )}
+                        data-testid={`button-reminder-${deadline.id}-${day}`}
+                      >
+                        {day} hari
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             
@@ -135,11 +166,12 @@ function DeadlineModal({ onClose, onSaved }: { onClose: () => void; onSaved: () 
   const [due, setDue] = useState('');
   const [kind, setKind] = useState('Notice');
   const [description, setDescription] = useState('');
+  const [reminderDays, setReminderDays] = useState<number[]>([]);
   const createDeadline = useCreateWorkItem();
   const submit = () => createDeadline.mutate(
-    { data: { category: 'administration', title, project, due, kind, description, owner: 'RA', status: 'Perlu ditinjau' } },
+    { data: { category: 'administration', title, project, due, kind, description, owner: 'RA', status: 'Perlu ditinjau', reminderDays } },
     { onSuccess: () => { onSaved(); onClose(); } },
   );
 
-  return <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true"><div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-2xl"><div className="flex items-start justify-between border-b border-border pb-4 mb-4"><div><p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Agenda Kontraktual</p><h2 className="mt-1 font-display text-xl font-bold text-white">Tambah Tenggat</h2></div><button onClick={onClose} className="rounded p-2 text-slate-500 hover:text-white hover:bg-white/5 transition-colors" data-testid="button-close-deadline"><X size={18} /></button></div><div className="grid gap-4"><label><span className="mb-2 block text-xs font-bold text-slate-300">Aksi/Kewajiban</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-title" placeholder="Cth: Submit Notice of Delay" /></label><label><span className="mb-2 block text-xs font-bold text-slate-300">Proyek (Opsional)</span><input value={project} onChange={(event) => setProject(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-project" placeholder="Cth: Tower A" /></label><div className="grid grid-cols-2 gap-3"><label><span className="mb-2 block text-xs font-bold text-slate-300">Jenis Dokumen</span><input value={kind} onChange={(event) => setKind(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-kind" /></label><label><span className="mb-2 block text-xs font-bold text-slate-300">Jatuh Tempo</span><input value={due} onChange={(event) => setDue(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-due" placeholder="DD/MM/YYYY atau teks" /></label></div><label><span className="mb-2 block text-xs font-bold text-slate-300">Klausul Rujukan / Catatan</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-description" placeholder="Cth: Sesuai Pasal 8.4 mengenai batas 14 hari..." /></label></div><div className="mt-6 flex justify-end gap-3 pt-4 border-t border-border"><button onClick={onClose} className="rounded px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors" data-testid="button-cancel-deadline">Batal</button><button onClick={submit} disabled={!title.trim() || createDeadline.isPending} className="rounded bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition-colors" data-testid="button-save-deadline">{createDeadline.isPending ? 'Menyimpan…' : 'Simpan Tenggat'}</button></div></div></div>;
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-black/80 backdrop-blur-sm p-4" role="dialog" aria-modal="true"><div className="w-full max-w-lg rounded-xl border border-border bg-card p-6 shadow-2xl"><div className="flex items-start justify-between border-b border-border pb-4 mb-4"><div><p className="font-mono text-[10px] uppercase tracking-[.18em] text-primary">Agenda Kontraktual</p><h2 className="mt-1 font-display text-xl font-bold text-white">Tambah Tenggat</h2></div><button onClick={onClose} className="rounded p-2 text-slate-500 hover:text-white hover:bg-white/5 transition-colors" data-testid="button-close-deadline"><X size={18} /></button></div><div className="grid gap-4"><label><span className="mb-2 block text-xs font-bold text-slate-300">Aksi/Kewajiban</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-title" placeholder="Cth: Submit Notice of Delay" /></label><label><span className="mb-2 block text-xs font-bold text-slate-300">Proyek (Opsional)</span><input value={project} onChange={(event) => setProject(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-project" placeholder="Cth: Tower A" /></label><div className="grid grid-cols-2 gap-3"><label><span className="mb-2 block text-xs font-bold text-slate-300">Jenis Dokumen</span><input value={kind} onChange={(event) => setKind(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-kind" /></label><label><span className="mb-2 block text-xs font-bold text-slate-300">Jatuh Tempo</span><input type="date" value={due} onChange={(event) => setDue(event.target.value)} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-due" /></label></div><fieldset><legend className="mb-2 text-xs font-bold text-slate-300">Ingatkan Sebelum Tenggat</legend><div className="flex flex-wrap gap-2">{[14, 7, 3, 1].map((day) => <button key={day} type="button" onClick={() => setReminderDays((current) => current.includes(day) ? current.filter((value) => value !== day) : [...current, day].sort((a, b) => b - a))} className={cn("rounded border px-3 py-1.5 text-xs font-bold", reminderDays.includes(day) ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background text-slate-500")} data-testid={`button-new-reminder-${day}`}>{day} hari</button>)}</div></fieldset><label><span className="mb-2 block text-xs font-bold text-slate-300">Klausul Rujukan / Catatan</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={3} className="w-full rounded border border-border bg-background px-3 py-2.5 text-sm text-white focus:outline-none focus:border-primary transition-colors" data-testid="input-deadline-description" placeholder="Cth: Sesuai Pasal 8.4 mengenai batas 14 hari..." /></label></div><div className="mt-6 flex justify-end gap-3 pt-4 border-t border-border"><button onClick={onClose} className="rounded px-4 py-2 text-xs font-bold text-slate-400 hover:text-white transition-colors" data-testid="button-cancel-deadline">Batal</button><button onClick={submit} disabled={!title.trim() || createDeadline.isPending} className="rounded bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50 hover:bg-primary/90 transition-colors" data-testid="button-save-deadline">{createDeadline.isPending ? 'Menyimpan…' : 'Simpan Tenggat'}</button></div></div></div>;
 }

@@ -78,6 +78,7 @@ router.post("/contract-cases", async (req, res): Promise<void> => {
         due: toCalendarDate(body.data.noticeDueDate),
         kind: `${body.data.type} Notice`,
         caseId: created.id,
+        reminderDays: [14, 7, 3, 1],
       });
     }
     return created;
@@ -132,7 +133,13 @@ router.patch("/contract-cases/:id", async (req, res): Promise<void> => {
         eq(workItemsTable.caseId, item.id),
       )).limit(1);
       if (deadline) {
-        await tx.update(workItemsTable).set({ due: changes.noticeDueDate }).where(eq(workItemsTable.id, deadline.id));
+        await tx.update(workItemsTable).set({
+          due: changes.noticeDueDate,
+          reminderSentDays: [],
+        }).where(and(
+          eq(workItemsTable.id, deadline.id),
+          eq(workItemsTable.organizationId, workspace.organizationId),
+        ));
       } else if (changes.noticeDueDate) {
         await tx.insert(workItemsTable).values({
           organizationId: workspace.organizationId,
@@ -145,6 +152,7 @@ router.patch("/contract-cases/:id", async (req, res): Promise<void> => {
           due: changes.noticeDueDate,
           kind: `${item.type} Notice`,
           caseId: item.id,
+          reminderDays: [14, 7, 3, 1],
         });
       }
     }

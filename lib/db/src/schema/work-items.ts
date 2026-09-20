@@ -16,6 +16,8 @@ export const workItemsTable = pgTable("work_items", {
   competencyArea: text("competency_area"),
   caseId: integer("case_id"),
   completed: boolean("completed").notNull().default(false),
+  reminderDays: integer("reminder_days").array().notNull().default([]),
+  reminderSentDays: integer("reminder_sent_days").array().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [

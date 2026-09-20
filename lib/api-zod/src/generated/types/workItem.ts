@@ -25,6 +25,10 @@ export interface WorkItem {
   /** @nullable */
   competencyArea?: string | null;
   completed: boolean;
+  /** @items.minimum 0 */
+  reminderDays: number[];
+  /** @items.minimum 0 */
+  reminderSentDays: number[];
   /** @nullable */
   caseId?: number | null;
   createdAt: Date;

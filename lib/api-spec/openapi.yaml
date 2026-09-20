@@ -613,7 +613,7 @@ components:
       enum: [Perlu ditinjau, Berjalan, Selesai]
     WorkItem:
       type: object
-      required: [id, category, title, status, kind, completed, createdAt, updatedAt]
+      required: [id, category, title, status, kind, completed, reminderDays, reminderSentDays, createdAt, updatedAt]
       properties:
         id:
           type: number
@@ -637,6 +637,18 @@ components:
           type: ["string", "null"]
         completed:
           type: boolean
+        reminderDays:
+          type: array
+          items:
+            type: number
+            multipleOf: 1
+            minimum: 0
+        reminderSentDays:
+          type: array
+          items:
+            type: number
+            multipleOf: 1
+            minimum: 0
         caseId:
           type: ["number", "null"]
         createdAt:
@@ -673,6 +685,15 @@ components:
           type: boolean
         caseId:
           type: number
+        reminderDays:
+          type: array
+          uniqueItems: true
+          maxItems: 8
+          items:
+            type: number
+            multipleOf: 1
+            minimum: 0
+            maximum: 365
     WorkItemUpdate:
       type: object
       minProperties: 1
@@ -699,6 +720,15 @@ components:
           type: boolean
         caseId:
           type: ["number", "null"]
+        reminderDays:
+          type: array
+          uniqueItems: true
+          maxItems: 8
+          items:
+            type: number
+            multipleOf: 1
+            minimum: 0
+            maximum: 365
     ContractCaseType:
       type: string
       enum: [VO, EOT, CLAIM, NCR]
