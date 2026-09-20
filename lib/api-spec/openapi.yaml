@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: work-items
     description: Persistent contract work items
+  - name: references
+    description: Searchable contract reference documents
 paths:
   /healthz:
     get:
@@ -88,6 +90,45 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "404":
           $ref: "#/components/responses/NotFound"
+  /references:
+    get:
+      operationId: listReferences
+      tags: [references]
+      summary: List indexed reference documents
+      responses:
+        "200":
+          description: Indexed documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReferenceDocument"
+  /references/search:
+    get:
+      operationId: searchReferences
+      tags: [references]
+      summary: Search reference document contents
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - in: query
+          name: category
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching excerpts with source context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReferenceSearchResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 components:
   parameters:
     WorkItemId:
@@ -211,4 +252,68 @@ components:
           type: ["string", "null"]
         completed:
           type: boolean
+    ReferenceDocument:
+      type: object
+      required: [id, title, category, fileType, sourceFilename, sourceChecksum, sectionCount, topics]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        fileType:
+          type: string
+        sourceFilename:
+          type: string
+        sourceChecksum:
+          type: string
+        sectionCount:
+          type: number
+        topics:
+          type: array
+          items:
+            type: string
+    ReferenceSearchHit:
+      type: object
+      required: [id, documentId, title, category, fileType, sourceFilename, sourceChecksum, sectionNumber, heading, excerpt, topics]
+      properties:
+        id:
+          type: string
+        documentId:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        fileType:
+          type: string
+        sourceFilename:
+          type: string
+        sourceChecksum:
+          type: string
+        sectionNumber:
+          type: number
+        heading:
+          type: string
+        excerpt:
+          type: string
+        topics:
+          type: array
+          items:
+            type: string
+    ReferenceSearchResponse:
+      type: object
+      required: [query, total, results, disclaimer]
+      properties:
+        query:
+          type: string
+        total:
+          type: number
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferenceSearchHit"
+        disclaimer:
+          type: string
 

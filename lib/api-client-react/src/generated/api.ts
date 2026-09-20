@@ -24,6 +24,9 @@ import type {
   HealthStatus,
   ListWorkItemsParams,
   NotFoundResponse,
+  ReferenceDocument,
+  ReferenceSearchResponse,
+  SearchReferencesParams,
   WorkItem,
   WorkItemInput,
   WorkItemUpdate
@@ -360,4 +363,165 @@ export const useUpdateWorkItem = <TError = ErrorType<BadRequestResponse | NotFou
       > => {
       return useMutation(getUpdateWorkItemMutationOptions(options));
     }
+
+export const getListReferencesUrl = () => {
+
+
+
+
+  return `/api/references`
+}
+
+/**
+ * @summary List indexed reference documents
+ */
+export const listReferences = async ( options?: Parameters<typeof customFetch>[1]): Promise<ReferenceDocument[]> => {
+
+  return customFetch<ReferenceDocument[]>(getListReferencesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListReferencesQueryKey = () => {
+    return [
+    `/api/references`
+    ] as const;
+    }
+
+
+export const getListReferencesQueryOptions = <TData = Awaited<ReturnType<typeof listReferences>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListReferencesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listReferences>>> = ({ signal }) => listReferences({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listReferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListReferencesQueryResult = NonNullable<Awaited<ReturnType<typeof listReferences>>>
+export type ListReferencesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List indexed reference documents
+ */
+
+export function useListReferences<TData = Awaited<ReturnType<typeof listReferences>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listReferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListReferencesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getSearchReferencesUrl = (params: SearchReferencesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/references/search?${stringifiedParams}` : `/api/references/search`
+}
+
+/**
+ * @summary Search reference document contents
+ */
+export const searchReferences = async (params: SearchReferencesParams, options?: Parameters<typeof customFetch>[1]): Promise<ReferenceSearchResponse> => {
+
+  return customFetch<ReferenceSearchResponse>(getSearchReferencesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getSearchReferencesQueryKey = (params?: SearchReferencesParams,) => {
+    return [
+    `/api/references/search`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getSearchReferencesQueryOptions = <TData = Awaited<ReturnType<typeof searchReferences>>, TError = ErrorType<BadRequestResponse>>(params: SearchReferencesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchReferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getSearchReferencesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof searchReferences>>> = ({ signal }) => searchReferences(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof searchReferences>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type SearchReferencesQueryResult = NonNullable<Awaited<ReturnType<typeof searchReferences>>>
+export type SearchReferencesQueryError = ErrorType<BadRequestResponse>
+
+
+/**
+ * @summary Search reference document contents
+ */
+
+export function useSearchReferences<TData = Awaited<ReturnType<typeof searchReferences>>, TError = ErrorType<BadRequestResponse>>(
+ params: SearchReferencesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof searchReferences>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getSearchReferencesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 

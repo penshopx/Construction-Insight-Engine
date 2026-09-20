@@ -87,6 +87,38 @@ export interface WorkItemUpdate {
   completed?: boolean;
 }
 
+export interface ReferenceDocument {
+  id: string;
+  title: string;
+  category: string;
+  fileType: string;
+  sourceFilename: string;
+  sourceChecksum: string;
+  sectionCount: number;
+  topics: string[];
+}
+
+export interface ReferenceSearchHit {
+  id: string;
+  documentId: string;
+  title: string;
+  category: string;
+  fileType: string;
+  sourceFilename: string;
+  sourceChecksum: string;
+  sectionNumber: number;
+  heading: string;
+  excerpt: string;
+  topics: string[];
+}
+
+export interface ReferenceSearchResponse {
+  query: string;
+  total: number;
+  results: ReferenceSearchHit[];
+  disclaimer: string;
+}
+
 /**
  * Invalid request
  */
@@ -99,5 +131,13 @@ export type NotFoundResponse = Error;
 
 export type ListWorkItemsParams = {
 category?: WorkItemCategory;
+};
+
+export type SearchReferencesParams = {
+/**
+ * @minLength 2
+ */
+q: string;
+category?: string;
 };
 

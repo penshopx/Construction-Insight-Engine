@@ -119,3 +119,51 @@ export const UpdateWorkItemResponse = zod.object({
 })
 
 
+/**
+ * @summary List indexed reference documents
+ */
+export const ListReferencesResponseItem = zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "fileType": zod.string(),
+  "sourceFilename": zod.string(),
+  "sourceChecksum": zod.string(),
+  "sectionCount": zod.number(),
+  "topics": zod.array(zod.string())
+})
+export const ListReferencesResponse = zod.array(ListReferencesResponseItem)
+
+
+/**
+ * @summary Search reference document contents
+ */
+export const searchReferencesQueryQMin = 2;
+
+
+
+export const SearchReferencesQueryParams = zod.object({
+  "q": zod.coerce.string().min(searchReferencesQueryQMin),
+  "category": zod.coerce.string().optional()
+})
+
+export const SearchReferencesResponse = zod.object({
+  "query": zod.string(),
+  "total": zod.number(),
+  "results": zod.array(zod.object({
+  "id": zod.string(),
+  "documentId": zod.string(),
+  "title": zod.string(),
+  "category": zod.string(),
+  "fileType": zod.string(),
+  "sourceFilename": zod.string(),
+  "sourceChecksum": zod.string(),
+  "sectionNumber": zod.number(),
+  "heading": zod.string(),
+  "excerpt": zod.string(),
+  "topics": zod.array(zod.string())
+})),
+  "disclaimer": zod.string()
+})
+
+
