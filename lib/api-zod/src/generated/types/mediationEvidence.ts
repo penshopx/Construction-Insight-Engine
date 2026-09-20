@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EvidenceConfidentiality } from './evidenceConfidentiality';
-import type { WorkspaceRole } from './workspaceRole';
+import type { MediationParticipantRole } from './mediationParticipantRole';
 
 export interface MediationEvidence {
   id: number;
@@ -16,7 +16,9 @@ export interface MediationEvidence {
   /** @nullable */
   mimeType?: string | null;
   confidentiality: EvidenceConfidentiality;
-  allowedRoles: WorkspaceRole[];
+  /** @maxItems 4 */
+  allowedParticipantRoles: MediationParticipantRole[];
+  allowedParticipantIds: number[];
   /** @nullable */
   uploadedBy?: string | null;
   createdAt: Date;

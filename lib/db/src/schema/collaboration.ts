@@ -1,6 +1,7 @@
-import { date, index, integer, jsonb, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { date, index, integer, jsonb, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { appUsersTable } from "./organizations";
 
 export const failureCasesTable = pgTable("failure_cases", {
   id: serial("id").primaryKey(),
@@ -54,12 +55,17 @@ export const mediationParticipantsTable = pgTable("mediation_participants", {
   id: serial("id").primaryKey(),
   organizationId: integer("organization_id").notNull(),
   roomId: integer("room_id").notNull().references(() => mediationRoomsTable.id, { onDelete: "cascade" }),
+  userId: integer("user_id").references(() => appUsersTable.id, { onDelete: "cascade" }),
   displayName: text("display_name").notNull(),
   contact: text("contact"),
   role: text("role").notNull(),
-  accessRole: text("access_role").notNull().default("PARTY"),
+  legacyAccessRole: text("access_role").notNull().default("PARTY"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [index("mediation_participants_room_idx").on(table.roomId)]);
+}, (table) => [
+  index("mediation_participants_room_idx").on(table.roomId),
+  index("mediation_participants_user_idx").on(table.userId),
+  uniqueIndex("mediation_participants_room_user_unique").on(table.roomId, table.userId),
+]);
 
 export const mediationSessionsTable = pgTable("mediation_sessions", {
   id: serial("id").primaryKey(),
@@ -94,8 +100,9 @@ export const mediationEvidenceTable = pgTable("mediation_evidence", {
   name: text("name").notNull(),
   objectPath: text("object_path"),
   mimeType: text("mime_type"),
-  confidentiality: text("confidentiality").notNull().default("ORGANIZATION"),
-  allowedRoles: jsonb("allowed_roles").$type<string[]>().notNull().default([]),
+  confidentiality: text("confidentiality").notNull().default("ROOM"),
+  allowedParticipantRoles: jsonb("allowed_roles").$type<string[]>().notNull().default([]),
+  allowedParticipantIds: jsonb("allowed_participant_ids").$type<number[]>().notNull().default([]),
   uploadedBy: text("uploaded_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [index("mediation_evidence_room_idx").on(table.roomId)]);

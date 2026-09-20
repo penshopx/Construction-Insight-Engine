@@ -9,10 +9,13 @@ import type { ContractCaseActivity } from './contractCaseActivity';
 import type { MediationEvidence } from './mediationEvidence';
 import type { MediationIssue } from './mediationIssue';
 import type { MediationParticipant } from './mediationParticipant';
+import type { MediationParticipantRole } from './mediationParticipantRole';
 import type { MediationRoom } from './mediationRoom';
 import type { MediationSession } from './mediationSession';
 
 export type MediationRoomAggregate = MediationRoom & {
+  viewerParticipantId: number;
+  viewerRole: MediationParticipantRole;
   participants: MediationParticipant[];
   sessions: MediationSession[];
   issues: MediationIssue[];

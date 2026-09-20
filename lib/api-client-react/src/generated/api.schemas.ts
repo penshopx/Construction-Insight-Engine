@@ -386,22 +386,30 @@ export interface MediationRoomUpdate {
   outcomeNotes?: string | null;
 }
 
+export type MediationParticipantRole = typeof MediationParticipantRole[keyof typeof MediationParticipantRole];
+
+
+export const MediationParticipantRole = {
+  CLAIMANT: 'CLAIMANT',
+  RESPONDENT: 'RESPONDENT',
+  MEDIATOR: 'MEDIATOR',
+  OBSERVER: 'OBSERVER',
+} as const;
+
 export interface MediationParticipant {
   id: number;
+  /** @nullable */
+  userId: number | null;
   displayName: string;
   /** @nullable */
   contact?: string | null;
-  role: string;
-  accessRole: string;
+  role: MediationParticipantRole;
   createdAt: string;
 }
 
 export interface MediationParticipantInput {
-  /** @minLength 2 */
-  displayName: string;
-  contact?: string;
-  role: string;
-  accessRole?: string;
+  userId: number;
+  role: MediationParticipantRole;
 }
 
 export interface MediationSession {
@@ -460,9 +468,8 @@ export type EvidenceConfidentiality = typeof EvidenceConfidentiality[keyof typeo
 
 
 export const EvidenceConfidentiality = {
-  ORGANIZATION: 'ORGANIZATION',
+  ROOM: 'ROOM',
   RESTRICTED: 'RESTRICTED',
-  MANAGERS: 'MANAGERS',
 } as const;
 
 export interface MediationEvidence {
@@ -473,7 +480,9 @@ export interface MediationEvidence {
   /** @nullable */
   mimeType?: string | null;
   confidentiality: EvidenceConfidentiality;
-  allowedRoles: WorkspaceRole[];
+  /** @maxItems 4 */
+  allowedParticipantRoles: MediationParticipantRole[];
+  allowedParticipantIds: number[];
   /** @nullable */
   uploadedBy?: string | null;
   createdAt: string;
@@ -485,10 +494,14 @@ export interface MediationEvidenceInput {
   objectPath?: string;
   mimeType?: string;
   confidentiality?: EvidenceConfidentiality;
-  allowedRoles?: WorkspaceRole[];
+  /** @maxItems 4 */
+  allowedParticipantRoles?: MediationParticipantRole[];
+  allowedParticipantIds?: number[];
 }
 
 export type MediationRoomAggregate = MediationRoom & {
+  viewerParticipantId: number;
+  viewerRole: MediationParticipantRole;
   participants: MediationParticipant[];
   sessions: MediationSession[];
   issues: MediationIssue[];

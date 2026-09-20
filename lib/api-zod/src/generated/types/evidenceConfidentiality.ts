@@ -10,7 +10,6 @@ export type EvidenceConfidentiality = typeof EvidenceConfidentiality[keyof typeo
 
 
 export const EvidenceConfidentiality = {
-  ORGANIZATION: 'ORGANIZATION',
+  ROOM: 'ROOM',
   RESTRICTED: 'RESTRICTED',
-  MANAGERS: 'MANAGERS',
 } as const;

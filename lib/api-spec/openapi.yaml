@@ -1041,22 +1041,20 @@ components:
         outcomeNotes: { type: ["string", "null"] }
     MediationParticipant:
       type: object
-      required: [id, displayName, role, accessRole, createdAt]
+      required: [id, userId, displayName, role, createdAt]
       properties:
         id: { type: number }
+        userId: { type: ["number", "null"] }
         displayName: { type: string }
         contact: { type: ["string", "null"] }
-        role: { type: string }
-        accessRole: { type: string }
+        role: { $ref: "#/components/schemas/MediationParticipantRole" }
         createdAt: { type: string, format: date-time }
     MediationParticipantInput:
       type: object
-      required: [displayName, role]
+      required: [userId, role]
       properties:
-        displayName: { type: string, minLength: 2 }
-        contact: { type: string }
-        role: { type: string }
-        accessRole: { type: string }
+        userId: { type: number }
+        role: { $ref: "#/components/schemas/MediationParticipantRole" }
     MediationSession:
       type: object
       required: [id, title, status, createdAt]
@@ -1104,14 +1102,15 @@ components:
         status: { type: string }
     MediationEvidence:
       type: object
-      required: [id, name, confidentiality, allowedRoles, createdAt]
+      required: [id, name, confidentiality, allowedParticipantRoles, allowedParticipantIds, createdAt]
       properties:
         id: { type: number }
         name: { type: string }
         objectPath: { type: ["string", "null"] }
         mimeType: { type: ["string", "null"] }
         confidentiality: { $ref: "#/components/schemas/EvidenceConfidentiality" }
-        allowedRoles: { type: array, uniqueItems: true, maxItems: 2, items: { $ref: "#/components/schemas/WorkspaceRole" } }
+        allowedParticipantRoles: { type: array, uniqueItems: true, maxItems: 4, items: { $ref: "#/components/schemas/MediationParticipantRole" } }
+        allowedParticipantIds: { type: array, uniqueItems: true, items: { type: number } }
         uploadedBy: { type: ["string", "null"] }
         createdAt: { type: string, format: date-time }
     MediationEvidenceInput:
@@ -1122,13 +1121,16 @@ components:
         objectPath: { type: string }
         mimeType: { type: string }
         confidentiality: { $ref: "#/components/schemas/EvidenceConfidentiality" }
-        allowedRoles: { type: array, uniqueItems: true, maxItems: 2, items: { $ref: "#/components/schemas/WorkspaceRole" } }
+        allowedParticipantRoles: { type: array, uniqueItems: true, maxItems: 4, items: { $ref: "#/components/schemas/MediationParticipantRole" } }
+        allowedParticipantIds: { type: array, uniqueItems: true, items: { type: number } }
     MediationRoomAggregate:
       allOf:
         - $ref: "#/components/schemas/MediationRoom"
         - type: object
-          required: [participants, sessions, issues, evidence, activities]
+          required: [participants, sessions, issues, evidence, activities, viewerParticipantId, viewerRole]
           properties:
+            viewerParticipantId: { type: number }
+            viewerRole: { $ref: "#/components/schemas/MediationParticipantRole" }
             participants: { type: array, items: { $ref: "#/components/schemas/MediationParticipant" } }
             sessions: { type: array, items: { $ref: "#/components/schemas/MediationSession" } }
             issues: { type: array, items: { $ref: "#/components/schemas/MediationIssue" } }
@@ -1136,7 +1138,10 @@ components:
             activities: { type: array, items: { $ref: "#/components/schemas/ContractCaseActivity" } }
     EvidenceConfidentiality:
       type: string
-      enum: [ORGANIZATION, RESTRICTED, MANAGERS]
+      enum: [ROOM, RESTRICTED]
+    MediationParticipantRole:
+      type: string
+      enum: [CLAIMANT, RESPONDENT, MEDIATOR, OBSERVER]
     ReferenceDocument:
       type: object
       required: [id, title, category, fileType, sourceFilename, sourceChecksum, sectionCount, topics]

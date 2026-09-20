@@ -5,13 +5,15 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MediationParticipantRole } from './mediationParticipantRole';
 
 export interface MediationParticipant {
   id: number;
+  /** @nullable */
+  userId: number | null;
   displayName: string;
   /** @nullable */
   contact?: string | null;
-  role: string;
-  accessRole: string;
+  role: MediationParticipantRole;
   createdAt: Date;
 }

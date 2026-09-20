@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EvidenceConfidentiality } from './evidenceConfidentiality';
-import type { WorkspaceRole } from './workspaceRole';
+import type { MediationParticipantRole } from './mediationParticipantRole';
 
 export interface MediationEvidenceInput {
   /** @minLength 1 */
@@ -14,5 +14,7 @@ export interface MediationEvidenceInput {
   objectPath?: string;
   mimeType?: string;
   confidentiality?: EvidenceConfidentiality;
-  allowedRoles?: WorkspaceRole[];
+  /** @maxItems 4 */
+  allowedParticipantRoles?: MediationParticipantRole[];
+  allowedParticipantIds?: number[];
 }

@@ -784,6 +784,10 @@ export const GetMediationRoomParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const getMediationRoomResponseTwoEvidenceItemAllowedParticipantRolesMax = 4;
+
+
+
 export const GetMediationRoomResponse = zod.object({
   "id": zod.number(),
   "contractCaseId": zod.number().nullish(),
@@ -796,12 +800,14 @@ export const GetMediationRoomResponse = zod.object({
   "createdAt": zod.coerce.date(),
   "updatedAt": zod.coerce.date()
 }).and(zod.object({
+  "viewerParticipantId": zod.number(),
+  "viewerRole": zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER']),
   "participants": zod.array(zod.object({
   "id": zod.number(),
+  "userId": zod.number().nullable(),
   "displayName": zod.string(),
   "contact": zod.string().nullish(),
-  "role": zod.string(),
-  "accessRole": zod.string(),
+  "role": zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER']),
   "createdAt": zod.coerce.date()
 })),
   "sessions": zod.array(zod.object({
@@ -829,8 +835,9 @@ export const GetMediationRoomResponse = zod.object({
   "name": zod.string(),
   "objectPath": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
-  "confidentiality": zod.enum(['ORGANIZATION', 'RESTRICTED', 'MANAGERS']),
-  "allowedRoles": zod.array(zod.enum(['manager', 'member'])),
+  "confidentiality": zod.enum(['ROOM', 'RESTRICTED']),
+  "allowedParticipantRoles": zod.array(zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER'])).max(getMediationRoomResponseTwoEvidenceItemAllowedParticipantRolesMax),
+  "allowedParticipantIds": zod.array(zod.number()),
   "uploadedBy": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })),
@@ -872,23 +879,17 @@ export const AddMediationParticipantParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const addMediationParticipantBodyDisplayNameMin = 2;
-
-
-
 export const AddMediationParticipantBody = zod.object({
-  "displayName": zod.string().min(addMediationParticipantBodyDisplayNameMin),
-  "contact": zod.string().optional(),
-  "role": zod.string(),
-  "accessRole": zod.string().optional()
+  "userId": zod.number(),
+  "role": zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER'])
 })
 
 export const AddMediationParticipantResponse = zod.object({
   "id": zod.number(),
+  "userId": zod.number().nullable(),
   "displayName": zod.string(),
   "contact": zod.string().nullish(),
-  "role": zod.string(),
-  "accessRole": zod.string(),
+  "role": zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER']),
   "createdAt": zod.coerce.date()
 })
 
@@ -975,23 +976,31 @@ export const AddMediationEvidenceParams = zod.object({
 })
 
 
+export const addMediationEvidenceBodyAllowedParticipantRolesMax = 4;
+
 
 
 export const AddMediationEvidenceBody = zod.object({
   "name": zod.string().min(1),
   "objectPath": zod.string().optional(),
   "mimeType": zod.string().optional(),
-  "confidentiality": zod.enum(['ORGANIZATION', 'RESTRICTED', 'MANAGERS']).optional(),
-  "allowedRoles": zod.array(zod.enum(['manager', 'member'])).optional()
+  "confidentiality": zod.enum(['ROOM', 'RESTRICTED']).optional(),
+  "allowedParticipantRoles": zod.array(zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER'])).max(addMediationEvidenceBodyAllowedParticipantRolesMax).optional(),
+  "allowedParticipantIds": zod.array(zod.number()).optional()
 })
+
+export const addMediationEvidenceResponseAllowedParticipantRolesMax = 4;
+
+
 
 export const AddMediationEvidenceResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "objectPath": zod.string().nullish(),
   "mimeType": zod.string().nullish(),
-  "confidentiality": zod.enum(['ORGANIZATION', 'RESTRICTED', 'MANAGERS']),
-  "allowedRoles": zod.array(zod.enum(['manager', 'member'])),
+  "confidentiality": zod.enum(['ROOM', 'RESTRICTED']),
+  "allowedParticipantRoles": zod.array(zod.enum(['CLAIMANT', 'RESPONDENT', 'MEDIATOR', 'OBSERVER'])).max(addMediationEvidenceResponseAllowedParticipantRolesMax),
+  "allowedParticipantIds": zod.array(zod.number()),
   "uploadedBy": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })

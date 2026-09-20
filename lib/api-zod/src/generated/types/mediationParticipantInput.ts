@@ -5,11 +5,9 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { MediationParticipantRole } from './mediationParticipantRole';
 
 export interface MediationParticipantInput {
-  /** @minLength 2 */
-  displayName: string;
-  contact?: string;
-  role: string;
-  accessRole?: string;
+  userId: number;
+  role: MediationParticipantRole;
 }

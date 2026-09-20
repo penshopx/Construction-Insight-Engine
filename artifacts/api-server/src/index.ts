@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { startNoticeReminderScheduler } from "./lib/notice-reminders";
 import { startReferenceExtractionWorker } from "./lib/reference-extraction-worker";
+import { migrateLegacyMediationAccess } from "./lib/mediation-access-migration";
 
 const rawPort = process.env["PORT"];
 
@@ -16,6 +17,8 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+await migrateLegacyMediationAccess();
 
 app.listen(port, (err) => {
   if (err) {

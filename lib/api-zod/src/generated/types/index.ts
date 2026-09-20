@@ -36,6 +36,7 @@ export * from './mediationIssueInput';
 export * from './mediationIssueUpdate';
 export * from './mediationParticipant';
 export * from './mediationParticipantInput';
+export * from './mediationParticipantRole';
 export * from './mediationRoom';
 export * from './mediationRoomAggregate';
 export * from './mediationRoomInput';
