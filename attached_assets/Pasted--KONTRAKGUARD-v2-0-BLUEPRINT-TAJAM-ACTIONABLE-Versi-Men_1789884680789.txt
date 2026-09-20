@@ -1,0 +1,984 @@
+# KONTRAKGUARD v2.0 — BLUEPRINT TAJAM & ACTIONABLE
+
+## Versi Mendalam: AI, Forensik, dan Strategi Pasar
+
+---
+
+## BAGIAN 1: DEEP DIVE TEKNIS — AI/NLP ENGINE
+
+Ini adalah **jantung intelektual** aplikasi. Tanpa AI yang akurat, aplikasi ini hanya menjadi "Google Drive yang mahal". Berikut detail teknisnya:
+
+### 1.1 Arsitektur AI Pipeline
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    AI CONTRACT ANALYSIS PIPELINE                │
+└─────────────────────────────────────────────────────────────────┘
+
+INPUT: PDF/DOCX Kontrak Konstruksi (Bahasa Indonesia/Inggris)
+  │
+  ▼
+[STAGE 1: DOCUMENT INGESTION]
+  ├── PDF Parser (PyMuPDF + pdfplumber)
+  ├── Table Extractor (Camelot) — untuk BQ, jadwal, dll
+  ├── OCR Engine (Tesseract + PaddleOCR) — untuk scan
+  └── Layout Analyzer (LayoutLMv3) — pahami struktur dokumen
+  │
+  ▼
+[STAGE 2: STRUCTURAL PARSING]
+  ├── Pasal Detection (Regex + ML hybrid)
+  │   └── Output: "Pasal 12.3", "Pasal 25.1.a", dll
+  ├── Cross-Reference Resolver
+  │   └── "Pasal 12.3 merujuk ke Pasal 25.1" → link otomatis
+  ├── Annex/Lampiran Classifier
+  │   └── Identifikasi: BQ, Spesifikasi, Jadwal, Gambar
+  └── Entity Extractor (NER)
+      └── Nama pihak, nilai kontrak, tanggal, lokasi
+  │
+  ▼
+[STAGE 3: CLAUSE CLASSIFICATION & EXTRACTION]
+  ├── Model: Fine-tuned LLM (berbasis Llama-3 8B atau Qwen2.5)
+  │   └── Dilatih pada 10.000+ kontrak konstruksi Indonesia
+  ├── Klasifikasi 23 Kategori Klausul:
+  │   1. Lingkup Pekerjaan
+  │   2. Nilai & Mekanisme Pembayaran
+  │   3. Jangka Waktu
+  │   4. Denda Keterlambatan
+  │   5. Perpanjangan Waktu (EOT)
+  │   6. Variation Order
+  │   7. Force Majeure
+  │   8. Pemutusan Kontrak (Terminasi)
+  │   9. Penyelesaian Sengketa
+  │   10. Asuransi
+  │   11. Jaminan (Pelaksanaan, Uang Muka, Retensi)
+  │   12. Retensi & DLP
+  │   13. Subkontrak
+  │   14. K3L (Keselamatan Kerja)
+  │   15. Hak Kekayaan Intelektual
+  │   16. Kerahasiaan
+  │   17. Perubahan Hukum
+  │   18. Pajak
+  │   19. Audit
+  │   20. Laporan & Dokumentasi
+  │   21. Serah Terima (PHO/FHO)
+  │   22. Cacat Mutu
+  │   23. Klausul Tambahan (Special Conditions)
+  │
+  └── Output: Structured JSON per klausul
+      {
+        "clause_id": "12.3",
+        "category": "denda_keterlambatan",
+        "text": "Denda sebesar 2‰ per hari...",
+        "entities": {
+          "rate": "0.002",
+          "base": "nilai_kontrak",
+          "cap": null  ← RED FLAG: tidak ada batas maksimal
+        },
+        "risk_score": 0.85,
+        "deviation_from_standard": "+0.0015 vs standar PUPR"
+      }
+  │
+  ▼
+[STAGE 4: RISK SCORING & BENCHMARKING]
+  ├── Rule Engine (deterministic):
+  │   └── "Jika denda > 1‰ → risk_score += 0.3"
+  ├── ML Model (learned):
+  │   └── Gradient Boosting trained pada 500+ kasus sengketa
+  │       untuk memprediksi probabilitas sengketa per klausul
+  └── Benchmark Database:
+      └── Perbandingan dengan 50.000+ kontrak dalam database
+  │
+  ▼
+[STAGE 5: OUTPUT GENERATION]
+  ├── Risk Dashboard (visual)
+  ├── Redline Report (perbandingan dengan template standar)
+  ├── Obligation Extract (daftar kewajiban terstruktur)
+  ├── Deadline Extract (semua tenggat waktu)
+  └── Natural Language Summary (ringkasan eksekutif)
+```
+
+### 1.2 Strategi Training Data (Ini Kunci!)
+
+**Masalah:** Tidak ada dataset publik kontrak konstruksi Indonesia yang besar.
+
+**Solusi — Data Flywheel:**
+
+```
+FASE 1: SEED DATA (Bulan 1-6)
+├── Kumpulkan 500 kontrak dari:
+│   ├── Template PUPR (publik)
+│   ├── Template FIDIC (terjemahan resmi)
+│   ├── Kontrak sampel dari partner awal (dengan NDA)
+│   ├── Putusan BANI yang dipublikasikan (untuk label "sengketa")
+│
+├── Annotasi manual oleh 5 lawyer konstruksi + 3 QS
+│   └── Label: kategori klausul, risk level, entities
+│
+└── Output: Dataset terannotasi ~5.000 klausul
+
+FASE 2: FINE-TUNING (Bulan 6-9)
+├── Fine-tune LLM (Qwen2.5-14B atau Llama-3-8B)
+│   ├── Task 1: Clause Classification (accuracy target: 92%)
+│   ├── Task 2: Entity Extraction (F1 target: 88%)
+│   ├── Task 3: Risk Scoring (Spearman correlation: 0.75+)
+│   └── Task 4: Deviation Detection (precision target: 90%)
+│
+├── Teknik: LoRA (Low-Rank Adaptation) untuk efisiensi
+└── Validasi: 5-fold cross-validation + expert review
+
+FASE 3: PRODUCTION & FEEDBACK LOOP (Bulan 9+)
+├── Deploy model di production
+├── Setiap analisis AI → user review → feedback
+│   └── "Apakah analisis ini akurat?" [Ya/Tidak/Edit]
+├── Feedback masuk ke retraining pipeline
+│   └── Model di-retrain setiap bulan
+└── Dalam 12 bulan: dataset tumbuh 10x, akurasi naik signifikan
+```
+
+### 1.3 Benchmark Akurasi yang Harus Dicapai
+
+| Task | Target Akurasi | Cara Ukur |
+|---|---|---|
+| Deteksi struktur pasal | 98% | Exact match dengan struktur asli |
+| Klasifikasi kategori klausul | 92% | F1-score vs label expert |
+| Ekstraksi entitas (nilai, tanggal) | 95% | Exact match |
+| Deteksi deviasi dari standar | 90% | Precision-recall vs expert |
+| Risk scoring (rank ordering) | 0.75 Spearman | Korelasi dengan penilaian lawyer |
+| Ringkasan eksekutif | 4.0/5.0 | Rating user (lawyer konstruksi) |
+
+**Jika akurasi di bawah target → jangan rilis fitur.** Lebih baik fitur manual + AI-assisted daripada AI yang salah dan menyesatkan.
+
+---
+
+## BAGIAN 2: FORENSIC-READY DATA ARCHITECTURE
+
+Ini yang membuat aplikasi ini **berbeda dari document management system biasa**. Setiap byte data harus bisa dipertahankan di pengadilan.
+
+### 2.1 Prinsip Desain: "Court-Admissible by Default"
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  FORENSIC DATA ARCHITECTURE                                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  PRINSIP 1: IMMUTABILITY                                   │
+│  ├── Tidak ada DELETE, hanya APPEND                        │
+│  ├── Setiap perubahan → versi baru (v1, v2, v3...)         │
+│  ├── Hash chain: setiap record mengandung hash record      │
+│  │   sebelumnya (mirip blockchain, tapi lebih sederhana)   │
+│  └── Periodic anchoring ke public blockchain (Ethereum/    │
+│      Polygon) untuk timestamp eksternal yang tak terbantah │
+│                                                             │
+│  PRINSIP 2: COMPREHENSIVE AUDIT TRAIL                      │
+│  ├── Setiap aksi dicatat: WHO, WHAT, WHEN, WHERE, WHY      │
+│  ├── IP address, device fingerprint, geolocation           │
+│  ├── Snapshot sebelum & sesudah perubahan                  │
+│  └── Audit log sendiri juga immutable & hashed             │
+│                                                             │
+│  PRINSIP 3: CHAIN OF CUSTODY                               │
+│  ├── Setiap dokumen memiliki "custody chain"               │
+│  │   Upload → Review → Approve → Sign → Distribute         │
+│  ├── Setiap perpindahan tangan tercatat                    │
+│  └── Bisa dibuktikan: "Dokumen ini tidak pernah diakses    │
+│      oleh pihak yang tidak berwenang"                      │
+│                                                             │
+│  PRINSIP 4: METADATA RICHNESS                              │
+│  ├── Foto: GPS, timestamp, device ID, EXIF data utuh       │
+│  ├── Dokumen: hash SHA-256, size, page count               │
+│  ├── Email: full headers (bukan hanya body)                │
+│  └── Semua metadata disimpan terpisah dari konten          │
+│                                                             │
+│  PRINSIP 5: EXPORT FORMAT                                  │
+│  ├── Format ekspor: PDF/A (archival) + JSON metadata       │
+│  ├── Setiap halaman PDF mengandung hash untuk verifikasi   │
+│  ├── Bundle ekspor mencakup "affidavit template" yang      │
+│  │   bisa langsung ditandatangani untuk pengadilan         │
+│  └── Kompatibel dengan format bukti elektronik BANI        │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 2.2 Database Schema untuk Evidence Vault
+
+```sql
+-- Core immutable table
+CREATE TABLE evidence_items (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_id UUID REFERENCES projects(id),
+    item_type VARCHAR(50) NOT NULL,  -- 'photo', 'document', 'email', 'notice'
+    
+    -- Content
+    content_hash SHA256 NOT NULL,     -- Hash konten (SHA-256)
+    content_size BIGINT NOT NULL,
+    storage_path VARCHAR(500) NOT NULL,
+    
+    -- Metadata (terpisah untuk query cepat)
+    metadata JSONB NOT NULL,          -- GPS, EXIF, page count, dll
+    
+    -- Provenance
+    uploaded_by UUID REFERENCES users(id),
+    uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    device_fingerprint VARCHAR(200),
+    ip_address INET,
+    geolocation GEOGRAPHY(POINT),
+    
+    -- Chain
+    previous_version_id UUID REFERENCES evidence_items(id),
+    version INTEGER NOT NULL DEFAULT 1,
+    is_latest BOOLEAN NOT NULL DEFAULT true,
+    
+    -- Blockchain anchor
+    blockchain_tx_hash VARCHAR(100),  -- Hash transaksi di Ethereum/Polygon
+    anchored_at TIMESTAMPTZ,
+    
+    -- Legal
+    legal_hold BOOLEAN NOT NULL DEFAULT false,
+    retention_until DATE,
+    
+    -- Immutable audit
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Hash chain verification
+CREATE TABLE hash_chain (
+    sequence BIGINT PRIMARY KEY,
+    block_hash SHA256 NOT NULL,
+    previous_hash SHA256,
+    evidence_item_ids UUID[] NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    blockchain_tx_hash VARCHAR(100)
+);
+
+-- Audit log (also immutable)
+CREATE TABLE audit_log (
+    id BIGSERIAL PRIMARY KEY,
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    user_id UUID,
+    action VARCHAR(50) NOT NULL,  -- 'VIEW', 'UPLOAD', 'DOWNLOAD', 'SIGN', etc
+    resource_type VARCHAR(50),
+    resource_id UUID,
+    details JSONB,
+    ip_address INET,
+    user_agent TEXT,
+    -- Hash of previous row for chain integrity
+    row_hash SHA256 NOT NULL,
+    previous_row_hash SHA256
+);
+
+-- Prevent any modification/deletion
+REVOKE UPDATE, DELETE ON evidence_items FROM PUBLIC;
+REVOKE UPDATE, DELETE ON audit_log FROM PUBLIC;
+
+-- Only allow INSERT
+CREATE POLICY immutable_evidence ON evidence_items
+    FOR ALL USING (false)  -- No row-level updates/deletes
+    WITH CHECK (true);     -- Only inserts allowed
+```
+
+### 2.3 Fitur "Court Export" (Fitur Pembunuh)
+
+Satu klik untuk menghasilkan **Dossier Hukum** yang siap diajukan ke pengadilan/arbitrase:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  COURT EXPORT WIZARD                                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Step 1: Pilih Konteks Hukum                                │
+│  ○ Sengketa Kontrak (Perdata)                               │
+│  ○ Arbitrase BANI                                           │
+│  ○ Kepailitan                                               │
+│  ○ Pidana (kegagalan bangunan)                              │
+│  ○ Internal Audit / Investigasi                             │
+│                                                             │
+│  Step 2: Pilih Periode & Scope                              │
+│  [Tanggal Mulai] ─── [Tanggal Akhir]                        │
+│  [Proyek] [Pihak Lawan] [Tipe Dokumen]                      │
+│                                                             │
+│  Step 3: Sistem Mengumpulkan:                               │
+│  ✓ Semua surat-menyurat terkait                             │
+│  ✓ Laporan harian periode tersebut                          │
+│  ✓ Foto dengan metadata GPS & timestamp                     │
+│  ✓ Variation Orders & EOT claims                            │
+│  ✓ Bukti pembayaran & termin                                │
+│  ✓ Audit trail (siapa akses apa, kapan)                     │
+│  ✓ Hash verification report (bukti dokumen tidak diubah)    │
+│                                                             │
+│  Step 4: Generate Bundle                                    │
+│  ├── PDF/A-3 (archival format, ISO 19005-3)                 │
+│  ├── Index dokumen (hyperlinked)                            │
+│  ├── Timeline visual (kronologi kejadian)                   │
+│  ├── Affidavit template (siap tanda tangan)                 │
+│  ├── Hash verification tool (standalone .exe)               │
+│  └── Metadata JSON (untuk analisis lanjutan)                │
+│                                                             │
+│  Step 5: Verifikasi Integritas                              │
+│  [Verify Hashes] → ✓ All 847 documents verified             │
+│  [Anchor to Blockchain] → ✓ Tx: 0x7f3a...                   │
+│                                                             │
+│  Output: Dossier_Kontrak_XYZ_2026.zip (2.3 GB)              │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Nilai Jual:** Firma hukum bisa charge Rp500 juta - Rp2 miliar untuk menyusun dossier seperti ini secara manual. Aplikasi ini melakukannya dalam 10 menit.
+
+---
+
+## BAGIAN 3: PREDICTIVE RISK ENGINE
+
+Bukan hanya melacak risiko, tapi **memprediksi** sebelum terjadi.
+
+### 3.1 Model Prediksi Sengketa
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PREDICTIVE RISK ENGINE                                     │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  INPUT VARIABLES (Real-time dari sistem):                   │
+│                                                             │
+│  [Kontrak]                                                  │
+│  ├── Risk score dari AI analysis (0-100)                    │
+│  ├── Jumlah klausul "merah"                                 │
+│  ├── Deviasi dari template standar (%)                      │
+│  └── Pengalaman historis dengan pihak lawan                 │
+│                                                             │
+│  [Pelaksanaan]                                              │
+│  ├── Delay index (progres aktual vs rencana)                │
+│  ├── Jumlah VO yang belum disetujui                         │
+│  ├── Jumlah NCR yang belum ditutup                          │
+│  ├── Frekuensi surat peringatan (somasi)                    │
+│  ├── Response time Owner/MK (rata-rata hari)                │
+│  ├── Perubahan personel kunci (PM, pengawas)                │
+│  └── Cuaca ekstrem (data BMKG)                              │
+│                                                             │
+│  [Finansial]                                                │
+│  ├── Aging piutang (hari sejak jatuh tempo)                 │
+│  ├── Persentase retensi ditahan                             │
+│  ├── Selisih progres fisik vs finansial                     │
+│  └── Perubahan harga material (BPS)                         │
+│                                                             │
+│  [Kontekstual]                                              │
+│  ├── Tipe Owner (Pemerintah/Swasta/BUMN)                    │
+│  ├── Lokasi proyek (risk profile daerah)                    │
+│  ├── Kondisi politik/ekonomi (indeks makro)                 │
+│  └── Musim (hujan/kemarau)                                  │
+│                                                             │
+│  ▼                                                          │
+│                                                             │
+│  MODEL: Ensemble (XGBoost + Neural Network)                 │
+│  Trained pada:                                              │
+│  ├── 500+ kasus sengketa konstruksi Indonesia (2015-2025)   │
+│  ├── Data BANI (publik)                                     │
+│  ├── Putusan Mahkamah Agung (konstruksi)                    │
+│  └── Survey industri (GAPENSI, AKLI)                        │
+│                                                             │
+│  ▼                                                          │
+│                                                             │
+│  OUTPUT:                                                    │
+│  ├── Probability of Dispute (0-100%)                        │
+│  │   └── "Proyek XYZ: 73% kemungkinan sengketa dalam       │
+│  │       6 bulan ke depan"                                  │
+│  ├── Top 5 Risk Drivers                                     │
+│  │   └── 1. Delay 23% dari jadwal                           │
+│  │   └── 2. 5 VO belum disetujui (Rp2.3M)                   │
+│  │   └── 3. Response time Owner: 21 hari (standar: 7)       │
+│  │   └── 4. 3 somasi sudah dikirim tanpa respon             │
+│  │   └── 5. Klausul denda 2x standar                        │
+│  └── Recommended Actions                                    │
+│      └── "Segera jadwalkan meeting dengan Owner untuk       │
+│          negosiasi VO. Kirim notice formal jika tidak       │
+│          ada respon dalam 7 hari."                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 Early Warning Dashboard (Executive View)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PORTFOLIO RISK DASHBOARD — PT Konstruksi ABC               │
+│  Minggu ke-38, 2026                                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Proyek              │ Risk │ Trend │ Top Issue             │
+│  ────────────────────┼──────┼───────┼────────────────────── │
+│  Tower A Jakarta     │ 🔴 82│  ↑   │ VO Rp4.2M belum       │
+│                      │      │       │ disetujui 45 hari     │
+│  ────────────────────┼──────┼───────┼────────────────────── │
+│  Toll Road Semarang  │ 🟡 58│  →   │ Delay 12% (hujan)     │
+│                      │      │       │ EOT pending review    │
+│  ────────────────────┼──────┼───────┼────────────────────── │
+│  Mall Surabaya       │ 🟢 23│  ↓   │ On track              │
+│  ────────────────────┼──────┼───────┼────────────────────── │
+│  Bridge Kalimantan   │ 🔴 91│  ↑↑  │ Somasi 3 dari Owner,  │
+│                      │      │       │ termin 4 unpaid 60hr  │
+│  ────────────────────┼──────┼───────┼────────────────────── │
+│  Housing BSD         │ 🟡 45│  ↑   │ 3 NCR struktur belum  │
+│                      │      │       │ ditutup               │
+│                                                             │
+│  PORTFOLIO SUMMARY:                                         │
+│  Total Exposure: Rp127 Miliar                               │
+│  High Risk Projects: 2 (40% exposure)                       │
+│  Recommended: Focus legal resources on Tower A & Bridge     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 4: INTEGRASI REGULASI INDONESIA
+
+Ini adalah **moat** terbesar — pemain global tidak bisa meniru ini.
+
+### 4.1 Peta Integrasi Regulator
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  INTEGRASI REGULASI INDONESIA                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  [LPSE - Lembaga Kebijakan Pengadaan Barang/Jasa Pemerintah]│
+│  ├── Integrasi: Tarik data tender yang dimenangkan         │
+│  ├── Manfaat: Auto-populate data kontrak pemerintah         │
+│  └── Status: API tersedia, perlu kerjasama formal          │
+│                                                             │
+│  [SIKa - Sistem Informasi Konstruksi Indonesia]             │
+│  ├── Integrasi: Verifikasi SBU (Sertifikat Badan Usaha)    │
+│  ├── Manfaat: Validasi kualifikasi kontraktor otomatis      │
+│  └── Status: API publik terbatas, perlu MoU dengan PUPR    │
+│                                                             │
+│  [OSS - Online Single Submission]                           │
+│  ├── Integrasi: Verifikasi NIB & izin usaha                │
+│  ├── Manfaat: KYC otomatis untuk pihak kontrak              │
+│  └── Status: API tersedia via BKPM                         │
+│                                                             │
+│  [BSrE - Badan Sertifikasi Elektronik]                      │
+│  ├── Integrasi: Tanda tangan elektronik tersertifikasi     │
+│  ├── Manfaat: Tanda tangan sah secara hukum (UU ITE)       │
+│  └── Status: API tersedia, partner: Peruri, Privy, dll     │
+│                                                             │
+│  [SIM-PUPR / e-Contracting PUPR]                            │
+│  ├── Integrasi: Untuk proyek yang didanai APBN             │
+│  ├── Manfaat: Compliance otomatis dengan standar PUPR      │
+│  └── Status: Perlu kerjasama institusional                 │
+│                                                             │
+│  [BANI - Badan Arbitrase Nasional Indonesia]                │
+│  ├── Integrasi: Template dokumen arbitrase, e-filing       │
+│  ├── Manfaat: streamline proses arbitrase jika sengketa    │
+│  └── Status: Perlu MoU                                     │
+│                                                             │
+│  [DJP Online - Direktorat Jenderal Pajak]                   │
+│  ├── Integrasi: e-Faktur, SSP, bukti potong                │
+│  ├── Manfaat: Auto-generate dokumen pajak untuk termin     │
+│  └── Status: API tersedia                                  │
+│                                                             │
+│  [Peruri - Perum Percetakan Uang RI]                        │
+│  ├── Integrasi: Meterai elektronik (e-Meterai)             │
+│  ├── Manfaat: Dokumen bernilai hukum tanpa meterai fisik   │
+│  └── Status: API tersedia                                  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 4.2 Compliance Engine (Auto-Check Regulasi)
+
+Setiap kontrak yang diunggah otomatis dicek terhadap regulasi yang berlaku:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  REGULATORY COMPLIANCE CHECK                                │
+│  Kontrak: Pembangunan Gedung Pemerintah XYZ                 │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ✅ COMPLIANT:                                              │
+│  ├── Menggunakan SBU yang masih berlaku (SIKa verified)    │
+│  ├── Jaminan Pelaksanaan 5% (sesuai Perpres 16/2018)       │
+│  ├── Asuransi CAR aktif                                    │
+│  ├── Klausul penyelesaian sengketa: Arbitrase BANI ✓       │
+│  └── Tanda tangan elektronik tersertifikasi (BSrE) ✓       │
+│                                                             │
+│  ⚠️ PERLU PERHATIAN:                                        │
+│  ├── Uang Muka 25% — melebihi batas 20% untuk             │
+│  │   kontrak >1 tahun (Perpres 16/2018 Pasal 77)           │
+│  │   → Rekomendasi: Kurangi jadi 20% atau tambah jaminan   │
+│  └── Klausul force majeure tidak mencantumkan "bencana     │
+│      non-alam" (sesuai Perpres 16/2018 Pasal 10)           │
+│                                                             │
+│  ❌ NON-COMPLIANT:                                          │
+│  ├── Denda keterlambatan 2‰/hari — melebihi batas          │
+│  │   1‰/hari untuk kontrak pemerintah (Permen PUPR         │
+│  │   14/2020)                                               │
+│  │   → WAJIB direvisi sebelum penandatanganan              │
+│  └── Tidak ada klausul SMK3 (Sistem Manajemen K3)          │
+│      → Wajib untuk kontrak >Rp10 miliar (PP 50/2012)       │
+│                                                             │
+│  COMPLIANCE SCORE: 78/100                                   │
+│  STATUS: ❌ Tidak bisa ditandatangani — perlu revisi       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## BAGIAN 5: USER JOURNEY NYATA (SKENARIO INDONESIA)
+
+### 5.1 Skenario: Kontraktor Menghadapi Klaim Owner
+
+**Konteks:** Proyek gedung kantor Rp80 miliar. Owner mengklaim kontraktor terlambat 45 hari dan menuntut denda Rp1.2 miliar. Kontraktor yakin keterlambatan disebabkan oleh: (1) Owner telat menyerahkan gambar struktur, (2) ada 7 VO yang belum dibayar, (3) hujan ekstrem 23 hari.
+
+**Tanpa Aplikasi:**
+Kontraktor panik. Tim legal menghabiskan 3 minggu mengumpulkan dokumen dari berbagai folder, email, dan arsip kertas. Banyak bukti hilang. Posisi tawar lemah. Akhirnya settle di Rp800 juta (rugi).
+
+**Dengan KontrakGuard:**
+
+```
+HARI H-0: Owner kirim somasi klaim denda Rp1.2M
+  │
+  ▼
+HARI H+1: Tim Legal Kontraktor buka KontrakGuard
+  │
+  ├── Step 1: Buka dashboard proyek
+  │   └── Sistem sudah menampilkan: "Klaim denda Owner: 
+  │       Rp1.2M. Analisis pertahanan otomatis tersedia."
+  │
+  ├── Step 2: Klik "Generate Defense Dossier"
+  │   └── Sistem otomatis mengumpulkan:
+  │       ├── Bukti 1: Surat Owner telat serah gambar
+  │       │   (Notice-023, 15 Mar 2026, acknowledged)
+  │       ├── Bukti 2: 7 VO senilai Rp3.4M yang sudah
+  │       │   dikerjakan tapi belum dibayar
+  │       ├── Bukti 3: Data BMKG — 23 hari hujan ekstrem,
+  │       │   sesuai kriteria force majeure Pasal 25
+  │       ├── Bukti 4: Daily reports yang menunjukkan
+  │       │   progres terdampak (dengan foto timestamped)
+  │       ├── Bukti 5: Email follow-up ke Owner (12 email)
+  │       └── Timeline visual: menunjukkan Owner delay 18 hari,
+  │           VO delay 22 hari, cuaca delay 23 hari
+  │           = Total justifiable delay: 63 hari
+  │           > Claimed delay: 45 hari
+  │           → Kontraktor TIDAK terlambat!
+  │
+  ├── Step 3: Review & refine dossier (2 jam)
+  │   └── Tim legal menambahkan narasi hukum, referensi
+  │       pasal KUHPerdata 1244-1246 (force majeure)
+  │
+  ├── Step 4: Generate response letter
+  │   └── Template otomatis: "Sanggahan terhadap Klaim
+  │       Denda" dengan attachment dossier lengkap
+  │
+  └── Step 5: Kirim via sistem (e-sign + e-meterai)
+      └── Owner menerima sanggahan yang sangat terstruktur
+      
+HARI H+3: Owner mundur. Negosiasi ulang. VO dibayar.
+          Denda batal. Kontraktor SELAMAT dari Rp1.2M.
+          
+Waktu yang dihabiskan: 1 hari kerja (vs 3 minggu tanpa app)
+Biaya hukum yang dihemat: ~Rp200 juta
+```
+
+### 5.2 Skenario: MK Mengelola 5 Proyek Sekaligus
+
+**Konteks:** Konsultan MK menangani 5 proyek bersamaan. Total nilai Rp400 miliar. PM kewalahan dengan administrasi.
+
+**Dengan KontrakGuard:**
+
+```
+08:00 — Buka dashboard
+  ├── Lihat alert: "Proyek A — Deadline EOT claim besok"
+  ├── Lihat alert: "Proyek C — Termin 3 jatuh tempo 5 hari lagi"
+  └── Lihat alert: "Proyek D — 3 NCR struktur belum ditutup"
+
+09:00 — Handle Proyek A
+  ├── Buka EOT module
+  ├── Review daily reports 14 hari terakhir
+  ├── Sistem sudah auto-draft EOT claim berdasarkan data
+  ├── PM tinggal review & approve
+  └── Submit ke Owner (e-sign)
+
+10:00 — Handle Proyek C
+  ├── Cek progress fisik vs finansial
+  ├── Generate invoice termin 3
+  ├── Attach progress photos & daily reports
+  └── Submit ke Owner untuk approval
+
+11:00 — Handle Proyek D
+  ├── Buka NCR tracker
+  ├── Lihat 3 NCR yang overdue
+  ├── Assign ke kontraktor via app (notifikasi push)
+  └── Set deadline 3 hari
+
+13:00 — Meeting dengan Owner Proyek B
+  ├── Buka tablet, tampilkan dashboard real-time
+  ├── Owner impressed: "Data lengkap dan terorganisir"
+  └── VO yang sebelumnya stuck 2 bulan, langsung approved
+
+15:00 — Review predictive risk
+  ├── Sistem menunjukkan Proyek E risk score naik ke 68%
+  ├── Top driver: response time Owner melambat (21 hari)
+  └── Rekomendasi: Kirim notice formal untuk proteksi hukum
+
+17:00 — Selesai. Semua 5 proyek terkontrol.
+        Tanpa aplikasi, PM butuh 3 orang untuk handle ini.
+```
+
+---
+
+## BAGIAN 6: COMPETITIVE MOAT
+
+### 6.1 Moat Analysis
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  MOAT LAYERS                                                │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  MOAT 1: DATA MOAT (Paling Kuat)                           │
+│  ├── Setiap kontrak yang dianalisis → memperkaya model AI  │
+│  ├── Dalam 3 tahun: database 100.000+ kontrak Indonesia    │
+│  ├── Tidak bisa direplikasi pemain baru tanpa data         │
+│  └── Network effect: semakin banyak user, semakin akurat   │
+│                                                             │
+│  MOAT 2: REGULATORY LOCK-IN                                │
+│  ├── Integrasi dengan LPSE, SIKa, BSrE, OSS, BANI          │
+│  ├── Setiap integrasi butuh MoU & waktu 6-12 bulan         │
+│  ├── Pemain global (Procore, Autodesk) tidak mau repot     │
+│  └── Setelah terintegrasi, switching cost sangat tinggi    │
+│                                                             │
+│  MOAT 3: WORKFLOW EMBEDDING                                │
+│  ├── Aplikasi jadi "sistem saraf" proyek konstruksi        │
+│  ├── Semua evidence, deadline, obligation ada di sini      │
+│  ├── Migrasi ke sistem lain = kehilangan audit trail      │
+│  └── Analogi: Seperti migrasi dari SAP — sangat menyakitkan│
+│                                                             │
+│  MOAT 4: DOMAIN EXPERTISE                                  │
+│  ├── Template klausul, risk model, compliance rules        │
+│  ├── Dibangun oleh lawyer + QS + engineer konstruksi       │
+│  ├── Butuh 5+ tahun untuk meniru kedalaman domain          │
+│  └── Pemain generalis (Notion, Monday) tidak bisa masuk    │
+│                                                             │
+│  MOAT 5: LEGAL DEFENSE VALUE                               │
+│  ├── Evidence Vault yang court-admissible                  │
+│  ├── Semakin lama dipakai, semakin banyak evidence         │
+│  ├── Saat sengketa, user TIDAK BISA pindah sistem         │
+│  └── Ini adalah "insurance" yang tidak bisa di-cancel      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 6.2 Competitive Landscape Indonesia
+
+| Pemain | Kelemahan vs KontrakGuard |
+|---|---|
+| **Procore** (US) | Tidak paham hukum Indonesia, mahal ($$$), tidak ada AI kontrak Bahasa Indonesia |
+| **Autodesk Build** (US) | Fokus ke BIM/desain, lemah di administrasi kontrak & hukum |
+| **Oracle Aconex** | Enterprise-only, kompleks, mahal, tidak ada AI |
+| **Notion/Monday/Asana** | Generalis, tidak ada domain expertise konstruksi & hukum |
+| **Excel + Email** (status quo) | Tidak scalable, rawan error, tidak forensically sound |
+| **Firma Hukum** | Mahal (Rp500jt+/tahun), reaktif (bukan preventif), manual |
+| **Konsultan MK** | Terbatas pada proyek yang ditangani, tidak ada teknologi |
+
+**KontrakGuard adalah satu-satunya yang menggabungkan: AI Hukum + Administrasi Konstruksi + Konteks Indonesia + Forensic-Ready.**
+
+---
+
+## BAGIAN 7: GO-TO-MARKET STRATEGY
+
+### 7.1 Target Customer Segmentation
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  TARGET MARKET (Indonesia)                                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  TIER 1: EARLY ADOPTERS (Bulan 1-12)                        │
+│  ├── Kontraktor menengah (BUJK Non-Kecil)                  │
+│  │   ├── Omzet: Rp100-500 miliar/tahun                      │
+│  │   ├── Pain: Sering rugi karena VO tidak teradministrasi │
+│  │   ├── Jumlah: ~2.000 perusahaan                          │
+│  │   └── Target: Akuisisi 50 perusahaan (2.5%)             │
+│  │                                                          │
+│  ├── Konsultan MK menengah                                  │
+│  │   ├── Handle 3-10 proyek simultan                        │
+│  │   ├── Pain: PM kewalahan administrasi                    │
+│  │   ├── Jumlah: ~500 perusahaan                            │
+│  │   └── Target: Akuisisi 30 perusahaan (6%)               │
+│  │                                                          │
+│  └── Developer properti menengah                            │
+│      ├── 3-8 proyek aktif                                   │
+│      ├── Pain: Kontrol terhadap kontraktor lemah            │
+│      ├── Jumlah: ~1.000 developer                           │
+│      └── Target: Akuisisi 20 perusahaan (2%)               │
+│                                                             │
+│  TIER 2: EXPANSION (Bulan 13-24)                            │
+│  ├── Kontraktor besar (BUJK Besar)                          │
+│  ├── BUMN Karya (Waskita, Wijaya, Hutama, dll)             │
+│  ├── Developer besar (IP, Agung Podomoro, Sinar Mas)       │
+│  └── Kementerian/Pemda (proyek APBN/APBD)                  │
+│                                                             │
+│  TIER 3: ECOSYSTEM (Bulan 25-36)                            │
+│  ├── Subkontraktor & supplier                               │
+│  ├── Firma hukum konstruksi                                 │
+│  ├── Asuransi konstruksi                                    │
+│  └── Lembaga pembiayaan (bank, multifinance)                │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7.2 Pricing Strategy yang Lebih Tajam
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  PRICING TIERS                                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  STARTER — Rp7.5 juta/bulan                                 │
+│  ├── 1 proyek aktif                                         │
+│  ├── 5 user                                                 │
+│  ├── Document repository + deadline tracking                │
+│  ├── Basic correspondence tracker                           │
+│  └── Email support                                          │
+│  Target: Kontraktor kecil, subkon                           │
+│                                                             │
+│  PROFESSIONAL — Rp25 juta/bulan                             │
+│  ├── 5 proyek aktif                                         │
+│  ├── 20 user                                                │
+│  ├── Semua fitur Starter +                                  │
+│  ├── AI Contract Analyzer (10 analisis/bulan)               │
+│  ├── VO & EOT management                                    │
+│  ├── Mobile app + daily report                              │
+│  ├── E-signature (BSrE)                                     │
+│  └── Priority support                                       │
+│  Target: Kontraktor menengah, MK                           │
+│                                                             │
+│  ENTERPRISE — Rp75 juta/bulan                               │
+│  ├── Unlimited proyek                                       │
+│  ├── Unlimited user                                         │
+│  ├── Semua fitur Professional +                             │
+│  ├── Unlimited AI analysis                                  │
+│  ├── Predictive Risk Engine                                 │
+│  ├── Court Export feature                                   │
+│  ├── API access (integrasi ERP)                             │
+│  ├── Custom clause library                                  │
+│  ├── Dedicated Customer Success Manager                     │
+│  └── SLA 99.9% uptime                                       │
+│  Target: Kontraktor besar, developer besar                  │
+│                                                             │
+│  GOVERNMENT — Custom (Rp150-500 juta/bulan)                 │
+│  ├── On-premise deployment option                           │
+│  ├── Integrasi LPSE, SIKa, SIM-PUPR                         │
+│  ├── Audit trail khusus (BPK-ready)                         │
+│  ├── Compliance Perpres 16/2018 auto-check                  │
+│  └── Training & pendampingan                                │
+│  Target: Kementerian, Pemda, BUMN                           │
+│                                                             │
+│  ADD-ONS:                                                   │
+│  ├── Extra AI analysis: Rp500.000/analisis                  │
+│  ├── Court Export: Rp5 juta/dossier                         │
+│  ├── Professional services (setup, training): Rp25-100 juta │
+│  ├── Custom development: Rp15 juta/man-month                │
+│  └── Premium support (24/7): +30% dari harga langganan     │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7.3 Unit Economics
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  UNIT ECONOMICS (Professional Tier)                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Revenue per customer:                                      │
+│  ├── Monthly: Rp25 juta                                     │
+│  ├── Annual: Rp300 juta                                     │
+│  ├── Add-ons (avg): Rp50 juta/tahun                         │
+│  └── Total ARPU: Rp350 juta/tahun                           │
+│                                                             │
+│  Costs per customer:                                        │
+│  ├── Cloud infrastructure: Rp3 juta/bulan = Rp36 juta/th    │
+│  ├── AI inference (LLM): Rp2 juta/bulan = Rp24 juta/th      │
+│  ├── Customer Success: Rp5 juta/bulan = Rp60 juta/th        │
+│  ├── Support: Rp3 juta/bulan = Rp36 juta/th                 │
+│  └── Total COGS + CS: Rp156 juta/tahun                      │
+│                                                             │
+│  Gross Margin: 55%                                          │
+│                                                             │
+│  Customer Acquisition Cost (CAC):                           │
+│  ├── Sales team (3 orang): Rp60 juta/bulan                  │
+│  ├── Marketing: Rp50 juta/bulan                             │
+│  ├── Events & partnerships: Rp25 juta/bulan                 │
+│  ├── Total: Rp135 juta/bulan                                │
+│  ├── Target new customers: 5/bulan                          │
+│  └── CAC per customer: Rp27 juta                            │
+│                                                             │
+│  Lifetime Value (LTV):                                      │
+│  ├── Avg customer lifespan: 5 tahun                         │
+│  ├── Gross profit per tahun: Rp194 juta                     │
+│  └── LTV: Rp970 juta                                        │
+│                                                             │
+│  LTV:CAC Ratio: 36:1 (SANGAT SEHAT)                         │
+│  Payback Period: < 2 bulan                                  │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 7.4 Go-to-Market Playbook (12 Bulan Pertama)
+
+```
+BULAN 1-3: FOUNDATION
+├── Rekrut 3 sales (ex-konstruksi/legal tech)
+├── Bangun 5 case study dari pilot customer
+├── Partnership dengan 2 asosiasi (GAPENSI, AKLI)
+├── Content marketing: webinar "Mitigasi Risiko Sengketa"
+└── Target: 10 pilot customers (free 3 bulan)
+
+BULAN 4-6: EARLY TRACTION
+├── Konversi pilot → paid (target: 7 dari 10)
+├── Launch profesional sales process
+├── Partnership dengan 2 firma hukum konstruksi top
+│   └── Mereka rekomendasikan app ke klien mereka
+├── Event: Booth di Indonesia Construction Conference
+└── Target: 25 paying customers
+
+BULAN 7-9: SCALE
+├── Scale sales team ke 8 orang
+├── Launch partner channel (konsultan MK resell app)
+├── PR: Liputan media konstruksi & hukum
+├── Case study published: "Kontraktor X hemat Rp5M dengan app"
+└── Target: 60 paying customers
+
+BULAN 10-12: EXPANSION
+├── Enterprise sales (target BUMN, developer besar)
+├── Government pilot (1-2 kementerian)
+├── Launch add-on: Court Export service
+├── International: Malaysia/Singapore (market serupa)
+└── Target: 100 paying customers, ARR Rp25 miliar
+```
+
+---
+
+## BAGIAN 8: FINANCIAL PROJECTION (3 TAHUN)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  FINANCIAL PROJECTION                                       │
+├─────────────┬──────────┬──────────┬──────────┬──────────────┤
+│             │ Year 1   │ Year 2   │ Year 3   │ Notes        │
+├─────────────┼──────────┼──────────┼──────────┼──────────────┤
+│ Customers   │ 100      │ 350      │ 800      │              │
+│ ARPU (juta) │ 300      │ 350      │ 400      │ Naik dg      │
+│             │          │          │          │ add-ons      │
+├─────────────┼──────────┼──────────┼──────────┼──────────────┤
+│ ARR (M)     │ 25       │ 105      │ 280      │              │
+│ Gross Margin│ 55%      │ 60%      │ 65%      │ Economies    │
+│             │          │          │          │ of scale     │
+│ Gross Profit│ 13.75    │ 63       │ 182      │              │
+├─────────────┼──────────┼──────────┼──────────┼──────────────┤
+│ OpEx:       │          │          │          │              │
+│ - R&D       │ 8        │ 15       │ 25       │              │
+│ - Sales & Mkt│ 6       │ 18       │ 35       │              │
+│ - G&A       │ 3        │ 8        │ 15       │              │
+│ Total OpEx  │ 17       │ 41       │ 75       │              │
+├─────────────┼──────────┼──────────┼──────────┼──────────────┤
+│ EBITDA      │ (3.25)   │ 22       │ 107      │              │
+│ EBITDA %    │ -13%     │ 21%      │ 38%      │              │
+├─────────────┼──────────┼──────────┼──────────┼──────────────┤
+│ Headcount   │ 18       │ 45       │ 95       │              │
+│ Cash Burn   │ (5)      │ -        │ -        │ Break-even   │
+│             │          │          │          │ di Y2 Q2     │
+└─────────────┴──────────┴──────────┴──────────┴──────────────┘
+```
+
+---
+
+## BAGIAN 9: RISIKO KRITIS & MITIGASI TAJAM
+
+| Risiko | Probabilitas | Dampak | Mitigasi Spesifik |
+|---|---|---|---|
+| **AI hallucination** — AI salah analisis klausul, user rugi | Tinggi | Fatal | Human-in-the-loop wajib, disclaimer hukum kuat, insurance profesional, fokus pada "assist" bukan "replace" lawyer |
+| **Liabilitas hukum** — user menggugat karena andalkan app | Sedang | Fatal | Terms of Service kuat, professional indemnity insurance Rp50M, audit trail lengkap, sertifikasi ISO 27001 |
+| **Adopsi rendah orang lapangan** | Tinggi | Tinggi | UI super simpel, offline mode, voice input, gamifikasi, training on-site, "champion user" di setiap proyek |
+| **Kompetitor global masuk** (Procore, Oracle) | Sedang | Sedang | Moat regulasi Indonesia, data lokal, harga lebih murah, fitur hukum yang tidak mereka miliki |
+| **Perubahan regulasi** drastis | Rendah | Sedang | Tim legal dedicated, update fitur dalam 30 hari, fleksibel arsitektur |
+| **Data breach** | Rendah | Fatal | Enkripsi end-to-end, SOC 2 Type II, penetration test quarterly, cyber insurance |
+| **Cash flow** — sales cycle panjang (enterprise 6-12 bulan) | Tinggi | Tinggi | Fokus awal ke SME (sales cycle 1-2 bulan), upfront annual payment discount, factoring invoice |
+
+---
+
+## BAGIAN 10: ACTION PLAN — 90 HARI PERTAMA
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  90-DAY ACTION PLAN                                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  HARI 1-30: VALIDATION                                      │
+│  ├── Interview 30 calon user (kontraktor, MK, owner)        │
+│  ├── Kumpulkan 50 kontrak sampel untuk training data        │
+│  ├── Rekrut co-founder teknis (CTO)                         │
+│  ├── Setup legal entity (PT)                                │
+│  └── Deliverable: Validation report + 3 LOI dari pilot      │
+│                                                             │
+│  HARI 31-60: MVP BUILD                                      │
+│  ├── Rekrut tim inti: 2 backend, 1 frontend, 1 AI, 1 UX    │
+│  ├── Build MVP: document repository + deadline tracker      │
+│  ├── Train AI model v0.1 (basic clause extraction)          │
+│  ├── Setup cloud infrastructure                             │
+│  └── Deliverable: MVP internal demo                         │
+│                                                             │
+│  HARI 61-90: PILOT                                          │
+│  ├── Onboard 5 pilot customers (gratis 3 bulan)             │
+│  ├── Iterasi berdasarkan feedback                           │
+│  ├── Kumpulkan data untuk training AI                       │
+│  ├── Siapkan sales deck & pricing                           │
+│  └── Deliverable: 5 pilot running + 3 case study draft      │
+│                                                             │
+│  MILESTONE 90 HARI:                                         │
+│  ✓ MVP live dengan 5 user nyata                             │
+│  ✓ AI model v0.1 working (70% akurasi)                      │
+│  ✓ 3 case study draft                                       │
+│  ✓ Pipeline sales: 20 calon customer                        │
+│  ✓ Funding: Seed round Rp5-10 miliar (opsional)             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## RINGKASAN EKSEKUTIF
+
+**KontrakGuard** adalah platform SaaS yang menggabungkan:
+
+1. **AI Hukum** — Analisis kontrak otomatis, prediksi risiko sengketa
+2. **Administrasi Konstruksi** — VO, EOT, termin, NCR, daily report
+3. **Forensic-Ready Evidence Vault** — Bukti yang sah di pengadilan
+4. **Regulatory Compliance Indonesia** — LPSE, SIKa, BSrE, BANI
+5. **Predictive Risk Engine** — Prediksi sengketa sebelum terjadi
+
+**Value Proposition:**
+> "Dari aplikasi yang hanya mencatat, menjadi sistem yang melindungi. KontrakGuard mengubah administrasi kontrak dari beban menjadi aset pertahanan hukum."
+
+**Target Pasar:**
+- Year 1: 100 customers, ARR Rp25 miliar
+- Year 3: 800 customers, ARR Rp280 miliar, EBITDA 38%
+
+**Competitive Moat:**
+- Data moat (100.000+ kontrak Indonesia dalam 3 tahun)
+- Regulatory lock-in (integrasi LPSE, SIKa, BSrE)
+- Workflow embedding (switching cost sangat tinggi)
+
+**Investment Required:**
+- Seed: Rp5-10 miliar (90 hari pertama + 6 bulan runway)
+- Series A: Rp50-80 miliar (scale ke 350 customers)
+
+---
+
+Apakah ada aspek spesifik yang ingin Anda dalami lebih lanjut? Misalnya:
+- **Detail teknis implementasi AI/NLP** (model architecture, training pipeline)?
+- **Wireframe/mockup** dashboard utama dan mobile app?
+- **Sales deck** untuk pitching ke investor?
+- **Legal framework** untuk Terms of Service dan liability?
+- **Detail roadmap integrasi** dengan LPSE/SIKa/BSrE?
+- **Financial model spreadsheet** yang lebih detail?

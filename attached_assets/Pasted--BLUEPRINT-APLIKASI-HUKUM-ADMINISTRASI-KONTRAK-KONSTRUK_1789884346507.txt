@@ -1,0 +1,732 @@
+# BLUEPRINT APLIKASI HUKUM & ADMINISTRASI KONTRAK KONSTRUKSI
+
+## "KontrakGuard" — Konsep Terperinci
+
+---
+
+## I. PROBLEM STATEMENT YANG TAJAM
+
+Sebelum masuk ke solusi, kita harus memahami **mengapa** aplikasi ini sangat dibutuhkan dengan data dan realita yang konkret:
+
+### Realita Lapangan di Indonesia
+| Masalah | Dampak Finansial | Akar Penyebab |
+|---|---|---|
+| 60-70% proyek konstruksi mengalami keterlambatan | Denda, pembengkakan biaya 10-30% | Administrasi perpanjangan waktu (EOT) tidak terdokumentasi |
+| Sengketa konstruksi meningkat 15-20% per tahun | Biaya arbitrase Rp500 juta - miliaran | Bukti lapangan tercecer, tidak ada *contemporary records* |
+| Variation Order (VO) tidak teradministrasi | Kontraktor rugi mengerjakan pekerjaan tanpa bayaran | Proses persetujuan VO masih manual/verbal |
+| Retensi tidak dicairkan tepat waktu | Cashflow kontraktor terganggu | Tidak ada sistem pengingat otomatis masa pemeliharaan |
+| Klausul kontrak tidak dipahami | Pihak lemah (biasanya kontraktor) dirugikan | Tidak ada tools analisis risiko kontrak |
+
+### Pain Points Spesifik per Stakeholder
+
+**Kontraktor:**
+> *"Kami sudah mengerjakan pekerjaan tambah senilai Rp2 miliar atas instruksi lisan pemilik proyek, tapi saat ditagih, mereka menolak karena tidak ada VO tertulis. Kami tidak punya bukti."*
+
+**Pemilik Proyek (Owner):**
+> *"Kontraktor mengajukan klaim perpanjangan waktu 6 bulan, tapi kami tidak bisa memverifikasi karena catatan harian proyek tidak rapi. Kami terpaksa bayar konsultan hukum ratusan juta untuk membela diri."*
+
+**Konsultan MK/Pengawas:**
+> *"Saya harus mengelola 5 proyek sekaligus. Setiap proyek punya ratusan dokumen, deadline notice, dan surat-menyurat. Saya mengandalkan Excel dan email. Sering terlewat."*
+
+**Tim Legal Perusahaan Konstruksi:**
+> *"Setiap ada sengketa, saya harus bongkar gudang arsip, mencari surat yang dikirim 2 tahun lalu. Separuh dokumen sudah hilang atau rusak."*
+
+---
+
+## II. POSITIONING & DIFERENSIASI
+
+### Di Mana Aplikasi Ini Berada dalam Lanskap Teknologi?
+
+```
+                    HUKUM MURNI                    KONSTRUKSI MURNI
+                    (LegalTech)                    (ConTech/PM)
+                         │                              │
+    ContractPodAi ───────┤                              │
+    Ironclad ────────────┤                              │
+    DocuSign CLM ────────┤                              │
+                         │                              │
+                         │     ★ KONTRAKGUARD ★         │
+                         │   (Hybrid: Legal + Constr)   │
+                         │                              │
+                         │        Procore ──────────────┤
+                         │        Autodesk Build ───────┤
+                         │        Primavera P6 ─────────┤
+```
+
+**Diferensiasi Kunci KontrakGuard:**
+1. **Satu-satunya yang menggabungkan analisis hukum AI dengan administrasi lapangan konstruksi** dalam satu platform
+2. **Dibangun untuk konteks hukum Indonesia** (UU No. 2/2017 tentang Jasa Konstruksi, Permen PUPR, FIDIC yang diadaptasi, KUHPerdata)
+3. **Early Warning System berbasis tenggat hukum**, bukan hanya tenggat proyek
+4. **Audit trail yang forensically admissible** — bisa dijadikan alat bukti di pengadilan/arbitrase BANI
+
+---
+
+## III. ARSITEKTUR APLIKASI
+
+### A. High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      PRESENTATION LAYER                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
+│  │  Web App     │  │  Mobile App  │  │  API Gateway          │ │
+│  │  (React/     │  │  (React      │  │  (untuk integrasi     │ │
+│  │   Next.js)   │  │   Native/    │  │   Primavera, SAP,     │ │
+│  │              │  │   Flutter)   │  │   Procore)            │ │
+│  └──────┬───────┘  └──────┬───────┘  └──────────┬────────────┘ │
+└─────────┼─────────────────┼─────────────────────┼──────────────┘
+          │                 │                     │
+┌─────────┴─────────────────┴─────────────────────┴──────────────┐
+│                     APPLICATION LAYER                          │
+│                                                                │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌────────────┐  │
+│  │  Contract  │ │  Admin &   │ │  Claims &  │ │ Financial  │  │
+│  │  Engine    │ │  Execution │ │  Dispute   │ │  Module    │  │
+│  │            │ │  Module    │ │  Module    │ │            │  │
+│  └─────┬──────┘ └─────┬──────┘ └─────┬──────┘ └─────┬──────┘  │
+│        │              │              │              │          │
+│  ┌─────┴──────────────┴──────────────┴──────────────┴──────┐   │
+│  │              AI / ML ENGINE                             │   │
+│  │  • NLP Contract Analyzer (Bahasa Indonesia + English)   │   │
+│  │  • Risk Scoring Model                                   │   │
+│  │  • Deadline Prediction Engine                           │   │
+│  │  • OCR untuk dokumen scan                               │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└──────────────────────────┬─────────────────────────────────────┘
+                           │
+┌──────────────────────────┴─────────────────────────────────────┐
+│                       DATA LAYER                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ PostgreSQL   │  │ Object Store │  │ Elasticsearch        │  │
+│  │ (Structured  │  │ (S3/MinIO)   │  │ (Full-text search    │  │
+│  │  Data)       │  │ (Dokumen,    │  │  dokumen & klausul)  │  │
+│  │              │  │  Foto, PDF)  │  │                      │  │
+│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │  Immutable Audit Log (Blockchain-inspired / Append-only)│   │
+│  └──────────────────────────────────────────────────────────┘   │
+└────────────────────────────────────────────────────────────────┘
+                           │
+┌──────────────────────────┴─────────────────────────────────────┐
+│                  INTEGRATION LAYER                             │
+│  • BSrE (Tanda Tangan Elektronik Tersertifikasi)               │
+│  • Email & WhatsApp Gateway (untuk notifikasi)                 │
+│  • Primavera P6 / MS Project API                               │
+│  • ERP (SAP, Oracle, Accurate)                                 │
+│  • E-Faktur / Sistem Perpajakan                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### B. Model Data Inti (Core Entities)
+
+```
+ORGANIZATION (Perusahaan)
+  └── PROJECT (Proyek)
+        ├── CONTRACT (Kontrak Utama)
+        │     ├── CLAUSES (Pasal-pasal)
+        │     ├── AMENDMENTS (Amandemen)
+        │     ├── MILESTONES (Tahapan/Termin)
+        │     └── OBLIGATIONS (Kewajiban para pihak)
+        │
+        ├── SUBCONTRACTS (Kontrak Subkon)
+        │     └── BACK_TO_BACK_MAPPING
+        │
+        ├── VARIATION_ORDERS (Pekerjaan Tambah/Kurang)
+        │     ├── VO_ITEMS
+        │     ├── COST_IMPACT
+        │     └── TIME_IMPACT
+        │
+        ├── EXTENSION_OF_TIME (Perpanjangan Waktu)
+        │     ├── EOT_CLAIMS
+        │     └── DELAY_ANALYSIS
+        │
+        ├── CORRESPONDENCES (Surat-menyurat)
+        │     ├── NOTICES (Pemberitahuan formal)
+        │     ├── SOMASI (Surat Peringatan)
+        │     └── RESPONSES
+        │
+        ├── DAILY_REPORTS (Laporan Harian)
+        │     ├── WEATHER_DATA
+        │     ├── PHOTOS (dengan GPS + Timestamp)
+        │     ├── WORKFORCE
+        │     └── EQUIPMENT
+        │
+        ├── CLAIMS (Klaim)
+        │     ├── CLAIM_EVENTS
+        │     ├── EVIDENCE_ATTACHMENTS
+        │     └── CLAIM_CALCULATIONS
+        │
+        ├── PAYMENTS (Pembayaran)
+        │     ├── TERMIN_INVOICES
+        │     ├── RETENTION_TRACKING
+        │     └── DEDUCTIONS (Potongan/Denda)
+        │
+        └── DEFECTS (Cacat Mutu)
+              ├── DEFECT_REPORTS
+              ├── REMEDIAL_WORKS
+              └── DLP_TRACKING (Masa Pemeliharaan)
+```
+
+---
+
+## IV. DETAIL MODUL & FITUR
+
+### MODUL 1: CONTRACT INTELLIGENCE ENGINE
+
+#### 1.1 AI Contract Analyzer
+
+**Input:** Dokumen kontrak (PDF, DOCX, scan)
+
+**Proses:**
+```
+Upload Dokumen
+    │
+    ▼
+OCR (jika scan) → Teks mentah
+    │
+    ▼
+NLP Parser (Bahasa Indonesia)
+    │
+    ├── Identifikasi Struktur Kontrak
+    │   (Para pihak, Pasal, Lampiran)
+    │
+    ├── Ekstraksi Klausul Kunci
+    │   • Lingkup pekerjaan
+    │   • Nilai kontrak & mekanisme pembayaran
+    │   • Jangka waktu & denda keterlambatan
+    │   • Force majeure
+    │   • Penyelesaian sengketa
+    │   • Pemutusan kontrak
+    │   • Asuransi & jaminan
+    │   • Retensi & masa pemeliharaan
+    │
+    ├── Risk Scoring per Klausul
+    │   (Merah/Kuning/Hijau)
+    │
+    └── Perbandingan dengan Template Standar
+        (FIDIC Red Book / PUPR / Internal)
+    │
+    ▼
+Output: Dashboard Analisis Risiko
+```
+
+**Contoh Output Analisis:**
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  ANALISIS RISIKO KONTRAK                                    │
+│  Proyek: Pembangunan Gedung XYZ                             │
+│  Skor Risiko Keseluruhan: 72/100 (TINGGI) 🔴               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  🔴 RISIKO TINGGI:                                          │
+│                                                             │
+│  Pasal 12.3 - Denda Keterlambatan                           │
+│  "Denda sebesar 2‰ per hari dari nilai kontrak"             │
+│  ⚠️ Melebihi batas wajar (standar: 0.5-1‰)                 │
+│  ⚠️ Tidak ada cap/batas maksimal denda                      │
+│  📌 Rekomendasi: Negosiasikan menjadi 1‰ dengan             │
+│     cap maksimal 5% dari nilai kontrak                      │
+│                                                             │
+│  Pasal 25.1 - Force Majeure                                 │
+│  "Hanya mencakup gempa bumi dan perang"                     │
+│  ⚠️ Terlalu sempit, tidak mencakup banjir,                  │
+│     pandemi, atau kebijakan pemerintah                      │
+│  📌 Rekomendasi: Tambahkan klausul catch-all                │
+│                                                             │
+│  🟡 RISIKO SEDANG:                                          │
+│                                                             │
+│  Pasal 8.2 - Mekanisme Variation Order                      │
+│  "VO harus disetujui tertulis dalam 7 hari"                 │
+│  ⚠️ Jangka waktu terlalu singkat untuk evaluasi             │
+│  📌 Rekomendasi: Perpanjang menjadi 14-21 hari              │
+│                                                             │
+│  🟢 RISIKO RENDAH:                                          │
+│                                                             │
+│  Pasal 30 - Penyelesaian Sengketa                           │
+│  "Arbitrase BANI di Jakarta"                                │
+│  ✅ Sesuai standar industri                                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 1.2 Clause Library & Template Engine
+
+*   **Pustaka Klausul Standar Indonesia:**
+    *   Klausul berdasarkan UU No. 2/2017 (Jasa Konstruksi)
+    *   Klausul standar Permen PUPR No. 14/2020
+    *   Klausul FIDIC Red/Yellow/Silver Book (versi terjemahan & adaptasi)
+    *   Klausul standar dari asosiasi (GAPENSI, AKI, INKINDO)
+*   **Drag-and-Drop Contract Builder:** Menyusun kontrak dengan menarik klausul dari pustaka, otomatis mengecek konsistensi antar-pasal
+*   **Redline Comparison:** Membandingkan dua versi kontrak dan menyoroti perubahan per kata
+
+#### 1.3 Obligation Tracker
+
+Setiap kontrak dipecah menjadi daftar kewajiban yang terukur:
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  OBLIGATION TRACKER - Kontrak #KTR-2026-0045              │
+├──────────┬──────────────────────┬──────────┬──────────────┤
+│  Pihak   │  Kewajiban           │  Deadline│  Status      │
+├──────────┼──────────────────────┼──────────┼──────────────┤
+│  Owner   │  Serahkan lahan      │ 15 Jan   │  ✅ Done     │
+│  Owner   │  Bayar termin 1      │ 28 Feb   │  ⚠️ 3 hari   │
+│          │                      │          │    lagi      │
+│  Kontr.  │  Submit shop drawing │ 10 Mar   │  🔴 Overdue  │
+│          │  MEP                 │          │    5 hari    │
+│  Kontr.  │  Asuransi CAR        │ 1 Feb    │  ✅ Done     │
+│  Kontr.  │  Jaminan Pelaksanaan │ 15 Jan   │  ✅ Done     │
+│  MK      │  Review drawing      │ 17 Mar   │  ⏳ Pending  │
+│          │  struktur            │          │    (tunggu   │
+│          │                      │          │    kontr.)   │
+└──────────┴──────────────────────┴──────────┴──────────────┘
+```
+
+---
+
+### MODUL 2: PROJECT EXECUTION ADMIN
+
+#### 2.1 Variation Order Management System
+
+Ini adalah fitur **paling kritis** karena VO yang tidak teradministrasi adalah penyebab #1 kerugian kontraktor.
+
+**Workflow VO:**
+
+```
+KEJADIAN DI LAPANGAN
+(yang berbeda dari kontrak)
+        │
+        ▼
+┌───────────────┐
+│ Kontraktor    │
+│ mengajukan    │
+│ "Notice of    │◄─── Batas waktu: 14 hari
+│  Variation"   │     sejak kejadian
+│  via Mobile   │     (sesuai kontrak)
+│  App          │
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ MK/Pengawas   │
+│ memverifikasi │
+│ di lapangan   │
+│ + foto bukti  │
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐
+│ Kontraktor    │
+│ submit VO     │
+│ Proposal      │
+│ (RAB + jadwal │
+│  dampak)      │
+└───────┬───────┘
+        │
+        ▼
+┌───────────────┐     ┌───────────────┐
+│ Owner review  │────►│ Negosiasi     │
+│ & approval    │◄────│ harga & waktu │
+└───────┬───────┘     └───────────────┘
+        │
+        ▼
+┌───────────────┐
+│ VO Approved   │
+│ → Otomatis    │
+│   update      │
+│   nilai       │
+│   kontrak &   │
+│   jadwal      │
+└───────────────┘
+```
+
+**Fitur Kunci:**
+*   **Auto-reminder:** Jika kontraktor belum mengajukan Notice of Variation dalam 10 hari sejak kejadian tercatat di laporan harian, sistem mengirim peringatan: *"⚠️ Anda memiliki potensi VO terkait [kejadian X] pada tanggal [Y]. Batas waktu pengajuan: [Z]. Jika tidak diajukan, hak klaim Anda mungkin hangus."*
+*   **Kalkulasi dampak otomatis:** Ketika VO disetujui, sistem otomatis menghitung dampak terhadap: nilai kontrak, jadwal (critical path), dan termin pembayaran
+*   **Status tracking real-time:** Semua pihak bisa melihat status setiap VO (Draft → Submitted → Under Review → Negotiating → Approved/Rejected)
+
+#### 2.2 Extension of Time (EOT) Management
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  EOT DASHBOARD                                            │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  Kontrak Awal:    1 Jan 2026 ──────── 31 Des 2026         │
+│  Hari Kalender:   365 hari                                │
+│                                                            │
+│  EOT Disetujui:                                           │
+│  ├── EOT-001: Hujan ekstrem (Mar)     +15 hari  ✅        │
+│  ├── EOT-002: Perubahan desain (Jun)  +30 hari  ✅        │
+│  └── EOT-003: Keterlambatan owner     +10 hari  ⏳        │
+│       (serah gambar)                   (pending)           │
+│                                                            │
+│  Tanggal Selesai Revisi: 25 Jan 2027                      │
+│  Hari Tersisa: 127 hari                                   │
+│                                                            │
+│  ⚠️ PERINGATAN:                                           │
+│  Jika EOT-003 ditolak, tanggal selesai kembali ke         │
+│  15 Jan 2027 → sisa hanya 117 hari                        │
+│  Progres saat ini: 62% (harusnya 68% per kurva-S)         │
+│  → Anda dalam posisi DELAY 6%                             │
+│  → Potensi denda: Rp150.000.000 jika tidak catch-up      │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+#### 2.3 Correspondence & Notice Management
+
+Setiap surat/pemberitahuan dalam proyek konstruksi memiliki implikasi hukum. Sistem ini mengelola:
+
+*   **Klasifikasi otomatis surat:** Masuk/Keluar, tipe (Notice, Somasi, Instruksi, Laporan, Klaim)
+*   **Linking ke klausul kontrak:** Setiap surat bisa ditautkan ke pasal kontrak yang relevan
+*   **Deadline tracking:** *"Surat ini adalah Notice of Delay sesuai Pasal 8.4. Kontraktor wajib merespons dalam 7 hari. Tersisa 2 hari."*
+*   **Bukti pengiriman:** Terintegrasi dengan email, WhatsApp Business API, dan ekspedisi (JNE/Pos) untuk mencatat bukti terima
+*   **Template surat hukum:** Template somasi, notice of default, notice of termination yang sesuai standar hukum Indonesia
+
+---
+
+### MODUL 3: CLAIMS & DISPUTE MANAGEMENT
+
+#### 3.1 Claim Builder
+
+Sistem yang memandu pengguna menyusun klaim secara terstruktur:
+
+```
+CLAIM BUILDER - Step by Step
+═══════════════════════════════
+
+Step 1: IDENTIFIKASI EVENT
+├── Tipe: [Delay / Cost / Defect / Termination]
+├── Tanggal kejadian: [15 Juni 2026]
+├── Deskripsi: [Owner gagal menyerahkan area kerja
+│   Lantai 3 sesuai jadwal]
+└── Link ke Daily Report: [DR-2026-06-15]
+
+Step 2: DASAR KONTRAKTUAL
+├── Pasal yang dilanggar: [Pasal 6.2 - Kewajiban
+│   Owner menyediakan akses kerja]
+├── Klausul klaim: [Pasal 20.1 - Hak Kontraktor
+│   mengajukan klaim]
+└── Notice sudah dikirim?: [Ya, Notice-045, 16 Jun]
+
+Step 3: BUKTI PENDUKUNG
+├── 📷 Foto area Lantai 3 (15 Jun, GPS tagged)
+├── 📄 Daily Report 15-20 Jun
+├── 📄 Surat instruksi MK #MK-089
+├── 📄 Email follow-up ke Owner (17, 19, 22 Jun)
+└── 📊 Impact analysis (delay 12 hari critical path)
+
+Step 4: KALKULASI KERUGIAN
+├── Idle cost tenaga kerja: Rp45.000.000
+├── Idle cost equipment: Rp78.000.000
+├── Overhead perpanjangan: Rp25.000.000
+├── Total klaim biaya: Rp148.000.000
+└── Klaim waktu: +12 hari kalender
+
+Step 5: GENERATE DOKUMEN KLAIM
+└── [Generate PDF] → Format standar yang bisa
+    langsung diajukan ke Owner/MK
+```
+
+#### 3.2 Dispute Resolution Tracker
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  STATUS SENGKETA PROYEK XYZ                               │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  Level 1: Negosiasi Internal          ✅ Resolved          │
+│  ├── Issue: Selisih volume galian     (Settlement 80%)     │
+│  └── Tanggal: 5 Mar 2026                                  │
+│                                                            │
+│  Level 2: Mediasi / DAB               ⏳ Active            │
+│  ├── Issue: Penolakan EOT-003                             │
+│  ├── Mediator: Ir. Bambang S.                             │
+│  ├── Sidang berikutnya: 25 Sep 2026                       │
+│  └── Dokumen disiapkan: 12/15                             │
+│                                                            │
+│  Level 3: Arbitrase BANI              🔴 Not Started       │
+│  ├── Issue: Klaim terminasi sepihak                       │
+│  ├── Estimasi biaya: Rp750.000.000                        │
+│  └── Deadline pengajuan: 30 Nov 2026                      │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+#### 3.3 Evidence Vault (Brankas Bukti)
+
+*   **Immutable storage:** Setiap dokumen/foto yang diunggah mendapat hash kriptografi dan timestamp. Tidak bisa diubah atau dihapus — hanya bisa ditambahkan versi baru
+*   **GPS + Timestamp otomatis:** Foto dari mobile app otomatis menempelkan koordinat GPS, waktu, dan identitas pengambil
+*   **Chain of custody:** Riwayat siapa yang mengunggah, melihat, mengunduh, dan mencetak dokumen
+*   **Export untuk arbitrase:** Satu klik untuk mengekspor seluruh bukti terkait suatu klaim dalam format yang terorganisir untuk diserahkan ke arbiter BANI
+
+---
+
+### MODUL 4: FINANCIAL & PAYMENT ADMINISTRATION
+
+#### 4.1 Termin & Progress Tracking
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  PAYMENT DASHBOARD - Proyek XYZ                           │
+│  Nilai Kontrak: Rp50.000.000.000                          │
+│  + VO Disetujui:  Rp3.200.000.000                         │
+│  = Nilai Revisi:  Rp53.200.000.000                        │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  Termin │ Progres │ Tagihan    │ Dibayar    │ Status       │
+│  ───────┼─────────┼────────────┼────────────┼────────────  │
+│  DP     │   -     │ 10.640 M   │ 10.640 M   │ ✅ Paid      │
+│  T-1    │  15%    │  7.980 M   │  7.980 M   │ ✅ Paid      │
+│  T-2    │  30%    │  7.980 M   │  7.980 M   │ ✅ Paid      │
+│  T-3    │  45%    │  7.980 M   │  7.500 M   │ ⚠️ Partial   │
+│  T-4    │  60%    │  7.980 M   │     -      │ 🔴 Unpaid    │
+│  T-5    │  75%    │  7.980 M   │     -      │ ⏳ Pending    │
+│                                                            │
+│  Retensi (5%): Rp2.660.000.000                            │
+│  ├── Ditahan dari T-1 s/d T-5                             │
+│  ├── DLP berakhir: 31 Des 2027                            │
+│  └── ⚠️ Reminder akan dikirim 30 hari sebelum             │
+│                                                            │
+│  Total Outstanding: Rp8.460.000.000                       │
+│  Aging: T-4 sudah 45 hari jatuh tempo ⚠️                  │
+│  → Denda keterlambatan pembayaran (jika ada               │
+│    klausul): Rp42.300.000                                 │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+#### 4.2 Retention & DLP Tracker
+
+*   Otomatis menghitung kapan masa pemeliharaan (Defect Liability Period) berakhir per paket pekerjaan
+*   Mengirim notifikasi 60, 30, dan 7 hari sebelum DLP berakhir
+*   Checklist inspeksi akhir DLP yang harus diselesaikan sebelum retensi dicairkan
+*   Tracking cacat yang dilaporkan selama DLP dan status perbaikannya
+
+#### 4.3 Denda & Penalty Calculator
+
+*   Kalkulasi otomatis denda keterlambatan berdasarkan progres aktual vs rencana (kurva-S)
+*   Mempertimbangkan EOT yang disetujui
+*   Menghitung cap/batas maksimal denda sesuai kontrak
+*   Simulasi: *"Jika proyek selesai 30 hari terlambat, denda = Rp X. Jika EOT-003 disetujui, denda turun menjadi Rp Y."*
+
+---
+
+### MODUL 5: EARLY WARNING & COMPLIANCE SYSTEM
+
+Ini adalah **fitur pembeda utama** yang membuat aplikasi ini bukan sekadar "document management system" biasa.
+
+#### 5.1 Legal Deadline Engine
+
+```
+┌────────────────────────────────────────────────────────────┐
+│  ⚡ LEGAL DEADLINE ALERT CENTER                           │
+│  Senin, 20 September 2026                                 │
+├────────────────────────────────────────────────────────────┤
+│                                                            │
+│  🔴 KRITIS (Deadline < 3 hari):                           │
+│                                                            │
+│  [Proyek XYZ] Kontraktor harus submit EOT-003             │
+│  supporting documents                                     │
+│  Deadline: 22 Sep 2026 (2 hari lagi)                      │
+│  Dasar: Pasal 20.1 Kontrak                                │
+│  Konsekuensi jika terlewat: Klaim EOT bisa ditolak        │
+│  → [Lihat Detail] [Kirim Reminder ke Kontraktor]          │
+│                                                            │
+│  [Proyek ABC] Masa sanggah hasil lelang berakhir          │
+│  Deadline: 21 Sep 2026 (1 hari lagi)                      │
+│  Dasar: Perpres 16/2018 Pasal 55                          │
+│  → [Lihat Detail]                                         │
+│                                                            │
+│  🟡 PENTING (Deadline 3-14 hari):                         │
+│                                                            │
+│  [Proyek XYZ] Review shop drawing MEP batch 3             │
+│  Deadline: 28 Sep 2026 (8 hari lagi)                      │
+│  Dasar: Pasal 7.3 Kontrak                                 │
+│  Konsekuensi: Jika tidak direview, dianggap approved      │
+│  → [Lihat Detail] [Assign ke Engineer]                    │
+│                                                            │
+│  [Proyek DEF] Jaminan Pemeliharaan akan expire            │
+│  Deadline: 1 Okt 2026 (11 hari lagi)                      │
+│  → Perpanjang atau cairkan retensi                        │
+│  → [Lihat Detail]                                         │
+│                                                            │
+│  🟢 INFO (Deadline > 14 hari):                            │
+│  ... (12 item lainnya)                                    │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
+
+#### 5.2 Compliance Checklist per Fase Proyek
+
+```
+FASE: PELAKSANAAN KONSTRUKSI
+═══════════════════════════════
+
+☑  Kontrak ditandatangani kedua belah pihak
+☑  Jaminan Pelaksanaan diserahkan
+☑  Polis Asuransi CAR aktif
+☑  Sertifikat Laik Fungsi (jika perlu)
+☐  Laporan Kemajuan Bulanan Agustus ← OVERDUE 5 hari
+☐  Berita Acara Opname Termin 4 ← Belum dibuat
+☐  Update Jadwal Pelaksanaan (revisi 3) ← Pending
+☑  Dokumen K3L (SMK3) disubmit
+☐  Sertifikasi tenaga kerja konstruksi ← 3 orang belum
+```
+
+---
+
+### MODUL 6: MOBILE FIELD APP (Untuk Orang Lapangan)
+
+Desain khusus untuk pengguna non-teknis di lapangan:
+
+**Fitur Utama Mobile:**
+1. **Quick Daily Report:** Input laporan harian dalam <5 menit
+   *   Foto progress (auto GPS + timestamp)
+   *   Cuaca (auto dari API BMKG)
+   *   Jumlah pekerja & alat
+   *   Catatan kejadian penting (voice-to-text)
+2. **Instant Notice:** Kirim notice resmi dari lapangan
+   *   Pilih template → isi detail → foto bukti → kirim
+   *   Otomatis tercatat di sistem dengan timestamp
+3. **Inspection & Defect:** Foto cacat mutu → tandai di denah → assign ke subkon
+4. **Offline Mode:** Bisa input data tanpa internet, otomatis sync saat online
+5. **Push Notification:** Menerima alert deadline dan tugas baru
+
+**UI Philosophy:** Tombol besar, minimal teks, visual-driven, bisa dipakai dengan tangan berkeringat/bersarung tangan.
+
+---
+
+## V. KONTEKS HUKUM INDONESIA
+
+Aplikasi ini harus secara eksplisit mengakomodasi kerangka hukum Indonesia:
+
+### Regulasi yang Diintegrasikan
+
+| Regulasi | Relevansi dalam Aplikasi |
+|---|---|
+| **UU No. 2/2017** tentang Jasa Konstruksi | Klasifikasi usaha, kualifikasi badan usaha, tanggung jawab kegagalan bangunan |
+| **PP No. 22/2020** (Peraturan Pelaksanaan UU 2/2017) | Ketentuan kontrak kerja konstruksi, penyelesaian sengketa |
+| **Permen PUPR No. 14/2020** | Standar dan pedoman pengadaan jasa konstruksi, klausul standar |
+| **Perpres No. 16/2018** jo. **Perpres 12/2021** | Pengadaan barang/jasa pemerintah (untuk proyek pemerintah) |
+| **KUHPerdata Buku III** | Hukum perjanjian, wanprestasi, force majeure, ganti rugi |
+| **UU No. 11/2008** jo. **UU 19/2016** (ITE) | Keabsahan tanda tangan elektronik dan dokumen elektronik sebagai alat bukti |
+| **Peraturan BSrE** | Standar Tanda Tangan Elektronik Tersertifikasi |
+| **Peraturan BANI** | Prosedur arbitrase (jika sengketa masuk arbitrase) |
+
+### Fitur Spesifik Hukum Indonesia
+
+1. **Dual Contract Mode:** Mendukung kontrak dengan skema:
+   *   Kontrak Swasta (berdasarkan kebebasan berkontrak KUHPerdata 1338)
+   *   Kontrak Pemerintah (harus mengikuti Perpres 16/2018, klausul baku PUPR)
+2. **Somasi Generator:** Template somasi yang sesuai format hukum Indonesia (Somasi 1, 2, 3) dengan referensi pasal KUHPerdata
+3. **Wanprestasi Detector:** Menganalisis apakah kondisi di lapangan sudah memenuhi unsur wanprestasi berdasarkan Pasal 1238-1243 KUHPerdata
+4. **Jaminan & Sertifikat Tracker:** Melacak masa berlaku Jaminan Penawaran, Jaminan Pelaksanaan, Jaminan Uang Muka, Jaminan Pemeliharaan — semua wajib dalam proyek pemerintah
+
+---
+
+## VI. MODEL BISNIS
+
+### Pricing Strategy (SaaS)
+
+| Tier | Target | Harga/Bulan | Fitur |
+|---|---|---|---|
+| **Starter** | Kontraktor kecil/subkon | Rp5-10 juta | 1 proyek, dokumen terbatas, basic tracking |
+| **Professional** | Kontraktor menengah, MK | Rp25-50 juta | 5 proyek, AI analyzer, VO & EOT management, mobile app |
+| **Enterprise** | Kontraktor besar, Developer, BUMN | Rp100-250 juta | Unlimited proyek, API integration, dedicated support, custom clause library, on-premise option |
+| **Government** | Kementerian, Pemda, BUMN | Custom pricing | Sesuai regulasi pengadaan, integrasi LPSE, audit trail khusus |
+
+### Revenue Stream Tambahan
+*   **Per-project pricing:** Untuk proyek besar yang butuh dedicated instance
+*   **AI Analysis credits:** Bayar per analisis kontrak (untuk user yang tidak berlangganan penuh)
+*   **Professional services:** Setup, migrasi data, pelatihan, custom template
+*   **Marketplace clause library:** Jual-beli klausul premium dari firma hukum konstruksi
+
+---
+
+## VII. ROADMAP PENGEMBANGAN
+
+### Fase 1: MVP (Bulan 1-4)
+**Fokus: "Jangan sampai kehilangan hak karena lupa deadline"**
+*   ✅ Upload & simpan kontrak (document repository)
+*   ✅ Ekstraksi manual klausul kunci + deadline
+*   ✅ Early Warning System (email + WhatsApp)
+*   ✅ Correspondence tracker (surat masuk/keluar)
+*   ✅ Basic obligation tracker
+*   ✅ Web dashboard + notifikasi
+
+### Fase 2: Core Admin (Bulan 5-8)
+**Fokus: "Administrasi VO, EOT, dan Pembayaran yang rapi"**
+*   ✅ Variation Order workflow lengkap
+*   ✅ Extension of Time management
+*   ✅ Payment & termin tracking
+*   ✅ Retention & DLP tracker
+*   ✅ Mobile app (iOS + Android) — daily report & foto
+*   ✅ E-Signature integration (BSrE)
+
+### Fase 3: Intelligence (Bulan 9-12)
+**Fokus: "AI yang bisa membaca dan menganalisis kontrak"**
+*   ✅ AI Contract Analyzer (NLP Bahasa Indonesia)
+*   ✅ Risk scoring per klausul
+*   ✅ Clause library & template engine
+*   ✅ Claim Builder wizard
+*   ✅ Evidence Vault (immutable storage)
+*   ✅ Integration Primavera P6 / MS Project
+
+### Fase 4: Scale & Enterprise (Bulan 13-18)
+**Fokus: "Enterprise-ready dan ecosystem"**
+*   ✅ Multi-tenant architecture
+*   ✅ ERP integration (SAP, Oracle)
+*   ✅ Advanced analytics & reporting
+*   ✅ Dispute resolution tracker
+*   ✅ API publik untuk ekosistem
+*   ✅ SOC 2 / ISO 27001 compliance
+*   ✅ On-premise deployment option
+
+---
+
+## VIII. TIM YANG DIBUTUHKAN (Initial Team)
+
+| Peran | Jumlah | Keahlian Khusus |
+|---|---|---|
+| **Product Manager** | 1 | Paham konstruksi + legal tech |
+| **Backend Engineer** | 2-3 | Python/Go, PostgreSQL, API design |
+| **Frontend Engineer** | 1-2 | React/Next.js, responsive design |
+| **Mobile Developer** | 1-2 | React Native/Flutter |
+| **AI/ML Engineer** | 1-2 | NLP Bahasa Indonesia, LLM fine-tuning |
+| **UI/UX Designer** | 1 | Enterprise SaaS, mobile-first |
+| **Domain Expert (Konstruksi)** | 1 | Ex-QS atau MK berpengalaman |
+| **Domain Expert (Hukum)** | 1 | Lawyer spesialis konstruksi |
+| **DevOps** | 1 | Cloud infrastructure, CI/CD |
+
+---
+
+## IX. RISIKO & MITIGASI
+
+| Risiko | Dampak | Mitigasi |
+|---|---|---|
+| **Adopsi rendah** — orang lapangan malas pakai | Fatal | UI super simpel, voice input, offline mode, gamifikasi, training intensif |
+| **NLP Bahasa Indonesia tidak akurat** | Tinggi | Fine-tune model dengan dataset kontrak konstruksi Indonesia, human-in-the-loop review |
+| **Liabilitas hukum** — user mengandalkan analisis AI yang salah | Tinggi | Disclaimer jelas, AI sebagai "assistant" bukan "advisor", tetap butuh review lawyer |
+| **Keamanan data** — kebocoran dokumen rahasia | Fatal | Enkripsi end-to-end, RBAC ketat, audit log, sertifikasi keamanan |
+| **Kompetitor global masuk** (Procore, Autodesk) | Sedang | Fokus pada konteks hukum Indonesia yang tidak bisa direplikasi pemain global |
+| **Regulasi berubah** | Sedang | Tim legal internal yang terus memantau perubahan regulasi |
+
+---
+
+## X. RINGKASAN VALUE PROPOSITION
+
+> **KontrakGuard** adalah platform SaaS yang menggabungkan **kecerdasan hukum AI** dengan **administrasi proyek konstruksi** dalam satu sistem terpadu. Aplikasi ini memastikan bahwa setiap hak, kewajiban, deadline, dan bukti dalam kontrak konstruksi **terlacak, teringatkan, dan terlindungi** — sehingga perusahaan konstruksi tidak lagi kehilangan miliaran rupiah akibat administrasi yang buruk.
+
+**Tagline:** *"Satu kontrak, nol celah hukum."*
+
+---
+
+Apakah Anda ingin saya mendalami salah satu bagian tertentu? Misalnya:
+- **Detail teknis arsitektur AI/NLP** untuk analisis kontrak Bahasa Indonesia?
+- **Wireframe/mockup konseptual** dari dashboard utama?
+- **Analisis kompetitor** yang lebih mendalam?
+- **Strategi go-to-market** untuk mendapatkan 10 klien pertama?
+- **Estimasi biaya pengembangan** per fase?
