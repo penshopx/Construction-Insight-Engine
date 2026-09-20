@@ -94,7 +94,7 @@ export const mediationEvidenceTable = pgTable("mediation_evidence", {
   name: text("name").notNull(),
   objectPath: text("object_path"),
   mimeType: text("mime_type"),
-  confidentiality: text("confidentiality").notNull().default("PARTIES"),
+  confidentiality: text("confidentiality").notNull().default("ORGANIZATION"),
   allowedRoles: jsonb("allowed_roles").$type<string[]>().notNull().default([]),
   uploadedBy: text("uploaded_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

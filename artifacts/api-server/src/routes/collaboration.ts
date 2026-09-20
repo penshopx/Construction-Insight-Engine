@@ -35,6 +35,7 @@ const caseInWorkspace = async (organizationId: number, caseId: number) => {
 };
 export const validEvidenceAccess = (confidentiality: string, allowedRoles: readonly string[]) => {
   if (!["ORGANIZATION", "RESTRICTED", "MANAGERS"].includes(confidentiality)) return false;
+  if (new Set(allowedRoles).size !== allowedRoles.length) return false;
   if (confidentiality === "RESTRICTED" && allowedRoles.length === 0) return false;
   if (confidentiality === "MANAGERS" && allowedRoles.some((role) => role !== "manager")) return false;
   if (confidentiality === "ORGANIZATION" && allowedRoles.length > 0) return false;
@@ -45,10 +46,17 @@ export const canViewEvidence = (item: EvidenceVisibility, role: "manager" | "mem
   item.confidentiality === "ORGANIZATION"
   || (item.confidentiality === "RESTRICTED" && item.allowedRoles.includes(role))
   || (item.confidentiality === "MANAGERS" && role === "manager");
-export const referencesBelongToWorkspace = (
-  references: Array<{ organizationId: number } | null | undefined>,
+export const listVisibleEvidence = async (
   organizationId: number,
-) => references.every((reference) => reference?.organizationId === organizationId);
+  roomId: number,
+  role: "manager" | "member",
+) => {
+  const evidence = await db.select().from(mediationEvidenceTable).where(and(
+    eq(mediationEvidenceTable.roomId, roomId),
+    eq(mediationEvidenceTable.organizationId, organizationId),
+  ));
+  return evidence.filter((item) => canViewEvidence(item, role));
+};
 
 router.get("/collaboration/failure-cases", async (req, res): Promise<void> => {
   const workspace = await requireWorkspace(req, res); if (!workspace) return;
@@ -117,14 +125,13 @@ router.get("/collaboration/mediation-rooms/:id", async (req, res): Promise<void>
   const workspace = await requireWorkspace(req, res); if (!workspace) return;
   const params = GetMediationRoomParams.safeParse(req.params); if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const value = await room(workspace.organizationId, params.data.id); if (!value) { res.status(404).json({ error: "Ruang mediasi tidak ditemukan" }); return; }
-  const [participants, sessions, issues, allEvidence, activities] = await Promise.all([
+  const [participants, sessions, issues, evidence, activities] = await Promise.all([
     db.select().from(mediationParticipantsTable).where(and(eq(mediationParticipantsTable.roomId, value.id), eq(mediationParticipantsTable.organizationId, workspace.organizationId))),
     db.select().from(mediationSessionsTable).where(and(eq(mediationSessionsTable.roomId, value.id), eq(mediationSessionsTable.organizationId, workspace.organizationId))),
     db.select().from(mediationIssuesTable).where(and(eq(mediationIssuesTable.roomId, value.id), eq(mediationIssuesTable.organizationId, workspace.organizationId))),
-    db.select().from(mediationEvidenceTable).where(and(eq(mediationEvidenceTable.roomId, value.id), eq(mediationEvidenceTable.organizationId, workspace.organizationId))),
+    listVisibleEvidence(workspace.organizationId, value.id, workspace.role),
     db.select().from(collaborationActivitiesTable).where(and(eq(collaborationActivitiesTable.roomId, value.id), eq(collaborationActivitiesTable.organizationId, workspace.organizationId))).orderBy(asc(collaborationActivitiesTable.createdAt)),
   ]);
-  const evidence = allEvidence.filter((item) => canViewEvidence(item, workspace.role));
   res.json(GetMediationRoomResponse.parse({ ...value, participants, sessions, issues, evidence, activities }));
 });
 

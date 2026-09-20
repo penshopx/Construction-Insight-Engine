@@ -1111,7 +1111,7 @@ components:
         objectPath: { type: ["string", "null"] }
         mimeType: { type: ["string", "null"] }
         confidentiality: { $ref: "#/components/schemas/EvidenceConfidentiality" }
-        allowedRoles: { type: array, items: { $ref: "#/components/schemas/WorkspaceRole" } }
+        allowedRoles: { type: array, uniqueItems: true, maxItems: 2, items: { $ref: "#/components/schemas/WorkspaceRole" } }
         uploadedBy: { type: ["string", "null"] }
         createdAt: { type: string, format: date-time }
     MediationEvidenceInput:
@@ -1122,7 +1122,7 @@ components:
         objectPath: { type: string }
         mimeType: { type: string }
         confidentiality: { $ref: "#/components/schemas/EvidenceConfidentiality" }
-        allowedRoles: { type: array, items: { $ref: "#/components/schemas/WorkspaceRole" } }
+        allowedRoles: { type: array, uniqueItems: true, maxItems: 2, items: { $ref: "#/components/schemas/WorkspaceRole" } }
     MediationRoomAggregate:
       allOf:
         - $ref: "#/components/schemas/MediationRoom"
