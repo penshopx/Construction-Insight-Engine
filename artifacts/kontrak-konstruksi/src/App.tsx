@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Switch } from 'wouter';
 import { ErrorBoundary } from '@/components/error-boundary';
 
@@ -9,6 +10,8 @@ import Bukti from '@/pages/bukti';
 import Kasus from '@/pages/kasus';
 import Referensi from '@/pages/referensi';
 import Kompetensi from '@/pages/kompetensi';
+
+const queryClient = new QueryClient();
 
 function NotFound() {
   return (
@@ -26,17 +29,19 @@ function NotFound() {
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/proyek" component={Proyek} />
-        <Route path="/tenggat" component={Tenggat} />
-        <Route path="/bukti" component={Bukti} />
-        <Route path="/kasus" component={Kasus} />
-        <Route path="/referensi" component={Referensi} />
-        <Route path="/kompetensi" component={Kompetensi} />
-        <Route component={NotFound} />
-      </Switch>
-    </ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ErrorBoundary>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/proyek" component={Proyek} />
+          <Route path="/tenggat" component={Tenggat} />
+          <Route path="/bukti" component={Bukti} />
+          <Route path="/kasus" component={Kasus} />
+          <Route path="/referensi" component={Referensi} />
+          <Route path="/kompetensi" component={Kompetensi} />
+          <Route component={NotFound} />
+        </Switch>
+      </ErrorBoundary>
+    </QueryClientProvider>
   );
 }

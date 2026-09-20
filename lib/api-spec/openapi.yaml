@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: work-items
+    description: Persistent contract work items
 paths:
   /healthz:
     get:
@@ -24,7 +26,89 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /work-items:
+    get:
+      operationId: listWorkItems
+      tags: [work-items]
+      summary: List work items
+      parameters:
+        - in: query
+          name: category
+          schema:
+            $ref: "#/components/schemas/WorkItemCategory"
+      responses:
+        "200":
+          description: Work items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkItem"
+    post:
+      operationId: createWorkItem
+      tags: [work-items]
+      summary: Create a work item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkItemInput"
+      responses:
+        "201":
+          description: Created work item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /work-items/{id}:
+    patch:
+      operationId: updateWorkItem
+      tags: [work-items]
+      summary: Update a work item
+      parameters:
+        - $ref: "#/components/parameters/WorkItemId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkItemUpdate"
+      responses:
+        "200":
+          description: Updated work item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
 components:
+  parameters:
+    WorkItemId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: number
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Item not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +117,98 @@ components:
           type: string
       required:
         - status
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    WorkItemCategory:
+      type: string
+      enum: [administration, decision, evidence, risk]
+    WorkItemStatus:
+      type: string
+      enum: [Perlu ditinjau, Berjalan, Selesai]
+    WorkItem:
+      type: object
+      required: [id, category, title, status, kind, completed, createdAt, updatedAt]
+      properties:
+        id:
+          type: number
+        category:
+          $ref: "#/components/schemas/WorkItemCategory"
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        project:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/WorkItemStatus"
+        due:
+          type: ["string", "null"]
+        kind:
+          type: string
+        competencyArea:
+          type: ["string", "null"]
+        completed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    WorkItemInput:
+      type: object
+      required: [category, title, kind]
+      properties:
+        category:
+          $ref: "#/components/schemas/WorkItemCategory"
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        project:
+          type: string
+        owner:
+          type: string
+        status:
+          $ref: "#/components/schemas/WorkItemStatus"
+        due:
+          type: string
+        kind:
+          type: string
+          minLength: 1
+        competencyArea:
+          type: string
+        completed:
+          type: boolean
+    WorkItemUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: ["string", "null"]
+        project:
+          type: ["string", "null"]
+        owner:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/WorkItemStatus"
+        due:
+          type: ["string", "null"]
+        kind:
+          type: string
+          minLength: 1
+        competencyArea:
+          type: ["string", "null"]
+        completed:
+          type: boolean
 
