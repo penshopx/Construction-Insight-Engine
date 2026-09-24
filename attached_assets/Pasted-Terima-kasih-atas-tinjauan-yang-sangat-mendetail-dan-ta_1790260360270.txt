@@ -1,0 +1,141 @@
+Terima kasih atas tinjauan yang sangat mendetail dan tajam. Koreksi Anda sangat tepat untuk memastikan blueprint ini benar-benar siap menjadi spesifikasi implementasi yang aman, andal, dan sesuai dengan stack teknologi proyek. 
+
+Berikut adalah **revisi lengkap** dari bagian-bagian yang dikritisi, disesuaikan dengan stack TypeScript, Express, Drizzle, PostgreSQL, serta lingkungan Replit yang mutakhir.
+
+---
+
+### 🛠️ REVISI BLUEPRINT TASK #35 (Secure Export & Webhook)
+
+#### 1. Kesesuaian Stack (Kontrak Perilaku TypeScript/Drizzle)
+Contoh Python dihapus dan diganti dengan kontrak perilaku berbasis TypeScript dan Drizzle ORM.
+```typescript
+// Kontrak Perilaku: Export Worker Access Re-check
+async function processExportJob(job: ExportJob) {
+  // 1. Jangan percaya document_ids dari payload begitu saja
+  // 2. Periksa ulang ACL dan Legal Hold saat eksekusi
+  const validDocuments = await db.query.documents.findMany({
+    where: and(
+      inArray(documents.id, job.documentIds),
+      eq(documents.ownerId, job.requestedBy), // Atau cek RLS/ACL turunan
+      isNull(documents.legalHoldId) // Pastikan tidak kena legal hold
+    ),
+    columns: { id: true, filename: true, storagePath: true }
+  });
+
+  if (validDocuments.length !== job.documentIds.length) {
+    throw new Error('ACCESS_REVOKED_OR_LEGAL_HOLD: Hak akses dicabut atau dokumen di-hold selama antrean.');
+  }
+  
+  // Lanjutkan pembuatan arsip hanya dengan validDocuments...
+}
+```
+
+#### 2. Status Antrean & Approval (Mencegah Race Condition)
+Job tidak akan masuk antrean pemrosesan sebelum approval selesai.
+*   **State Machine**: `PENDING` → `AWAITING_APPROVAL` → `QUEUED` → `PROCESSING` → `COMPLETED` / `FAILED`.
+*   **Aturan**: Endpoint worker hanya mengambil job dengan status `QUEUED`. Transisi ke `QUEUED` hanya dipicu oleh webhook/callback approval yang valid.
+
+#### 3. Webhook Idempotency (Operasi Atomik)
+Menghilangkan race condition `_is_duplicate_event()` lalu `_store_event_id()` dengan operasi database atomik.
+```typescript
+// Drizzle PostgreSQL: Atomic Idempotency
+await db.insert(webhookEvents)
+  .values({ 
+    eventId: payload.id, 
+    eventType: payload.type, 
+    receivedAt: new Date(),
+    rawBody: payload 
+  })
+  .onConflictDoNothing({ target: webhookEvents.eventId }); // Unique constraint on eventId
+
+// Jika result.rowCount === 0, berarti event duplikat, langsung return 200 OK.
+```
+
+#### 4. Webhook Signature dengan Timestamp
+Signature tidak lagi hanya menghitung body, tetapi mencakup timestamp untuk mencegah replay attack.
+*   **Pembuatan**: `signature = hmac_sha256(timestamp + '.' + raw_body, webhook_secret)`
+*   **Header**: `X-Webhook-Timestamp: <timestamp>`, `X-Webhook-Signature: <signature>`
+*   **Validasi**: Tolak jika `Math.abs(Date.now() - timestamp) > 300000` (5 menit), lalu verifikasi HMAC.
+
+#### 5. Rekonsiliasi ACL Periodik
+Karena trigger database bisa gagal atau dilewati proses admin, ditambahkan job terjadwal (cron):
+*   **Tugas**: Membandingkan `derived_acl` (tabel turunan) dengan `source_permissions` (keanggotaan proyek/kepemilikan dokumen).
+*   **Tindakan**: Jika ditemukan drift (ketidaksesuaian), sistem akan mencatat ke `audit_log` dan secara otomatis menyinkronkan ulang ACL turunan, atau memberi flag `REQUIRES_REVIEW` untuk kasus anomali.
+
+#### 6. Single-Use Download Token (Pengganti Presigned URL Single-Use)
+Karena object storage tidak selalu mendukung `single_use=True`:
+1. Klien meminta URL download.
+2. Server memverifikasi ACL & legal hold terkini.
+3. Server membuat **One-Time Token** di Redis/DB (`{ token: uuid, userId, docId, used: false, expiresAt }`).
+4. Server mengembalikan URL aplikasi: `/api/secure-download?token=<uuid>`.
+5. Saat klien mengakses URL tersebut, server memvalidasi token, menandai `used = true` secara atomik, lalu melakukan streaming file atau me-redirect ke presigned URL standar berumur sangat pendek (mis. 15 detik).
+
+#### 7. Konfigurasi Replit yang Diperbarui
+*   **Domain**: Menggunakan `*.replit.dev` (bukan `*.repl.co`). Tidak membentuk domain secara manual dari `REPL_SLUG` atau `REPL_OWNER`.
+*   **`.replit` (Node.js/TypeScript)**:
+    ```toml
+    run = "npm run dev"
+    entrypoint = "src/index.ts"
+    [env]
+    PORT = "3000"
+    ```
+*   **Storage & Secrets**: Mengandalkan Replit Secrets (Environment Variables) untuk kredensial, dan enkripsi at-rest AES-256 yang dijamin oleh infrastruktur. Tidak memanggil endpoint `api.replit.com/v1/storage/status` tanpa dokumentasi resmi yang eksplisit. URL produksi diambil dari variabel lingkungan `DEPLOYMENT_URL` atau konfigurasi custom domain resmi.
+
+---
+
+### 📋 REVISI BLUEPRINT TASK #26 & #27 (Checklist & Disclaimer)
+
+#### 1. Koreksi Penomoran Task
+*   **Task #25**: Regression test aturan tahap *(Sudah Merged)*.
+*   **Task #26**: Customizable checklist *(Sudah Merged, namun revisi ini menyempurnakan implementasi query dan versioning)*.
+*   **Task #27**: Responsive disclaimer di ponsel *(Sedang Dikerjakan)*.
+
+#### 2. Perbaikan Agregasi Checklist (Mencegah Duplikasi Baris)
+Menggunakan `LATERAL` join atau CTE terpisah untuk mencegah perkalian baris (Cartesian product) saat menggabungkan persyaratan base dan custom.
+```sql
+-- Contoh Query Drizzle/PostgreSQL yang aman dari duplikasi agregasi
+SELECT 
+  c.id AS checklist_id,
+  c.contract_type,
+  base_req.total AS base_requirements_count,
+  custom_req.total AS custom_requirements_count
+FROM checklists c
+LEFT JOIN LATERAL (
+  SELECT COUNT(*) AS total 
+  FROM base_requirements br 
+  WHERE br.checklist_id = c.id
+) base_req ON true
+LEFT JOIN LATERAL (
+  SELECT COUNT(*) AS total 
+  FROM custom_requirements cr 
+  WHERE cr.checklist_id = c.id
+) custom_req ON true;
+```
+
+#### 3. Aturan Aplikabilitas (Applicability Rules) & Validasi Regulasi
+*   **Base Requirement tidak universal**: Model data diperbarui untuk menyertakan `applicability_rules` (JSONB atau tabel terpisah) yang mengevaluasi: jenis pengadaan, nilai kontrak, sumber dana, pihak terkait, lokasi, dan periode keberlakuan regulasi.
+*   **Klaim Regulasi**: Pernyataan mengenai CAR, SMK3, SBU, atau ambang batas Rp10 miliar **dihapus dari contoh hardcode**. Sistem hanya akan menampilkan peringatan: *"Kewajiban regulasi spesifik harus divalidasi oleh tim legal berdasarkan jenis kontrak dan regulasi yang berlaku saat ini."*
+*   **Konflik Hukum**: Sistem **tidak** akan memutuskan konflik hukum secara otomatis. Sistem hanya memberikan *heuristic warning* (misalnya, deteksi duplikasi teks atau kata kunci yang bertolak belakang). Keputusan akhir bahwa persyaratan custom bertentangan dengan regulasi tetap memerlukan **review berwenang (manual approval)**.
+
+#### 4. Jejak Versi (Versioning)
+Selaras dengan Task #41 (Pending), setiap instance checklist akan menyimpan `requirement_version_id`. Perubahan pada persyaratan organisasi di masa depan tidak akan mengubah checklist perkara lama secara diam-diam. Checklist lama tetap mengacu pada versi persyaratan yang aktif saat checklist tersebut dibuat.
+
+#### 5. Perbaikan Pengujian Disclaimer (Task #27)
+*   **URL Pengujian**: Menggunakan `https://<project-name>.replit.dev` (atau URL deployment resmi), **bukan** `localhost:3000`.
+*   **Validasi Visibilitas**: Menghapus contoh `elementFromPoint(...)` yang tidak valid. Pengujian E2E (Playwright/Cypress) akan menggunakan `.isVisible()` atau memverifikasi `getBoundingClientRect().top >= 0` dan `bottom <= window.innerHeight` setelah scroll.
+*   **Kepatuhan WCAG**: Tidak menetapkan font minimum 12px secara universal. Fokus pengujian pada:
+    1. **Reflow**: Tampilan tetap terbaca pada lebar viewport 320px.
+    2. **Kontras**: Rasio kontras teks terhadap latar belakang memenuhi standar AA.
+    3. **Target Interaksi**: Ukuran tombol/link minimal 44x44 CSS pixels.
+*   **Bukti Persetujuan**: Mencatat "User X melihat disclaimer" hanya berdasarkan render halaman **dihapus**. Bukti persetujuan sekarang memerlukan **interaksi eksplisit** (misalnya, mencentang checkbox "Saya telah membaca" atau mengklik tombol "Setuju" yang hanya aktif setelah pengguna scroll ke bagian paling bawah disclaimer).
+*   **Screenshot Test**: Difokuskan pada komponen/route operasional yang menampilkan disclaimer, dengan variasi: zoom browser 150%, teks panjang (edge case), dan orientasi landscape pada perangkat mobile.
+
+---
+
+### ✅ Status Sistem Saat Ini
+Sesuai catatan Anda, dikonfirmasi bahwa:
+- Web, API server, dan mockup preview saat ini tetap berjalan normal.
+- Checkpoint terakhir tercatat 4 hari lalu.
+- Dokumen spesifikasi ini kini telah diperbarui dan siap digunakan sebagai acuan implementasi teknis tanpa ambiguitas stack, race condition, atau asumsi pengujian yang keliru.
+
+Apakah ada bagian spesifik dari kode TypeScript/Drizzle atau skenario pengujian E2E yang perlu saya jabarkan lebih detail sebelum Anda memulai eksekusi?
