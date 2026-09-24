@@ -92,7 +92,7 @@ assert.deepEqual(
   'Pendeteksi klaim berisiko harus mengizinkan disclaimer yang jelas',
 );
 
-assert.match(riskModelSource, /validationStatus:\s*'pending_expert_review'/, 'Model tanpa persetujuan ahli harus berstatus tertunda');
+assert.match(riskModelSource, /decision:\s*'pending_expert_review'/, 'Model tanpa persetujuan ahli harus berstatus tertunda');
 assert.match(riskModelSource, /calculatedAt:/, 'Snapshot risiko harus mencatat waktu perhitungan');
 assert.match(riskModelSource, /sources:/, 'Snapshot risiko harus mencatat sumber input');
 assert.match(riskIndicatorSource, /canDisplayOperationalScore\(\)/, 'UI harus mengunci skor berdasarkan status validasi');

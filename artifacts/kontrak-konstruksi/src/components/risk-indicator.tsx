@@ -1,5 +1,5 @@
 import { Clock3, Database, LockKeyhole } from 'lucide-react';
-import { canDisplayOperationalScore, calculateIllustrativeScore, projectRiskSnapshots, riskModel } from '@/lib/risk-model';
+import { canDisplayOperationalScore, calculateIllustrativeScore, getRiskValidation, projectRiskSnapshots, riskModel, riskReviewHistory } from '@/lib/risk-model';
 
 const formatTime = (value: string) => new Intl.DateTimeFormat('id-ID', {
   dateStyle: 'medium',
@@ -27,14 +27,31 @@ export function RiskIndicator({ projectId, compact = false }: { projectId: strin
 }
 
 export function RiskValidationNotice() {
+  const validation = getRiskValidation();
+  const operational = canDisplayOperationalScore();
   return (
     <section data-testid="status-risk-model-validation" className="rounded-lg border border-amber-500/25 bg-amber-950/20 p-4">
       <div className="flex items-start gap-3">
         <LockKeyhole className="mt-0.5 shrink-0 text-amber-400" size={18} />
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-400">Validasi model tertunda</p>
-          <p className="mt-1 text-xs leading-relaxed text-slate-300">Skor operasional tidak ditampilkan sampai kasus representatif selesai diuji dan reviewer kontrak serta risiko konstruksi yang kompeten mencatat persetujuan.</p>
-          <p className="mt-2 text-[10px] text-slate-500">Metodologi draft: administrasi kontrak 30%, jadwal & notice 25%, mutu & NCR 25%, klaim & sengketa 20%. Batas kategori draft: 0–39 rendah, 40–69 perlu tinjauan, 70–100 prioritas tinggi.</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-400">{operational ? 'Model risiko disetujui' : 'Validasi model tertunda'}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-300">{operational
+            ? 'Versi aktif telah mendapat persetujuan reviewer untuk metodologi yang sama.'
+            : 'Skor operasional tidak ditampilkan sampai kasus representatif selesai diuji dan reviewer kontrak serta risiko konstruksi yang kompeten mencatat persetujuan untuk metodologi aktif.'}</p>
+          <p className="mt-2 text-[11px] text-slate-300">Versi dipakai: {riskModel.version} · {validation.methodologyChanged ? 'Metodologi berubah; review baru diperlukan' : validation.currentDecision === 'approved' ? 'Disetujui' : 'Menunggu review'}</p>
+          <p className="text-[11px] text-slate-300">Versi terakhir disetujui: {validation.latestApproved?.version ?? 'Belum ada'}{validation.latestApproved ? ` (${formatTime(validation.latestApproved.recordedAt)})` : ''}</p>
+          <p className="mt-2 text-[10px] text-slate-500">Metodologi aktif: {riskModel.factors.map((factor) => `${factor.label} ${factor.weight}%`).join(', ')}. Batas kategori: {riskModel.thresholds.map((threshold) => `${threshold.min}–${threshold.max} ${threshold.label.toLowerCase()}`).join(', ')}.</p>
+          <details className="mt-2 text-[10px] text-slate-400">
+            <summary className="cursor-pointer">Riwayat perubahan dan keputusan review</summary>
+            <ol className="mt-2 space-y-1">
+              {riskReviewHistory.map((entry, index) => (
+                <li key={`${entry.version}-${index}`}>
+                  {formatTime(entry.recordedAt)} · {entry.version} · {entry.decision === 'approved' ? 'Disetujui' : entry.decision === 'rejected' ? 'Ditolak' : 'Menunggu review'} · {entry.recordedBy}: {entry.note}
+                  {entry.decision === 'approved' ? ` · Reviewer: ${entry.reviewer}; kompetensi: ${entry.verifiedCompetence}; independensi: ${entry.independence}; ruang lingkup: ${entry.scope}; batasan: ${entry.limitations}` : ''}
+                </li>
+              ))}
+            </ol>
+          </details>
         </div>
       </div>
     </section>

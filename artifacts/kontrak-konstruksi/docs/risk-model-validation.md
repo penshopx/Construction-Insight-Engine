@@ -21,6 +21,12 @@ Rumus: `round(Σ(nilai faktor × bobot / 100))`. Input dibatasi ke rentang 0–1
 
 Setiap snapshot harus menyimpan versi model, daftar sumber input, dan waktu perhitungan. UI wajib menampilkan sumber dan waktu tersebut. Perubahan input harus menghasilkan snapshot baru; nilai lama tidak boleh ditimpa tanpa jejak.
 
+## Revisi metodologi dan riwayat keputusan
+
+`riskModel` adalah metodologi aktif. `riskReviewHistory` adalah daftar kronologis rekaman perubahan dan keputusan; setiap entri memuat versi, salinan faktor/bobot/batas kategori yang ditinjau, fingerprint kanonik dari isi salinan itu, waktu, pencatat, alasan, dan keputusan. Fingerprint adalah representasi JSON deterministik dari seluruh faktor (termasuk kunci, label, bobot, dan urutannya) dan batas kategori (termasuk label, min, max, dan urutannya). Persetujuan hanya berlaku bila **entri terbaru** menyatakan `approved`, versinya sama dengan versi aktif, dan fingerprint entri, salinan metodologi yang direview, serta metodologi aktif cocok persis. Entitas yang sudah disetujui sebelumnya tetap terlihat sebagai riwayat, bukan izin untuk versi yang berbeda atau versi yang kembali memakai konfigurasi lama.
+
+Saat faktor, bobot, batas kategori, atau versi berubah, skor operasional otomatis terkunci sampai ada keputusan review baru. Jika perubahan belum dicatat, UI menandainya sebagai perubahan metodologi yang perlu review; jangan mengganti entri lama atau menyalin status persetujuannya. Buat versi baru dan tambahkan entri `pending_expert_review` dengan snapshot independen dan alasan perubahan. Setelah hasil uji dan review selesai, tambahkan keputusan `approved` atau `rejected` baru beserta identitas reviewer, kompetensi terverifikasi, independensi, ruang lingkup, batasan, waktu, dan catatan. Pertahankan entri terdahulu untuk audit; tinjau perubahan daftar ini dalam version control. UI menampilkan versi aktif, versi terakhir yang disetujui, dan riwayat keputusan. Rekaman kode ini bukan pengganti sistem persetujuan elektronik atau validasi hukum.
+
 ## Kasus representatif dan kriteria penerimaan
 
 Sebelum status dapat menjadi `approved`, pengujian harus mencakup sekurangnya:
