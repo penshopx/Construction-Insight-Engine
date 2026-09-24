@@ -73,10 +73,10 @@ export function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground cyber-grid">
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col border-r border-sidebar-border bg-sidebar/95 backdrop-blur transition-transform duration-300 lg:translate-x-0', 
+        'fixed inset-y-0 left-0 z-40 flex w-[260px] flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar/95 backdrop-blur transition-transform duration-300 lg:translate-x-0', 
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
-        <div className="flex h-[72px] items-center justify-between border-b border-sidebar-border px-6">
+        <div className="flex h-[72px] shrink-0 items-center justify-between border-b border-sidebar-border px-6">
           <Link href="/dashboard" className="flex items-center gap-3 no-underline group" onClick={() => setMobileOpen(false)}>
             <span className="grid h-9 w-9 place-items-center rounded bg-primary/10 border border-primary/20 text-primary transition-colors group-hover:bg-primary/20">
               <ShieldAlert size={18} className="text-primary" />
@@ -89,7 +89,7 @@ export function Shell({ children }: { children: ReactNode }) {
           <button className="rounded-md p-1 text-slate-400 lg:hidden" onClick={() => setMobileOpen(false)}><X size={18} /></button>
         </div>
         
-        <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6">
+        <div className="flex-1 px-4 py-6">
           <p className="mb-3 px-3 font-mono text-[10px] uppercase tracking-[0.2em] text-slate-500">Modul Pertahanan</p>
           <nav className="space-y-1" aria-label="Navigasi utama">
             {navItems.map((item) => {
@@ -135,7 +135,7 @@ export function Shell({ children }: { children: ReactNode }) {
             <p className="text-[10px] text-red-400/60 mt-1">Menunggu uji kasus dan persetujuan ahli independen</p>
           </div>
           
-          <div className="flex items-start gap-2 border-t border-sidebar-border pt-4">
+          <div data-testid="shell-disclaimer" className="flex items-start gap-2 border-t border-sidebar-border pt-4">
             <Info size={14} className="shrink-0 text-slate-500 mt-0.5" />
             <p className="text-[9px] leading-relaxed text-slate-500">
               <span className="font-bold text-slate-400">DISCLAIMER:</span> KontrakGuard adalah alat administrasi dan pendukung keputusan, bukan nasihat hukum, pendapat ahli, sertifikasi, atau penetapan kepatuhan. Sistem tidak menjamin keutuhan, kekekalan, maupun diterimanya data sebagai alat bukti. Verifikasi fakta, regulasi, dan dokumen sumber dengan tenaga profesional serta sumber resmi yang berlaku.

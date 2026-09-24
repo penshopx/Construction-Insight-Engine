@@ -35,6 +35,16 @@ for (const { path, component } of operationalRoutes) {
 }
 
 assert.match(layoutSource, />DISCLAIMER:</, 'Shell standar harus tetap menampilkan label disclaimer');
+assert.match(
+  layoutSource,
+  /<aside[\s\S]*?overflow-y-auto[\s\S]*?data-testid="shell-disclaimer"/,
+  'Sidebar harus dapat digulir sampai disclaimer pada viewport pendek',
+);
+assert.match(
+  appSource,
+  /data-testid="landing-disclaimer"/,
+  'Landing page harus menyediakan target stabil untuk pemeriksaan keterlihatan disclaimer',
+);
 for (const requiredCopy of ['bukan nasihat hukum', 'tidak menjamin keutuhan', 'diterimanya data sebagai alat bukti']) {
   assert.ok(
     layoutSource.toLocaleLowerCase('id').includes(requiredCopy),

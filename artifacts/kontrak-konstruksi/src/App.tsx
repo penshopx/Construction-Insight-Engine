@@ -101,7 +101,7 @@ function LandingPage() {
           <p className="mb-4 font-mono text-xs font-bold uppercase tracking-[.2em] text-primary">Ruang kerja kontrak konstruksi</p>
           <h1 className="max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-6xl">Data kontrak perusahaan Anda, terpisah dan terkendali.</h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-slate-300">Kelola tenggat, metadata bukti, dan kasus dalam ruang kerja organisasi berbasis akun. Pengelola dan anggota mendapat akses sesuai perannya.</p>
-          <p className="mt-4 max-w-2xl text-xs leading-relaxed text-slate-500">KontrakGuard adalah alat administrasi, bukan nasihat hukum, pendapat ahli, sertifikasi, atau jaminan diterimanya data sebagai alat bukti. Verifikasi fakta dan regulasi melalui tenaga profesional serta sumber resmi.</p>
+          <p data-testid="landing-disclaimer" className="mt-4 max-w-2xl text-xs leading-relaxed text-slate-400">KontrakGuard adalah alat administrasi, bukan nasihat hukum, pendapat ahli, sertifikasi, atau jaminan diterimanya data sebagai alat bukti. Verifikasi fakta dan regulasi melalui tenaga profesional serta sumber resmi.</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href={`${basePath}/sign-up`} className="inline-flex items-center gap-2 rounded bg-primary px-5 py-3 text-sm font-extrabold text-primary-foreground">Buat ruang kerja <ArrowRight size={16} /></a>
             <a href={`${basePath}/sign-in`} className="rounded border border-border bg-card px-5 py-3 text-sm font-bold text-slate-100">Masuk ke akun</a>
