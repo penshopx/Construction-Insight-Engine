@@ -18,12 +18,10 @@ export function RiskIndicator({ projectId, compact = false }: { projectId: strin
         <LockKeyhole size={11} />
         {operational ? `Skor ${illustrativeScore}` : 'Skor operasional dikunci'}
       </div>
-      {!compact && (
-        <div className="mt-2 space-y-1 text-[10px] leading-relaxed text-slate-500">
-          <p className="flex items-start gap-1.5"><Database size={11} className="mt-0.5 shrink-0" />{snapshot.sources.join(' · ')}</p>
-          <p className="flex items-center gap-1.5"><Clock3 size={11} />Dihitung {formatTime(snapshot.calculatedAt)} · {riskModel.version}</p>
-        </div>
-      )}
+      <div className="mt-2 space-y-1 text-[10px] leading-relaxed text-slate-500">
+        <p className="flex items-start gap-1.5"><Database size={11} className="mt-0.5 shrink-0" />{snapshot.sources.join(' · ')}</p>
+        <p className="flex items-center gap-1.5"><Clock3 size={11} />Dihitung {formatTime(snapshot.calculatedAt)} · {riskModel.version}</p>
+      </div>
     </div>
   );
 }
